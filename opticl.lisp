@@ -1,73 +1,122 @@
 
 (in-package :opticl)
 
-(deftype image (&optional channels bits-per-channel)
-  `(simple-array (unsigned-byte ,bits-per-channel)
-                 ,(if (= channels 1)
-                      `(* *)
-                      `(* * ,channels))))
+(deftype image (&optional (channels nil) bits-per-channel)
+  `(simple-array ,(if bits-per-channel
+                      `(unsigned-byte ,bits-per-channel)
+                      '*)
+                 ,(if channels
+                      (if (= channels 1)
+                          `(* *)
+                          `(* * ,channels))
+                      '*)))
+(macrolet
+    ((frob-gray-image (bits)
+       (let ((type
+              (intern (string-upcase (format nil "~A-bit-gray-image" bits))))
+             (ctor-function
+              (intern (string-upcase (format nil "make-~A-bit-gray-image" bits))))
+             (pixel-function
+              (intern (string-upcase (format nil "~A-bit-gray-pixel" bits)))))
+         `(progn
+            (deftype ,type () '(image 1 ,bits))
 
-(deftype 1-bit-gray-image () '(image 1 1))
-(defun make-1-bit-gray-image (height width)
-  (make-array (list height width) 
-              :element-type '(unsigned-byte 1)))
+            (defun ,ctor-function (height width)
+              (make-array (list height width) 
+                          :element-type '(unsigned-byte ,bits)))
 
-(defun 1-bit-gray-pixel (img y x)
-  (declare (type fixnum y x))
-  (declare (type 1-bit-gray-image img))
-  (declare (optimize (speed 3) (safety 0)))
-  (aref img y x))
+            (defun ,pixel-function (img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (declare (optimize (speed 3) (safety 0)))
+              (aref img y x))
+            (declaim (inline ,pixel-function))
 
-(defun (setf 1-bit-gray-pixel) (val img y x)
-  (declare (type fixnum y x))
-  (declare (type 1-bit-gray-image img))
-  (declare (optimize (speed 3) (safety 0)))
-  (setf (aref img y x) val))
+            (defun (setf ,pixel-function) (val img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (declare (optimize (speed 3) (safety 0)))
+              (setf (aref img y x) val))
+            (declaim (inline (setf ,pixel-function)))))))
+  (frob-gray-image 1)
+  (frob-gray-image 2)
+  (frob-gray-image 4)
+  (frob-gray-image 8)
+  (frob-gray-image 16))
 
-(deftype 4-bit-gray-image () '(image 1 4))
-(defun make-4-bit-gray-image (height width)
-  (make-array (list height width) 
-              :element-type '(unsigned-byte 4)))
+(macrolet
+    ((frob-rgb-image (bits)
+       (let ((type
+              (intern (string-upcase (format nil "~A-bit-rgb-image" bits))))
+             (ctor-function
+              (intern (string-upcase (format nil "make-~A-bit-rgb-image" bits))))
+             (pixel-function
+              (intern (string-upcase (format nil "~A-bit-rgb-pixel" bits)))))
+         `(progn
+            (deftype ,type () '(image 3 ,bits))
 
-(deftype 8-bit-gray-image () '(image 1 8))
-(defun make-8-bit-gray-image (height width)
-  (make-array (list height width) 
-              :element-type '(unsigned-byte 8)))
+            (defun ,ctor-function (height width)
+              (make-array (list height width 3) 
+                          :element-type '(unsigned-byte ,bits)))
 
-(deftype 16-bit-gray-image () '(image 1 16))
-(defun make-16-bit-gray-image (height width)
-  (make-array (list height width) 
-              :element-type '(unsigned-byte 16)))
+            (defun ,pixel-function (img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (declare (optimize (speed 3) (safety 0)))
+              (values (aref img y x 0)
+                      (aref img y x 1)
+                      (aref img y x 2)))
+            (declaim (inline ,pixel-function))
+            
+            (defsetf ,pixel-function (img y x) (r g b)
+              `(locally
+                   (declare (type ,',type ,img)
+                            (optimize (speed 3) (safety 0)))
+                 (setf (values (aref ,img ,y ,x 0)
+                               (aref ,img ,y ,x 1)
+                               (aref ,img ,y ,x 2))
+                       (values ,r ,g ,b))))))))
+  (frob-rgb-image 4)
+  (frob-rgb-image 5)
+  (frob-rgb-image 8)
+  (frob-rgb-image 16))
 
-(deftype 4-bit-rgb-image () '(image 3 4))
-(defun make-4-bit-rgb-image (height width)
-  (make-array (list height width 3) 
-              :element-type '(unsigned-byte 4)))
+(macrolet
+    ((frob-rgba-image (bits)
+       (let ((type
+              (intern (string-upcase (format nil "~A-bit-rgba-image" bits))))
+             (ctor-function
+              (intern (string-upcase (format nil "make-~A-bit-rgba-image" bits))))
+             (pixel-function
+              (intern (string-upcase (format nil "~A-bit-rgba-pixel" bits)))))
+         `(progn
+            (deftype ,type () '(image 4 ,bits))
 
-(deftype 8-bit-rgb-image () '(image 3 8))
-(defun make-8-bit-rgb-image (height width)
-  (make-array (list height width 3) 
-              :element-type '(unsigned-byte 8)))
+            (defun ,ctor-function (height width)
+              (make-array (list height width 4) 
+                          :element-type '(unsigned-byte ,bits)))
 
-(deftype 16-bit-rgb-image () '(image 3 16))
-(defun make-16-bit-rgb-image (height width)
-  (make-array (list height width 3) 
-              :element-type '(unsigned-byte 16)))
-
-
-(deftype 4-bit-argb-image () '(image 4 4))
-(defun make-4-bit-argb-image (height width)
-  (make-array (list height width 4) 
-              :element-type '(unsigned-byte 4)))
-
-(deftype 8-bit-argb-image () '(image 4 8))
-(defun make-8-bit-argb-image (height width)
-  (make-array (list height width 4) 
-              :element-type '(unsigned-byte 8)))
-
-(deftype 16-bit-argb-image () '(image 4 16))
-(defun make-16-bit-argb-image (height width)
-  (make-array (list height width 4) 
-              :element-type '(unsigned-byte 16)))
-
+            (defun ,pixel-function (img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (declare (optimize (speed 3) (safety 0)))
+              (values (aref img y x 0)
+                      (aref img y x 1)
+                      (aref img y x 2)
+                      (aref img y x 3)))
+            (declaim (inline ,pixel-function))
+            
+            (defsetf ,pixel-function (img y x) (r g b a)
+              `(locally
+                   (declare (type ,',type ,img)
+                            (optimize (speed 3) (safety 0)))
+                 (setf (values (aref ,img ,y ,x 0)
+                               (aref ,img ,y ,x 1)
+                               (aref ,img ,y ,x 2)
+                               (aref ,img ,y ,x 3))
+                       (values ,r ,g ,b ,a))))))))
+  (frob-rgba-image 4)
+  (frob-rgba-image 5)
+  (frob-rgba-image 8)
+  (frob-rgba-image 16))
 
