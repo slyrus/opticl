@@ -1,15 +1,15 @@
 
 (in-package :opticl)
 
-(deftype image (&optional (channels nil) bits-per-channel)
-  `(simple-array ,(if bits-per-channel
+(deftype image (&optional channels bits-per-channel)
+  `(simple-array ,(if (numberp bits-per-channel)
                       `(unsigned-byte ,bits-per-channel)
-                      '*)
-                 ,(if channels
+                      bits-per-channel)
+                 ,(if (numberp channels)
                       (if (= channels 1)
                           `(* *)
                           `(* * ,channels))
-                      '*)))
+                      channels)))
 (macrolet
     ((frob-gray-image (bits)
        (let ((type
