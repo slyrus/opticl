@@ -5,7 +5,10 @@
   :licence "BSD"
   :serial t
   :default-component-class cl-source-file
+  :depends-on (retrospectiff zpng read-png cl-jpeg)
   :components
   ((:static-file "README")
    (:file "package")
-   (:file "opticl")))
+   (:file "opticl")
+   (:file "tiff")
+   (:file "jpeg")))
