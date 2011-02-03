@@ -67,8 +67,8 @@
                      (multiple-value-bind
                            (r g b a)
                          ;; FIXME! For now we're just ignoring the alpha channel here!!
-                         (delare (ignore a))
                          (8-bit-rgba-pixel image i j)
+                       (declare (ignore a))
                        (setf (aref jpeg-array pixoff) b
                              (aref jpeg-array (incf pixoff)) g
                              (aref jpeg-array (incf pixoff)) r)))))
