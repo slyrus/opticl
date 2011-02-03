@@ -11,4 +11,5 @@
    (:file "package")
    (:file "opticl")
    (:file "tiff")
-   (:file "jpeg")))
+   (:file "jpeg")
+   (:file "png")))
