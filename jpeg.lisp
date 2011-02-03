@@ -3,10 +3,9 @@
 
 (defconstant +ncomp-gray+ 1)
 (defconstant +ncomp-rgb+ 3)
-(defconstant +ncomp-rgba+ 4)
 
 (defparameter *rgb-sampling* '((1 1)(1 1)(1 1)))
-(defparameter *rgba-sampling* '((1 1)(1 1)(1 1)(1 1)))
+(defparameter *gray-q-tabs* (vector jpeg::*q-luminance*))
 
 ;;;
 ;;; Reading JPEG files
@@ -16,18 +15,27 @@
     (cond
       ((= ncomp +ncomp-rgb+)
        (let ((image (make-8-bit-rgb-image height width)))
-               (loop for i below height
-                  do 
-                    (loop for j below width
-                       do 
-                         (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
-                           (setf (8-bit-rgb-pixel image i j)
-                                 (values (aref buffer (+ 2 pixoff))
-                                         (aref buffer (+ 1 pixoff))
-                                         (aref buffer  pixoff))))))
-               image))
+         (loop for i below height
+            do 
+              (loop for j below width
+                 do 
+                   (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
+                     (setf (8-bit-rgb-pixel image i j)
+                           (values (aref buffer (+ 2 pixoff))
+                                   (aref buffer (+ 1 pixoff))
+                                   (aref buffer  pixoff))))))
+         image))
       ((= ncomp 1)
-       (error "grayscale JPEGs not yet supported.")))))
+       (let ((image (make-8-bit-gray-image height width))
+             (pixoff 0))
+         (loop for i below height
+            do 
+              (loop for j below width
+                 do 
+                   (setf (8-bit-gray-pixel image i j)
+                         (aref buffer pixoff))
+                   (incf pixoff)))
+         image)))))
 
 (defun read-jpeg-file (pathname)
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
@@ -35,6 +43,21 @@
 
 (defun write-jpeg-stream (stream image)
   (typecase image
+    (8-bit-gray-image
+     (destructuring-bind (height width)
+         (array-dimensions image)
+       (let ((jpeg-array (make-array (* height width)))
+             (pixoff 0))
+         (loop for i below height
+            do 
+              (loop for j below width
+               do 
+                 (setf (aref jpeg-array pixoff) 
+                       (8-bit-gray-pixel image i j))
+                 (incf pixoff)))
+         (jpeg::encode-image-stream stream jpeg-array +ncomp-gray+ height width
+                                    :q-tabs *gray-q-tabs*))))
+    
     (8-bit-rgb-image
      (destructuring-bind (height width channels)
          (array-dimensions image)
@@ -54,6 +77,9 @@
          (jpeg::encode-image-stream stream jpeg-array +ncomp-rgb+ height width
                                     :sampling *rgb-sampling*))))
 
+    ;; NB: The JPEG format doesn't, AAICT, have a well-specified way
+    ;; of writing an RGBA image. So, for now at least, we'll punt and
+    ;; write it as an RGB image.
     (8-bit-rgba-image
      (destructuring-bind (height width channels)
          (array-dimensions image)
@@ -66,7 +92,6 @@
                    (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
                      (multiple-value-bind
                            (r g b a)
-                         ;; FIXME! For now we're just ignoring the alpha channel here!!
                          (8-bit-rgba-pixel image i j)
                        (declare (ignore a))
                        (setf (aref jpeg-array pixoff) b
