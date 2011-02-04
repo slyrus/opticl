@@ -23,8 +23,8 @@ in time-(and resource-)sensitive operations.
 
 * INSTALLATION
 
+NOTE: THIS DOESN'T WORK YET!!!
 The easiest way (will be) to use Zachary Beane's fabulous quicklisp library:
-
 (ql:quickload 'opticl)
 
 * FOR THE IMPATIENT
@@ -126,7 +126,11 @@ less painful (for the quicklisp user anyway) than the used to be.
 
 To install the dependencies using quicklisp:
 
-    (ql:quickload 'retrospectiff 'zpng 'png-read 'cl-jpeg)
+    (ql:quickload 'zpng 'png-read 'cl-jpeg)
+
+Retrospectiff must be installed by hand using a recent version from [github](https://github.com/slyrus/retrospectiff):
+
+    git://github.com/slyrus/retrospectiff.git
 
 Once opticl is on quicklisp, this step will be replaced by:
 
