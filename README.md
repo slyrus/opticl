@@ -13,7 +13,7 @@ some ideas from Matthieu Villeneuve's excellent imago image processing
 library. Representing and processing images provides an excellent
 illustration of the tradeoffs between generality, and complexity, on
 the one hand, and simplicity and efficiency, on the other hand. All
-other things being equal, one generall wants a simple sytem that is
+other things being equal, one generally wants a simple system that is
 both efficient and general enough to be suitable for use in a variety
 of different contexts -- opticl aims to strike this balance and to be
 both broadly applicable in different contexts and to provide a core
