@@ -53,7 +53,8 @@ image or an 8-bit grayscale image"
                                  (values (aref image-data pixoff)
                                          (aref image-data (incf pixoff))
                                          (aref image-data (incf pixoff))
-                                         (aref image-data (incf pixoff)))))))))
+                                         (aref image-data (incf pixoff)))))))
+               image))
 
 
             ((and (= samples-per-pixel 3)
