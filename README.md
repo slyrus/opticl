@@ -11,9 +11,9 @@ lightweight, library for representing, processing, loading, and saving
 attempt at an image processing library -- ch-image, and also borrows
 some ideas from Matthieu Villeneuve's excellent imago image processing
 library. Representing and processing images provides an excellent
-illustration of the tradeoffs between generality, and complexity, on
+illustration of the trade-offs between generality, and complexity, on
 the one hand, and simplicity and efficiency, on the other hand. All
-other things being equal, one generall wants a simple sytem that is
+other things being equal, one generally wants a simple system that is
 both efficient and general enough to be suitable for use in a variety
 of different contexts -- opticl aims to strike this balance and to be
 both broadly applicable in different contexts and to provide a core
@@ -84,7 +84,7 @@ So... I've taken a different approach with opticl, which is to largely
 eschew CLOS classes and to provide the image data directly as native
 CL arrays. Clearly, some measure of abstraction can be useful to
 insulate programmers from subsequent changes in the implementation,
-but this abstraction should be kept to a minumum and should not get in
+but this abstraction should be kept to a minimum and should not get in
 the way of programmers seeking to use the data. Therefore, the
 fundamental data structure of opticl is the CL array, but the API to
 create and access the data in these arrays is a set of functions that
@@ -93,7 +93,7 @@ images. These functions are implemented as non-generic functions,
 which can be inlined (with a sufficiently smart compiler) for
 efficient access to image data. To date, opticl has only been tested
 on SBCL, and, conversely, has been designed to exploit the
-performance-enchancing characteristics of the SBCL compiler, such as
+performance-enhancing characteristics of the SBCL compiler, such as
 efficient access to specialized arrays (given proper type
 declarations). opticl contains CL types (not classes) and the core
 functions for creating and accessing and setting pixel values use
@@ -124,7 +124,7 @@ will satisfy the conditions of being an `8-bit-rgb-image`.
 
 This enables both opticl code and user code to infer the dimensions
 and the kind of pixels represented in a(n appropriate) CL array that
-hapepns to be on optiicl `image`. This, in turn, allows for both
+happens to be on opticl `image`. This, in turn, allows for both
 opticl code and user code to use type declarations to enable the
 compiler to generate high-performance code for processing images. It
 is chiefly this facility that distinguishes opticl from other CL image
@@ -143,7 +143,7 @@ one can rely on reader/writer functions. Each of these alternatives
 has some drawbacks.
 
 The 24-bit unsigned integer approach is relatively clean, but requires
-that user code unpack the image into it's resepective components. Easy
+that user code unpack the image into it's respective components. Easy
 enough to do, but we just lost two things. First, the image would now
 be represented as an array of unsigned 24-bit integers -- or in the
 case of an RGBA image, unsigned 32-bit integers. How would one
@@ -153,7 +153,7 @@ code or library-provided facilities for unpacking the color
 information. It is my belief that the compiler is going to do at least
 as good of a job as user code in pulling those values out of an
 additional array dimension than user or library code would. On the
-other hand, uisng a list or reader/writer functions would likely
+other hand, using a list or reader/writer functions would likely
 involve heap-allocation of data structures to store this information.
 
 CL offers a facility that has the potential to alleviate these issues,
@@ -164,7 +164,7 @@ allows for a unified treatment of grayscale and RGB pixels as a
 grayscale pixel is just a single value, while an RGB pixel is
 represented by multiple values, as opposed to treating grayscale
 values as an integer and RGB values as a list of integers. All of this
-would just be theoretical nazel-gaving if the implementations didn't
+would just be theoretical navel-gazing if the implementations didn't
 take advantage of the features of multiple values to provide efficient
 compiled implementations of code that uses these
 features. Fortunately, SBCL's implementation of multiple-values allows
@@ -172,7 +172,7 @@ us to define (possibly inline) reader and writer functions that can
 access the pixel and color-value data efficiently and without
 allocating additional memory on the heap (consing).
 
-The tradeoff in this approach is that doing so requires that we know
+The trade-off in this approach is that doing so requires that we know
 what kind of image with which are dealing. If we have an 8-bit RGB
 image, we can use the `8-bit-rgb-pixel` and `(setf 8-bit-rgb-pixel)`
 functions to read and write, respectively, pixel data. Other reader
