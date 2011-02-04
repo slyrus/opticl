@@ -1,8 +1,9 @@
+;;; Copyright (c) 2011 Cyrus Harmon, All rights reserved.
+;;; See COPYRIGHT file for details.
 
 (in-package :opticl)
 
 (defun read-png-stream (stream)
-  (declare (optimize (debug 3)))
   (let ((png (png-read:read-png-datastream stream)))
     (with-accessors
           ((colour-type png-read:colour-type)

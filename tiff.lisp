@@ -1,6 +1,7 @@
+;;; Copyright (c) 2011 Cyrus Harmon, All rights reserved.
+;;; See COPYRIGHT file for details.
 
 (in-package :opticl)
-
 
 ;;;
 ;;; Reading TIFF files
@@ -15,7 +16,7 @@ image or an 8-bit grayscale image"
                      (image-data tiff:tiff-image-data))
         tiff-image
       (cond ((and (= samples-per-pixel 1)
-                  (equalp bits-per-sample #(8))) ;; 8-bit Grayscale
+                  (equalp bits-per-sample 8)) ;; 8-bit Grayscale
              (let ((image (make-8-bit-gray-image image-length image-width)))
                (loop for i below image-length
                   do 
@@ -97,10 +98,33 @@ image or an 8-bit grayscale image"
     (read-tiff-stream stream)))
 
 
+#|
+
 ;;;
 ;;; Writing TIFF files
 (defun make-tiff-image (image)
   (typecase image
+    (8-bit-gray-image
+     (destructuring-bind (height width)
+         (array-dimensions image)
+       (let ((tiff-image (make-instance 'tiff:tiff-image
+                                        :width width
+                                        :length height
+                                        :bits-per-sample 8
+                                        :samples-per-pixel 1
+                                        :data (make-array (* width height)
+                                                          :initial-element 255))))
+         (with-accessors ((image-data tiff:tiff-image-data))
+             tiff-image
+           (let ((pixoff 0))
+             (loop for i below height
+                do 
+                  (loop for j below width
+                     do 
+                       (setf (aref image-data pixoff) (8-bit-gray-pixel image i j))
+                       (incf pixoff)))))
+         tiff-image)))
+
     (8-bit-rgb-image
      (destructuring-bind (height width channels)
          (array-dimensions image)
@@ -224,3 +248,9 @@ image or an 8-bit grayscale image"
 (defun write-tiff-file (pathname image)
   (let ((tiff-image (make-tiff-image image)))
     (tiff:write-tiff-file pathname tiff-image)))
+
+|#
+
+(defun write-tiff-stream (stream image))
+
+(defun write-tiff-file (pathname image))
