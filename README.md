@@ -42,9 +42,9 @@ jpeg file:
            do (loop for j below width 
                  do 
                  (multiple-value-bind (r g b)
-                     (8-bit-rgb-pixel* img i j)
+                     (8-bit-rgb-pixel img i j)
                    (declare (type (unsigned-byte 8) r g b))
-                   (setf (8-bit-rgb-pixel* img i j)
+                   (setf (8-bit-rgb-pixel img i j)
                          (values (- 255 r) g b))))))
       (write-jpeg-file "test/output/inv-r-truck.jpeg" img))
 
@@ -52,14 +52,14 @@ If we time the `(loop for i below...)` using the time macro, with SBCL we see
 the following:
 
     Evaluation took:
-      0.006 seconds of real time
-      0.005808 seconds of total run time (0.005807 user, 0.000001 system)
-      100.00% CPU
-      12,326,048 processor cycles
+      0.009 seconds of real time
+      0.009671 seconds of total run time (0.009663 user, 0.000008 system)
+      111.11% CPU
+      20,533,416 processor cycles
       0 bytes consed
 
 Which shows that we're able to perform simple arithmetic operations on
-each pixel of the image in 6 milliseconds, and that we don't need to
+each pixel of the image in 9 milliseconds, and that we don't need to
 cons to do so.
 
 * Image Representation
