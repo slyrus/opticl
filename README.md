@@ -1,8 +1,7 @@
-opticl
-A library for representing and processing images in Common Lisp (CL)
+* opticl: A library for representing and processing images in Common Lisp (CL)
 
-Cyrus Harmon <ch-lisp@bobobeach.com>, February 2011
-See COPYRIGHT file for license details
+By Cyrus Harmon <ch-lisp@bobobeach.com>, February 2011. See COPYRIGHT
+file for license details.
 
 * Overview
 
@@ -43,9 +42,9 @@ jpeg file:
            do (loop for j below width 
                  do 
                  (multiple-value-bind (r g b)
-                     (8-bit-rgb-pixel img i j)
+                     (8-bit-rgb-pixel* img i j)
                    (declare (type (unsigned-byte 8) r g b))
-                   (setf (8-bit-rgb-pixel img i j)
+                   (setf (8-bit-rgb-pixel* img i j)
                          (values (- 255 r) g b))))))
       (write-jpeg-file "test/output/inv-r-truck.jpeg" img))
 
@@ -60,7 +59,7 @@ the following:
       0 bytes consed
 
 Which shows that we're able to perform simple arithmetic operations on
-each pixel of the image in 6 microseconds, and that we don't need to
+each pixel of the image in 6 milliseconds, and that we don't need to
 cons to do so.
 
 * Image Representation
