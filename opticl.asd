@@ -8,6 +8,7 @@
   :depends-on (retrospectiff zpng png-read cl-jpeg)
   :components
   ((:static-file "README")
+   (:static-file "COPYRIGHT")
    (:file "package")
    (:file "opticl")
    (:file "tiff")

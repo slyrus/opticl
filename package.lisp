@@ -59,4 +59,16 @@
 
    #:16-bit-rgba-image
    #:make-16-bit-rgba-image
-   #:16-bit-rgba-pixel))
+   #:16-bit-rgba-pixel
+
+   #:read-jpeg-file
+   #:read-jpeg-stream
+   #:write-jpeg-file
+   #:write-jpeg-stream
+
+   #:read-png-file
+   #:read-png-stream
+
+   #:read-tiff-file
+   #:read-tiff-stream
+   ))
