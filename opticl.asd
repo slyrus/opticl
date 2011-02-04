@@ -7,7 +7,7 @@
   :default-component-class cl-source-file
   :depends-on (retrospectiff zpng png-read cl-jpeg)
   :components
-  ((:static-file "README")
+  ((:static-file "README.md")
    (:static-file "COPYRIGHT")
    (:file "package")
    (:file "opticl")
