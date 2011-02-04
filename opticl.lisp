@@ -12,14 +12,24 @@
                           `(* *)
                           `(* * ,channels))
                       channels)))
+(defmacro check-bounds ((img y x) &body body)
+  (let ((ymax (gensym)) (xmax (gensym)))
+    `(let ((,ymax (1- (array-dimension ,img 0)))
+           (,xmax (1- (array-dimension ,img 1))))
+       (if (and (<= 0 ,y ,ymax)
+                (<= 0 ,x ,xmax))
+           ,@body))))
+
 (macrolet
     ((frob-gray-image (bits)
        (let ((type
               (intern (string-upcase (format nil "~A-bit-gray-image" bits))))
              (ctor-function
               (intern (string-upcase (format nil "make-~A-bit-gray-image" bits))))
-             (pixel-function
-              (intern (string-upcase (format nil "~A-bit-gray-pixel" bits)))))
+             (safe-pixel-function
+              (intern (string-upcase (format nil "~A-bit-gray-pixel" bits))))
+             (unsafe-pixel-function
+              (intern (string-upcase (format nil "~A-bit-gray-pixel*" bits)))))
          `(progn
             (deftype ,type () '(image 1 ,bits))
 
@@ -27,19 +37,35 @@
               (make-array (list height width) 
                           :element-type '(unsigned-byte ,bits)))
 
-            (defun ,pixel-function (img y x)
+            (defun ,safe-pixel-function (img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (check-bounds (img y x)
+                (aref img y x)
+                0))
+            (declaim (inline ,safe-pixel-function))
+
+            (defun (setf ,safe-pixel-function) (val img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (check-bounds (img y x)
+                (setf (aref img y x) val)))
+            (declaim (inline (setf ,safe-pixel-function)))
+
+            (defun ,unsafe-pixel-function (img y x)
               (declare (type fixnum y x))
               (declare (type ,type img))
               (declare (optimize (speed 3) (safety 0)))
               (aref img y x))
-            (declaim (inline ,pixel-function))
+            (declaim (inline ,unsafe-pixel-function))
 
-            (defun (setf ,pixel-function) (val img y x)
+            (defun (setf ,unsafe-pixel-function) (val img y x)
               (declare (type fixnum y x))
               (declare (type ,type img))
               (declare (optimize (speed 3) (safety 0)))
               (setf (aref img y x) val))
-            (declaim (inline (setf ,pixel-function)))))))
+            (declaim (inline (setf ,unsafe-pixel-function)))))))
+
   (frob-gray-image 1)
   (frob-gray-image 2)
   (frob-gray-image 4)
@@ -52,8 +78,10 @@
               (intern (string-upcase (format nil "~A-bit-rgb-image" bits))))
              (ctor-function
               (intern (string-upcase (format nil "make-~A-bit-rgb-image" bits))))
-             (pixel-function
-              (intern (string-upcase (format nil "~A-bit-rgb-pixel" bits)))))
+             (safe-pixel-function
+              (intern (string-upcase (format nil "~A-bit-rgb-pixel" bits))))
+             (unsafe-pixel-function
+              (intern (string-upcase (format nil "~A-bit-rgb-pixel*" bits)))))
          `(progn
             (deftype ,type () '(image 3 ,bits))
 
@@ -61,16 +89,33 @@
               (make-array (list height width 3) 
                           :element-type '(unsigned-byte ,bits)))
 
-            (defun ,pixel-function (img y x)
+            (defun ,safe-pixel-function (img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (check-bounds (img y x)
+                (values (aref img y x 0)
+                        (aref img y x 1)
+                        (aref img y x 2))
+                (values 0 0 0)))
+            (declaim (inline ,safe-pixel-function))
+            
+            (defsetf ,safe-pixel-function (img y x) (r g b)
+              `(check-bounds (,img ,y ,x)
+                 (setf (values (aref ,img ,y ,x 0)
+                               (aref ,img ,y ,x 1)
+                               (aref ,img ,y ,x 2))
+                       (values ,r ,g ,b))))
+            
+            (defun ,unsafe-pixel-function (img y x)
               (declare (type fixnum y x))
               (declare (type ,type img))
               (declare (optimize (speed 3) (safety 0)))
               (values (aref img y x 0)
                       (aref img y x 1)
                       (aref img y x 2)))
-            (declaim (inline ,pixel-function))
+            (declaim (inline ,unsafe-pixel-function))
             
-            (defsetf ,pixel-function (img y x) (r g b)
+            (defsetf ,unsafe-pixel-function (img y x) (r g b)
               `(locally
                    (declare (type ,',type ,img)
                             (optimize (speed 3) (safety 0)))
@@ -89,8 +134,10 @@
               (intern (string-upcase (format nil "~A-bit-rgba-image" bits))))
              (ctor-function
               (intern (string-upcase (format nil "make-~A-bit-rgba-image" bits))))
-             (pixel-function
-              (intern (string-upcase (format nil "~A-bit-rgba-pixel" bits)))))
+             (safe-pixel-function
+              (intern (string-upcase (format nil "~A-bit-rgba-pixel" bits))))
+             (unsafe-pixel-function
+              (intern (string-upcase (format nil "~A-bit-rgba-pixel*" bits)))))
          `(progn
             (deftype ,type () '(image 4 ,bits))
 
@@ -98,7 +145,26 @@
               (make-array (list height width 4) 
                           :element-type '(unsigned-byte ,bits)))
 
-            (defun ,pixel-function (img y x)
+            (defun ,safe-pixel-function (img y x)
+              (declare (type fixnum y x))
+              (declare (type ,type img))
+              (check-bounds (img y x)
+                (values (aref img y x 0)
+                        (aref img y x 1)
+                        (aref img y x 2)
+                        (aref img y x 3))
+                (values 0 0 0)))
+            (declaim (inline ,safe-pixel-function))
+            
+            (defsetf ,safe-pixel-function (img y x) (r g b a)
+              `(check-bounds (,img ,y ,x)
+                 (setf (values (aref ,img ,y ,x 0)
+                               (aref ,img ,y ,x 1)
+                               (aref ,img ,y ,x 2)
+                               (aref ,img ,y ,x 3))
+                       (values ,r ,g ,b ,a))))
+            
+            (defun ,unsafe-pixel-function (img y x)
               (declare (type fixnum y x))
               (declare (type ,type img))
               (declare (optimize (speed 3) (safety 0)))
@@ -106,9 +172,9 @@
                       (aref img y x 1)
                       (aref img y x 2)
                       (aref img y x 3)))
-            (declaim (inline ,pixel-function))
+            (declaim (inline ,unsafe-pixel-function))
             
-            (defsetf ,pixel-function (img y x) (r g b a)
+            (defsetf ,unsafe-pixel-function (img y x) (r g b a)
               `(locally
                    (declare (type ,',type ,img)
                             (optimize (speed 3) (safety 0)))
