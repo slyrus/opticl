@@ -42,9 +42,9 @@ jpeg file:
            do (loop for j below width 
                  do 
                  (multiple-value-bind (r g b)
-                     (8-bit-rgb-pixel img i j)
+                     (pixel/8-bit-rgb-image img i j)
                    (declare (type (unsigned-byte 8) r g b))
-                   (setf (8-bit-rgb-pixel img i j)
+                   (setf (pixel/8-bit-rgb-image img i j)
                          (values (- 255 r) g b))))))
       (write-jpeg-file "test/output/inv-r-truck.jpeg" img))
 
