@@ -60,7 +60,13 @@
    #:16-bit-rgba-image
    #:make-16-bit-rgba-image
    #:pixel/16-bit-rgba-image #:pixel/16-bit-rgba-image
-
+   
+   ;; Drawing primitives
+   #:fill-image
+   #:draw-circle
+   #:fill-circle
+   
+   ;; I/O
    #:read-jpeg-file
    #:read-jpeg-stream
    #:write-jpeg-file

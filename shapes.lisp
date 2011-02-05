@@ -1,51 +1,84 @@
 
 (in-package #:opticl)
 
-#+nil
-(defun fill-image-8-bit-rgb (img r g b)
-  (declare (type (unsigned-byte 8) r g b))
-  (destructuring-bind (height width channels)
-      (array-dimensions img)
-    (declare (ignore channels))
-    (loop for i below height
-       do (loop for j below width 
-             do 
-               (setf (pixel/8-bit-rgb-image img i j)
-                     (values r g b))))))
+;;; We have two approaches for twiddling the bits in an opticl
+;;; image. We can either use the slow generic functions, or we can use
+;;; the fast pixel/<n>-bit-<type>-image functions. We explore a bit of
+;;; both of those approaches here.
+;;;
+;;; for fill image, we use some macro hackery to generate fast
+;;; functions for each of the image types, and then define a helper
+;;; function to dispatch to the right fast function, based on the type
+;;; of the image (vector) passed in. Note that we can't do CLOS
+;;; dispatch on the particular specialized array type, or this would
+;;; be a lot cleaner...
+;;;
+
 
 (macrolet
-    ((frob-fill-image-rgb (bits channel-names)
+    ((frob-fill-image (type bits channel-names)
        (let ((function-name
-              (intern (string-upcase (format nil "fill-image-~A-bit-rgb" bits))))
+              (intern (string-upcase (format nil "fill-image/~A" (symbol-name type)))))
              (pixel-function
-              (intern (string-upcase (format nil "pixel/~A-bit-rgb-image" bits)))))
+              (intern (string-upcase (format nil "pixel/~A" (symbol-name type))))))
          `(defun ,function-name (img ,@channel-names)
             (declare (type (unsigned-byte ,bits) ,@channel-names))
-            (destructuring-bind (height width channels)
+            (destructuring-bind (height width &optional channels)
                 (array-dimensions img)
               (declare (ignore channels))
               (loop for i below height
                  do (loop for j below width 
                        do 
-                       (setf (,pixel-function img i j)
-                             (values ,@channel-names)))))))))
-  (frob-fill-image-rgb 4 (r g b))
-  (frob-fill-image-rgb 8 (r g b))
-  (frob-fill-image-rgb 16 (r g b)))
+                         (setf (,pixel-function img i j)
+                               (values ,@channel-names)))))))))
+  (frob-fill-image 1-bit-gray-image 1 (k))
+  (frob-fill-image 2-bit-gray-image 2 (k))
+  (frob-fill-image 4-bit-gray-image 4 (k))
+  (frob-fill-image 8-bit-gray-image 8 (k))
+  (frob-fill-image 16-bit-gray-image 16 (k))
+  
+  (frob-fill-image 4-bit-rgb-image 4 (r g b))
+  (frob-fill-image 8-bit-rgb-image 8 (r g b))
+  (frob-fill-image 16-bit-rgb-image 16 (r g b))
+  
+  (frob-fill-image 4-bit-rgba-image 4 (r g b a))
+  (frob-fill-image 8-bit-rgba-image 8 (r g b a))
+  (frob-fill-image 16-bit-rgba-image 16 (r g b a)))
 
-(defun horizontal-line-8-bit-rgb (img y x0 x1 r g b)
+(defun fill-image (img &rest vals)
+  (etypecase img
+    (1-bit-gray-image (apply #'fill-image/1-bit-gray-image img vals))
+    (2-bit-gray-image (apply #'fill-image/2-bit-gray-image img vals))
+    (4-bit-gray-image (apply #'fill-image/4-bit-gray-image img vals))
+    (8-bit-gray-image (apply #'fill-image/8-bit-gray-image img vals))
+    (16-bit-gray-image (apply #'fill-image/16-bit-gray-image img vals))
+    
+    (4-bit-rgb-image (apply #'fill-image/4-bit-rgb-image img vals))
+    (8-bit-rgb-image (apply #'fill-image/8-bit-rgb-image img vals))
+    (16-bit-rgb-image (apply #'fill-image/16-bit-rgb-image img vals))
+
+    (4-bit-rgba-image (apply #'fill-image/4-bit-rgba-image img vals))
+    (8-bit-rgba-image (apply #'fill-image/8-bit-rgba-image img vals))
+    (16-bit-rgba-image (apply #'fill-image/16-bit-rgba-image img vals))))
+
+;;;
+;;; For the remaining functions, we take the slow approach. These
+;;; should get replaced with fast paths, as exmplified by fill-image
+;;; above.
+
+(defun horizontal-line (img y x0 x1 &rest vals)
+  (declare (optimize (debug 3)))
   (declare (type fixnum y x0 x1))
   (loop for x fixnum from x0 to x1
-     do (setf (pixel/8-bit-rgb-image img y x) (values r g b))))
+     do (setf (pixel img y x) (values-list vals))))
 
-(defun vertical-line-8-bit-rgb (img y0 y1 x r g b)
+(defun vertical-line (img y0 y1 x &rest vals)
   (declare (type fixnum y0 y1 x))
   (loop for y fixnum from y0 to y1
-     do (setf (pixel/8-bit-rgb-image img y x) (values r g b))))
+     do (setf (pixel img y x) (values-list vals))))
 
-(defun draw-line-8-bit-rgb (img y0 x0 y1 x1 r g b)
-  (declare (type 8-bit-rgb-image img)
-           (type fixnum y0 x0 y1 x1))
+(defun draw-line (img y0 x0 y1 x1 &rest vals)
+  (declare (type fixnum y0 x0 y1 x1))
   (let ((dx (- x1 x0))
         (dy (- y1 y0)))
     (declare (type fixnum dx dy))
@@ -61,7 +94,7 @@
                   (x x0)
                   (y y0))
               (declare (type fixnum d incr-e incr-ne x y))
-              (setf (pixel/8-bit-rgb-image img y x) (values r g b))
+              (setf (pixel img y x) (values-list vals))
               (dotimes (i absdx)
                 (cond
                   ((<= d 0)
@@ -71,14 +104,14 @@
                    (incf d incr-ne)
                    (incf x xstep)
                    (incf y ystep)))
-                (setf (pixel/8-bit-rgb-image img y x) (values r g b))))
+                (setf (pixel img y x) (values-list vals))))
             (let ((d (- (* 2 absdy) absdx))
                   (incr-n (* 2 absdx))
                   (incr-ne (* 2 (- absdx absdy)))
                   (x x0)
                   (y y0))
               (declare (type fixnum d incr-n incr-ne x y))
-              (setf (pixel/8-bit-rgb-image img y x) (values r g b))
+              (setf (pixel img y x) (values-list vals))
               (dotimes (i absdy)
                 (cond
                   ((<= d 0)
@@ -88,28 +121,27 @@
                    (incf d incr-ne)
                    (incf y ystep)
                    (incf x xstep)))
-                (setf (pixel/8-bit-rgb-image img y x) (values r g b)))))))))
+                (setf (pixel img y x) (values-list vals)))))))))
 
-(defun draw-circle-8-bit-rgb (img center-y center-x radius r g b)
+(defun draw-circle (img center-y center-x radius &rest vals)
   "draws a circle centered at (x, y) with radius r on a image."
-  (declare (type 8-bit-rgb-image img)
-           (type fixnum center-y center-x radius))
-  (flet ((circle-points (y x r g b)
-           (setf (pixel/8-bit-rgb-image img (+ center-y y) (+ center-x x)) (values r g b))
-           (setf (pixel/8-bit-rgb-image img (+ center-y x) (+ center-x y)) (values r g b))
-           (setf (pixel/8-bit-rgb-image img (- center-y x) (+ center-x y)) (values r g b))
-           (setf (pixel/8-bit-rgb-image img (- center-y y) (+ center-x x)) (values r g b))
-           (setf (pixel/8-bit-rgb-image img (- center-y y) (- center-x x)) (values r g b))
-           (setf (pixel/8-bit-rgb-image img (- center-y x) (- center-x y)) (values r g b))
-           (setf (pixel/8-bit-rgb-image img (+ center-y x) (- center-x y)) (values r g b))
-           (setf (pixel/8-bit-rgb-image img (+ center-y y) (- center-x x)) (values r g b))))
+  (declare (type fixnum center-y center-x radius))
+  (flet ((circle-points (y x)
+           (setf (pixel img (+ center-y y) (+ center-x x)) (values-list vals))
+           (setf (pixel img (+ center-y x) (+ center-x y)) (values-list vals))
+           (setf (pixel img (- center-y x) (+ center-x y)) (values-list vals))
+           (setf (pixel img (- center-y y) (+ center-x x)) (values-list vals))
+           (setf (pixel img (- center-y y) (- center-x x)) (values-list vals))
+           (setf (pixel img (- center-y x) (- center-x y)) (values-list vals))
+           (setf (pixel img (+ center-y x) (- center-x y)) (values-list vals))
+           (setf (pixel img (+ center-y y) (- center-x x)) (values-list vals))))
     (let ((x 0)
           (y radius)
           (d (- 1 radius))
           (delta-e 3)
           (delta-se (+ (* -2 radius) 5)))
       (declare (type fixnum x y d delta-e delta-se))
-      (circle-points y x r g b)
+      (circle-points y x)
       (do () ((>= x y))
         (if (< d 0)
             (progn
@@ -122,16 +154,16 @@
               (incf delta-se 4)
               (decf y)))
         (incf x)
-        (circle-points y x r g b)))))
+        (circle-points y x)))))
 
-(defun fill-circle-8-bit-rgb (img center-y center-x radius r g b)
+(defun fill-circle (img center-y center-x radius &rest vals)
   "draws a filled circle centered at (x, y) with radius r on a image."
   (declare (type fixnum center-y center-x radius))
   (flet ((circle-lines (y x)
-           (horizontal-line-8-bit-rgb img (- center-y y) (- center-x x) (+ center-x x) r g b)
-           (horizontal-line-8-bit-rgb img (- center-y x) (- center-x y) (+ center-x y) r g b)
-           (horizontal-line-8-bit-rgb img (+ center-y y) (- center-x x) (+ center-x x) r g b)
-           (horizontal-line-8-bit-rgb img (+ center-y x) (- center-x y) (+ center-x y) r g b)))
+           (apply #'horizontal-line img (- center-y y) (- center-x x) (+ center-x x) vals)
+           (apply #'horizontal-line img (- center-y x) (- center-x y) (+ center-x y) vals)
+           (apply #'horizontal-line img (+ center-y y) (- center-x x) (+ center-x x) vals)
+           (apply #'horizontal-line img (+ center-y x) (- center-x y) (+ center-x y) vals)))
     (let ((x 0)
           (y radius)
           (d (- 1 radius))
@@ -153,25 +185,25 @@
         (incf x)
         (circle-lines y x)))))
 
-(defun draw-rectangle-8-bit-rgb (img y0 x0 y1 x1 r g b)
-  (horizontal-line-8-bit-rgb img y0 x0 x1 r g b)
-  (vertical-line-8-bit-rgb img y0 y1 x0 r g b)
-  (vertical-line-8-bit-rgb img y0 y1 x1 r g b)
-  (horizontal-line-8-bit-rgb img y1 x0 x1 r g b))
+(defun draw-rectangle (img y0 x0 y1 x1 &rest vals)
+  (apply #'horizontal-line img y0 x0 x1 vals)
+  (apply #'vertical-line img y0 y1 x0 vals)
+  (apply #'vertical-line img y0 y1 x1 vals)
+  (apply #'horizontal-line img y1 x0 x1 vals))
 
-(defun fill-rectangle-8-bit-rgb (img y0 x0 y1 x1 r g b)
+(defun fill-rectangle (img y0 x0 y1 x1 &rest vals)
   (loop for x from x0 to x1
      do 
-       (vertical-line-8-bit-rgb img y0 y1 x r g b)))
+       (apply #'vertical-line img y0 y1 x vals)))
 
-(defun draw-triangle-8-bit-rgb (img y0 x0 y1 x1 y2 x2 r g b)
-  (draw-line-8-bit-rgb img y0 x0 y1 x1 r g b)
-  (draw-line-8-bit-rgb img y1 x1 y2 x2 r g b)
-  (draw-line-8-bit-rgb img y2 x2 y0 x0 r g b))
+(defun draw-triangle (img y0 x0 y1 x1 y2 x2 &rest vals)
+  (apply #'draw-line img y0 x0 y1 x1 vals)
+  (apply #'draw-line img y1 x1 y2 x2 vals)
+  (apply #'draw-line img y2 x2 y0 x0 vals))
 
-(defun draw-polygon-8-bit-rgb (img points r g b)
+(defun draw-polygon (img points &rest vals)
   (loop for p across points
      do (let ((p1 (elt p 0))
               (p2 (elt p 1)))
           (when (and (consp p1) (consp p2))
-            (draw-line-8-bit-rgb img (car p1) (cdr p1) (car p2) (cdr p2) r g b)))))
+            (apply #'draw-line img (car p1) (cdr p1) (car p2) (cdr p2) vals)))))
