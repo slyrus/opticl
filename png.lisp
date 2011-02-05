@@ -19,7 +19,7 @@
                   do 
                     (loop for j below width
                        do 
-                         (setf (8-bit-rgb-pixel img i j)
+                         (setf (pixel/8-bit-rgb-image img i j)
                                (values (aref image-data j i 0)
                                        (aref image-data j i 1)
                                        (aref image-data j i 2)))))
@@ -32,7 +32,7 @@
                   do 
                     (loop for j below width
                        do 
-                         (setf (8-bit-rgba-pixel img i j)
+                         (setf (pixel/8-bit-rgba-image img i j)
                                (values (aref image-data j i 0)
                                        (aref image-data j i 1)
                                        (aref image-data j i 2)
@@ -49,7 +49,7 @@
                   do 
                     (loop for j below width
                        do 
-                         (setf (8-bit-rgb-pixel img i j)
+                         (setf (pixel/8-bit-rgb-image img i j)
                                (values (aref image-data j i 0)
                                        (aref image-data j i 1)
                                        (aref image-data j i 2)))))
@@ -62,7 +62,7 @@
                   do 
                     (loop for j below width
                        do 
-                         (setf (8-bit-gray-pixel img i j)
+                         (setf (pixel/8-bit-gray-image img i j)
                                (aref image-data j i))))
                img))
 

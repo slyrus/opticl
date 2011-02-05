@@ -22,7 +22,7 @@
               (loop for j below width
                  do 
                    (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
-                     (setf (8-bit-rgb-pixel image i j)
+                     (setf (pixel/8-bit-rgb-image image i j)
                            (values (aref buffer (+ 2 pixoff))
                                    (aref buffer (+ 1 pixoff))
                                    (aref buffer  pixoff))))))
@@ -34,7 +34,7 @@
             do 
               (loop for j below width
                  do 
-                   (setf (8-bit-gray-pixel image i j)
+                   (setf (pixel/8-bit-gray-image image i j)
                          (aref buffer pixoff))
                    (incf pixoff)))
          image)))))
@@ -55,7 +55,7 @@
               (loop for j below width
                do 
                  (setf (aref jpeg-array pixoff) 
-                       (8-bit-gray-pixel image i j))
+                       (pixel/8-bit-gray-image image i j))
                  (incf pixoff)))
          (jpeg::encode-image-stream stream jpeg-array +ncomp-gray+ height width
                                     :q-tabs *gray-q-tabs*))))
@@ -72,7 +72,7 @@
                (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
                  (multiple-value-bind
                        (r g b)
-                     (8-bit-rgb-pixel image i j)
+                     (pixel/8-bit-rgb-image image i j)
                    (setf (aref jpeg-array pixoff) b
                          (aref jpeg-array (incf pixoff)) g
                          (aref jpeg-array (incf pixoff)) r)))))
@@ -94,7 +94,7 @@
                    (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
                      (multiple-value-bind
                            (r g b a)
-                         (8-bit-rgba-pixel image i j)
+                         (pixel/8-bit-rgba-image image i j)
                        (declare (ignore a))
                        (setf (aref jpeg-array pixoff) b
                              (aref jpeg-array (incf pixoff)) g

@@ -23,7 +23,7 @@ image or an 8-bit grayscale image"
                     (loop for j below image-width
                        do 
                          (let ((pixoff (+ (* i image-width) j)))
-                           (setf (8-bit-gray-pixel image i j)
+                           (setf (pixel/8-bit-gray-image image i j)
                                  (aref image-data pixoff)))))
                image))
 
@@ -35,7 +35,7 @@ image or an 8-bit grayscale image"
                     (loop for j below image-width
                        do 
                          (let ((pixoff (* 3 (+ (* i image-width) j))))
-                           (setf (8-bit-rgb-pixel image i j)
+                           (setf (pixel/8-bit-rgb-image image i j)
                                  (values (aref image-data pixoff)
                                          (aref image-data (incf pixoff))
                                          (aref image-data (incf pixoff)))))))
@@ -49,7 +49,7 @@ image or an 8-bit grayscale image"
                     (loop for j below image-width
                        do 
                          (let ((pixoff (* 4 (+ (* i image-width) j))))
-                           (setf (8-bit-rgba-pixel image i j)
+                           (setf (pixel/8-bit-rgba-image image i j)
                                  (values (aref image-data pixoff)
                                          (aref image-data (incf pixoff))
                                          (aref image-data (incf pixoff))
@@ -65,7 +65,7 @@ image or an 8-bit grayscale image"
                     (loop for j below image-width
                        do 
                          (let ((pixoff (* 6 (+ (* i image-width) j))))
-                           (setf (16-bit-rgb-pixel image i j)
+                           (setf (pixel/16-bit-rgb-image image i j)
                                  (values (+ (ash (aref image-data pixoff) 8)
                                             (aref image-data (incf pixoff)))
                                          (+ (ash (aref image-data (incf pixoff)) 8)
@@ -82,7 +82,7 @@ image or an 8-bit grayscale image"
                     (loop for j below image-width
                        do 
                          (let ((pixoff (* 8 (+ (* i image-width) j))))
-                           (setf (16-bit-rgba-pixel image i j)
+                           (setf (pixel/16-bit-rgba-image image i j)
                                  (values (+ (ash (aref image-data pixoff) 8)
                                             (aref image-data (incf pixoff)))
                                          (+ (ash (aref image-data (incf pixoff)) 8)
@@ -122,7 +122,7 @@ image or an 8-bit grayscale image"
                 do 
                   (loop for j below width
                      do 
-                       (setf (aref image-data pixoff) (8-bit-gray-pixel image i j))
+                       (setf (aref image-data pixoff) (pixel/8-bit-gray-image image i j))
                        (incf pixoff)))))
          tiff-image)))
 
@@ -145,7 +145,7 @@ image or an 8-bit grayscale image"
                  (let ((pixoff (* 3 (+ (* i width) j))))
                    (multiple-value-bind
                          (r g b)
-                       (8-bit-rgb-pixel image i j)
+                       (pixel/8-bit-rgb-image image i j)
                      (setf (aref image-data pixoff) r
                            (aref image-data (incf pixoff)) g
                            (aref image-data (incf pixoff)) b))))))
@@ -170,7 +170,7 @@ image or an 8-bit grayscale image"
                  (let ((pixoff (* 4 (+ (* i width) j))))
                    (multiple-value-bind
                          (r g b a)
-                       (8-bit-rgb-pixel image i j)
+                       (pixel/8-bit-rgb-image image i j)
                      (setf (aref image-data pixoff) r
                            (aref image-data (incf pixoff)) g
                            (aref image-data (incf pixoff)) b
@@ -196,7 +196,7 @@ image or an 8-bit grayscale image"
                      (let ((pixoff (* 3 2 (+ (* i width) j))))
                        (multiple-value-bind
                              (r g b)
-                           (16-bit-rgb-pixel image i j)
+                           (pixel/16-bit-rgb-image image i j)
                          (setf (aref image-data pixoff) (ash r -8)
                                (aref image-data (incf pixoff)) (logand r #xff)
 
@@ -226,7 +226,7 @@ image or an 8-bit grayscale image"
                      (let ((pixoff (* 4 2 (+ (* i width) j))))
                        (multiple-value-bind
                              (r g b a)
-                           (16-bit-rgba-pixel image i j)
+                           (pixel/16-bit-rgba-image image i j)
                          (setf (aref image-data pixoff) (ash r -8)
                                (aref image-data (incf pixoff)) (logand r #xff)
 
