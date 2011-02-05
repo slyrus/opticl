@@ -252,6 +252,8 @@ image or an 8-bit grayscale image"
 
 |#
 
-(defun write-tiff-stream (stream image))
+(defun write-tiff-stream (stream image)
+  (declare (ignore stream image)))
 
-(defun write-tiff-file (pathname image))
+(defun write-tiff-file (pathname image)
+  (declare (ignore pathname image)))
