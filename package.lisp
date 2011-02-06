@@ -79,3 +79,10 @@
    #:read-tiff-file
    #:read-tiff-stream
    ))
+
+
+#+sbcl
+(require :sb-cltl2)
+
+#+sbcl
+(rename-package 'sb-cltl2 'sb-cltl2 '(cltl2))

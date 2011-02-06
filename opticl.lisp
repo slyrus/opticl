@@ -246,117 +246,69 @@
   (frob-rgba-image 16))
 
 
-(defun pixel (img y x)
-  (etypecase img
-    (1-bit-gray-image (pixel/1-bit-gray-image img y x))
-    (2-bit-gray-image (pixel/2-bit-gray-image img y x))
-    (4-bit-gray-image (pixel/4-bit-gray-image img y x))
-    (8-bit-gray-image (pixel/8-bit-gray-image img y x))
-    (16-bit-gray-image (pixel/16-bit-gray-image img y x))
-    
-    (4-bit-rgb-image (pixel/4-bit-rgb-image img y x))
-    (8-bit-rgb-image (pixel/8-bit-rgb-image img y x))
-    (16-bit-rgb-image (pixel/16-bit-rgb-image img y x))
+(define-setf-expander pixel (image-var y x &environment env)
+  (multiple-value-bind (binding-type localp declarations)
+      (cltl2:variable-information image-var env)
+    (declare (ignore binding-type localp))
+    (let ((type-decl (find 'type declarations :key #'car)))
+      (let* ((image-dimensions (and type-decl
+                                    (listp type-decl)
+                                    (= (length type-decl) 4)
+                                    (fourth type-decl)))
+             (arity (and image-dimensions
+                         (or (and (= (length image-dimensions) 3)
+                                  (third image-dimensions))
+                             1))))
+        (let ((temp-y (gensym))
+              (temp-x (gensym)))
+          (if (= arity 1)
+              (let ((store (gensym)))
+                (values `(,temp-y ,temp-x)
+                        `(,y ,x)
+                        `(,store)
+                        `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
+                        `(aref ,image-var ,temp-y ,temp-x)))
+              (let ((stores (map-into (make-list arity) #'gensym)))
+                (values `(,temp-y ,temp-x)
+                        `(,y ,x)
+                        stores
+                        `(progn (setf ,@(loop for i from 0
+                                           for store in stores
+                                           collect `(aref ,image-var ,temp-y ,temp-x ,i)
+                                           collect store))
+                                (values ,@stores))
+                        `(values ,@(loop for i from 0
+                                      for store in stores
+                                      collect `(aref ,image-var ,temp-y ,temp-x ,i)))))))))))
 
-    (4-bit-rgba-image (pixel/4-bit-rgba-image img y x))
-    (8-bit-rgba-image (pixel/8-bit-rgba-image img y x))
-    (16-bit-rgba-image (pixel/16-bit-rgba-image img y x))))
-
-(defmacro pixelm (img y x)
-  `(check-bounds (,img ,y ,x)
-                 (case (array-rank ,img)
-                   (3
-                    (let ((d (array-dimension ,img 2)))
-                      (case d
-                        (1
-                         (values
-                          (aref ,img ,y ,x 0)
-                          0
-                          0
-                          0))
-                        (2
-                         (values
-                          (aref ,img ,y ,x 0)
-                          (aref ,img ,y ,x 1)
-                          0
-                          0))
-                        (3
-                         (values
-                          (aref ,img ,y ,x 0)
-                          (aref ,img ,y ,x 1)
-                          (aref ,img ,y ,x 2)
-                          0))
-                        (4
-                         (values
-                          (aref ,img ,y ,x 0)
-                          (aref ,img ,y ,x 1)
-                          (aref ,img ,y ,x 2)
-                          (aref ,img ,y ,x 3))))))
-                   (2 (aref ,img ,y ,x) 0 0 0))
-                 (values 0 0 0 0)))
-
-
-(defconstant +max-image-channels+ 4)
-
-(define-setf-expander pixel (img y x &environment env)
-  (multiple-value-bind (temps subforms store-vars setter getter)
-      (get-setf-expansion img env)
-    (declare (ignore store-vars setter))
-    (let ((syms (map-into (make-list +max-image-channels+) #'gensym)))
-      (values temps
-              subforms
-              syms
-              `(check-bounds (,img ,y ,x)
-                 (case (array-rank ,getter)
-                   (3 (let ((d (array-dimension ,getter 2)))
-                        (case d
-                          (1
-                           (values
-                            (setf (aref ,getter ,y ,x 0) ,(elt syms 0))))
-                          (2
-                           (values
-                            (setf (aref ,getter ,y ,x 0) ,(elt syms 0))
-                            (setf (aref ,getter ,y ,x 1) ,(elt syms 1))))
-                          (3
-                           (values
-                            (setf (aref ,getter ,y ,x 0) ,(elt syms 0))
-                            (setf (aref ,getter ,y ,x 1) ,(elt syms 1))
-                            (setf (aref ,getter ,y ,x 2) ,(elt syms 2))))
-                          (4
-                           (values
-                            (setf (aref ,getter ,y ,x 0) ,(elt syms 0))
-                            (setf (aref ,getter ,y ,x 1) ,(elt syms 1))
-                            (setf (aref ,getter ,y ,x 2) ,(elt syms 2))
-                            (setf (aref ,getter ,y ,x 3) ,(elt syms 3))))
-                          (t (loop for i below d
-                                collect (setf (aref ,getter ,y ,x i) (elt (list ,@syms) i)))))))
-                   (2 (setf (aref ,getter ,y ,x) ,(elt syms 0))))
-                 (values))
-              `(check-bounds (,img ,y ,x)
-                 (case (array-rank ,getter)
-                   (3
-                    (let ((d (array-dimension ,getter 2)))
-                      (case d
-                        (1
-                         (values
-                          (aref ,getter ,y ,x 0)))
-                        (2
-                         (values
-                          (aref ,getter ,y ,x 0)
-                          (aref ,getter ,y ,x 1)))
-                        (3
-                         (values
-                          (aref ,getter ,y ,x 0)
-                          (aref ,getter ,y ,x 1)
-                          (aref ,getter ,y ,x 2)))
-                        (4
-                         (values
-                          (aref ,getter ,y ,x 0)
-                          (aref ,getter ,y ,x 1)
-                          (aref ,getter ,y ,x 2)
-                          (aref ,getter ,y ,x 3)))
-                        (t (values-list
-                            (loop for i below d
-                               collect (aref ,getter ,y ,x i)))))))
-                   (2 (aref ,getter ,y ,x)))
-                 (values))))))
+(defmacro pixel (image-var y x &environment env)
+  (multiple-value-bind (binding-type localp declarations)
+      (cltl2:variable-information image-var env)
+    (declare (ignore binding-type localp))
+    (let ((type-decl (find 'type declarations :key #'car)))
+      (let ((image-dimensions (and type-decl
+                            (listp type-decl)
+                            (= (length type-decl) 4)
+                            (fourth type-decl))))
+        (if image-dimensions
+            (progn
+              (print 'here)
+              (case (length image-dimensions)
+                (2 `(aref ,image-var ,y ,x))
+                (3 `(values ,@(loop for i below (third image-dimensions)
+                                 collect `(aref ,image-var ,y ,x ,i))))))
+            `(case (array-rank ,image-var)
+               (2 (aref ,image-var ,y ,x))
+               (3 (case (array-dimension ,image-var 2)
+                    (2 (values
+                        (aref ,image-var ,y ,x 0)
+                        (aref ,image-var ,y ,x 1)))
+                    (3 (values
+                        (aref ,image-var ,y ,x 0)
+                        (aref ,image-var ,y ,x 1)
+                        (aref ,image-var ,y ,x 2)))
+                    (4 (values
+                        (aref ,image-var ,y ,x 0)
+                        (aref ,image-var ,y ,x 1)
+                        (aref ,image-var ,y ,x 2)
+                        (aref ,image-var ,y ,x 3)))))))))))
