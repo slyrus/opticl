@@ -6,6 +6,7 @@
   (:export
 
    #:image
+   #:pixel
 
    #:1-bit-gray-image
    #:make-1-bit-gray-image

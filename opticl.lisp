@@ -150,7 +150,15 @@
                    (setf (values (aref ,img ,y ,x 0)
                                  (aref ,img ,y ,x 1)
                                  (aref ,img ,y ,x 2))
-                         (values ,r ,g ,b)))))))))
+                         (values ,r ,g ,b))))
+
+              (defun ,unsafe-set-pixel-function (img y x r g b)
+                (declare (type fixnum y x))
+                (declare (type ,type img))
+                (setf (values (aref img y x 0)
+                              (aref img y x 1)
+                              (aref img y x 2))
+                      (values r g b))))))))
   (frob-rgb-image 4)
   (frob-rgb-image 8)
   (frob-rgb-image 16))
@@ -184,7 +192,7 @@
                           (aref img y x 1)
                           (aref img y x 2)
                           (aref img y x 3))
-                  (values 0 0 0)))
+                  (values 0 0 0 0)))
               (declaim (inline ,safe-pixel-function))
             
               (defun ,safe-set-pixel-function (img y x r g b a)
@@ -223,29 +231,72 @@
                                  (aref ,img ,y ,x 1)
                                  (aref ,img ,y ,x 2)
                                  (aref ,img ,y ,x 3))
-                         (values ,r ,g ,b ,a)))))))))
+                         (values ,r ,g ,b ,a))))
+              
+              (defun ,unsafe-set-pixel-function (img y x r g b a)
+                (declare (type fixnum y x))
+                (declare (type ,type img))
+                (setf (values (aref img y x 0)
+                              (aref img y x 1)
+                              (aref img y x 2)
+                              (aref img y x 3))
+                      (values r g b a))))))))
   (frob-rgba-image 4)
   (frob-rgba-image 8)
   (frob-rgba-image 16))
 
 
-(defun pixel (img &rest vals)
+(defun pixel (img y x)
   (etypecase img
-    (1-bit-gray-image (apply #'pixel/1-bit-gray-image img vals))
-    (2-bit-gray-image (apply #'pixel/2-bit-gray-image img vals))
-    (4-bit-gray-image (apply #'pixel/4-bit-gray-image img vals))
-    (8-bit-gray-image (apply #'pixel/8-bit-gray-image img vals))
-    (16-bit-gray-image (apply #'pixel/16-bit-gray-image img vals))
+    (1-bit-gray-image (pixel/1-bit-gray-image img y x))
+    (2-bit-gray-image (pixel/2-bit-gray-image img y x))
+    (4-bit-gray-image (pixel/4-bit-gray-image img y x))
+    (8-bit-gray-image (pixel/8-bit-gray-image img y x))
+    (16-bit-gray-image (pixel/16-bit-gray-image img y x))
     
-    (4-bit-rgb-image (apply #'pixel/4-bit-rgb-image img vals))
-    (8-bit-rgb-image (apply #'pixel/8-bit-rgb-image img vals))
-    (16-bit-rgb-image (apply #'pixel/16-bit-rgb-image img vals))
+    (4-bit-rgb-image (pixel/4-bit-rgb-image img y x))
+    (8-bit-rgb-image (pixel/8-bit-rgb-image img y x))
+    (16-bit-rgb-image (pixel/16-bit-rgb-image img y x))
 
-    (4-bit-rgba-image (apply #'pixel/4-bit-rgba-image img vals))
-    (8-bit-rgba-image (apply #'pixel/8-bit-rgba-image img vals))
-    (16-bit-rgba-image (apply #'pixel/16-bit-rgba-image img vals))))
+    (4-bit-rgba-image (pixel/4-bit-rgba-image img y x))
+    (8-bit-rgba-image (pixel/8-bit-rgba-image img y x))
+    (16-bit-rgba-image (pixel/16-bit-rgba-image img y x))))
 
-(defconstant +max-image-channels+ 64)
+(defmacro pixelm (img y x)
+  `(check-bounds (,img ,y ,x)
+                 (case (array-rank ,img)
+                   (3
+                    (let ((d (array-dimension ,img 2)))
+                      (case d
+                        (1
+                         (values
+                          (aref ,img ,y ,x 0)
+                          0
+                          0
+                          0))
+                        (2
+                         (values
+                          (aref ,img ,y ,x 0)
+                          (aref ,img ,y ,x 1)
+                          0
+                          0))
+                        (3
+                         (values
+                          (aref ,img ,y ,x 0)
+                          (aref ,img ,y ,x 1)
+                          (aref ,img ,y ,x 2)
+                          0))
+                        (4
+                         (values
+                          (aref ,img ,y ,x 0)
+                          (aref ,img ,y ,x 1)
+                          (aref ,img ,y ,x 2)
+                          (aref ,img ,y ,x 3))))))
+                   (2 (aref ,img ,y ,x) 0 0 0))
+                 (values 0 0 0 0)))
+
+
+(defconstant +max-image-channels+ 4)
 
 (define-setf-expander pixel (img y x &environment env)
   (multiple-value-bind (temps subforms store-vars setter getter)
