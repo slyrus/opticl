@@ -66,17 +66,6 @@
 ;;; should get replaced with fast paths, as exmplified by fill-image
 ;;; above.
 
-(defun constrain (val min max)
-  (let ((val (if (< val min) min val)))
-    (if (> val max)
-        max
-        val)))
-
-(defmacro with-image-bounds ((ymax-var xmax-var) img &body body)
-  `(let ((,ymax-var (1- (array-dimension ,img 0)))
-         (,xmax-var (1- (array-dimension ,img 1))))
-     ,@body))
-
 (defun horizontal-line (img y x0 x1 &rest vals)
   (declare (type fixnum y x0 x1))
   (with-image-bounds (ymax xmax)
@@ -86,14 +75,6 @@
           (x1 (constrain x1 0 xmax)))
       (loop for x fixnum from x0 to x1
          do (setf (pixel img y x) (values-list vals))))))
-
-(defun pixel-in-bounds (img y x)
-  (with-image-bounds (ymax xmax)
-      img
-    (and (>= y 0)
-         (< y ymax)
-         (>= x 0)
-         (< x xmax))))
 
 (defun vertical-line (img y0 y1 x &rest vals)
   (declare (type fixnum y0 y1 x))
