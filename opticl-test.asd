@@ -8,5 +8,6 @@
   :depends-on (opticl)
   :components
   ((:module :test
+            :serial t
             :components ((:file "package")
                          (:file "opticl-test")))))
