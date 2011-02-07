@@ -209,8 +209,8 @@
         val)))
 
 (defmacro with-image-bounds ((ymax-var xmax-var &optional (channels (gensym))) img &body body)
-  `(let ((,ymax-var (1- (array-dimension ,img 0)))
-         (,xmax-var (1- (array-dimension ,img 1)))
+  `(let ((,ymax-var (array-dimension ,img 0))
+         (,xmax-var (array-dimension ,img 1))
          (,channels (when (= (array-rank ,img) 3)
                       (array-dimension ,img 2))))
      (declare (ignorable ,channels))

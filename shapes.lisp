@@ -13,9 +13,9 @@
   (declare (type fixnum y x0 x1))
   (with-image-bounds (ymax xmax)
       img
-    (let ((y (constrain y 0 ymax))
-          (x0 (constrain x0 0 xmax))
-          (x1 (constrain x1 0 xmax)))
+    (let ((y (constrain y 0 (1- ymax)))
+          (x0 (constrain x0 0 (1- xmax)))
+          (x1 (constrain x1 0 (1- xmax))))
       (loop for x fixnum from x0 to x1
          do (setf (pixel img y x) (values-list vals))))))
 
@@ -23,9 +23,9 @@
   (declare (type fixnum y0 y1 x))
   (with-image-bounds (ymax xmax)
       img
-    (let ((y0 (constrain y0 0 ymax))
-          (y1 (constrain y1 0 xmax))
-          (x (constrain x 0 xmax)))
+    (let ((y0 (constrain y0 0 (1- ymax)))
+          (y1 (constrain y1 0 (1- xmax)))
+          (x (constrain x 0 (1- xmax))))
       (loop for y fixnum from y0 to y1
          do (when (pixel-in-bounds img y x)
               (setf (pixel img y x) (values-list vals)))))))
