@@ -11,6 +11,7 @@
    (:static-file "COPYRIGHT")
    (:file "package")
    (:file "opticl")
+   (:file "imageops")
    (:file "shapes")
    (:file "tiff")
    (:file "jpeg")
