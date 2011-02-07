@@ -251,35 +251,35 @@
       (cltl2:variable-information image-var env)
     (declare (ignore binding-type localp))
     (let ((type-decl (find 'type declarations :key #'car)))
-      (let* ((image-dimensions (and type-decl
-                                    (listp type-decl)
-                                    (= (length type-decl) 4)
-                                    (fourth type-decl)))
-             (arity (and image-dimensions
-                         (or (and (= (length image-dimensions) 3)
+      (let ((image-dimensions (and type-decl
+                                   (listp type-decl)
+                                   (= (length type-decl) 4)
+                                   (fourth type-decl))))
+        (if image-dimensions
+            (let ((arity (or (and (= (length image-dimensions) 3)
                                   (third image-dimensions))
-                             1))))
-        (let ((temp-y (gensym))
-              (temp-x (gensym)))
-          (if (= arity 1)
-              (let ((store (gensym)))
-                (values `(,temp-y ,temp-x)
-                        `(,y ,x)
-                        `(,store)
-                        `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
-                        `(aref ,image-var ,temp-y ,temp-x)))
-              (let ((stores (map-into (make-list arity) #'gensym)))
-                (values `(,temp-y ,temp-x)
-                        `(,y ,x)
-                        stores
-                        `(progn (setf ,@(loop for i from 0
-                                           for store in stores
-                                           collect `(aref ,image-var ,temp-y ,temp-x ,i)
-                                           collect store))
-                                (values ,@stores))
-                        `(values ,@(loop for i from 0
-                                      for store in stores
-                                      collect `(aref ,image-var ,temp-y ,temp-x ,i)))))))))))
+                             1))
+                  (temp-y (gensym))
+                  (temp-x (gensym)))
+              (if (= arity 1)
+                  (let ((store (gensym)))
+                    (values `(,temp-y ,temp-x)
+                            `(,y ,x)
+                            `(,store)
+                            `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
+                            `(aref ,image-var ,temp-y ,temp-x)))
+                  (let ((stores (map-into (make-list arity) #'gensym)))
+                    (values `(,temp-y ,temp-x)
+                            `(,y ,x)
+                            stores
+                            `(progn (setf ,@(loop for i from 0
+                                               for store in stores
+                                               collect `(aref ,image-var ,temp-y ,temp-x ,i)
+                                               collect store))
+                                    (values ,@stores))
+                            `(values ,@(loop for i from 0
+                                          for store in stores
+                                          collect `(aref ,image-var ,temp-y ,temp-x ,i))))))))))))
 
 (defmacro pixel (image-var y x &environment env)
   (multiple-value-bind (binding-type localp declarations)
@@ -287,12 +287,11 @@
     (declare (ignore binding-type localp))
     (let ((type-decl (find 'type declarations :key #'car)))
       (let ((image-dimensions (and type-decl
-                            (listp type-decl)
-                            (= (length type-decl) 4)
-                            (fourth type-decl))))
+                                   (listp type-decl)
+                                   (= (length type-decl) 4)
+                                   (fourth type-decl))))
         (if image-dimensions
             (progn
-              (print 'here)
               (case (length image-dimensions)
                 (2 `(aref ,image-var ,y ,x))
                 (3 `(values ,@(loop for i below (third image-dimensions)
