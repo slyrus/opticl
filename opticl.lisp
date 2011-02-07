@@ -373,3 +373,27 @@
                         (aref ,image-var ,y ,x 1)
                         (aref ,image-var ,y ,x 2)
                         (aref ,image-var ,y ,x 3)))))))))))
+
+
+(defun constrain (val min max)
+  (let ((val (if (< val min) min val)))
+    (if (> val max)
+        max
+        val)))
+
+(defmacro with-image-bounds ((ymax-var xmax-var &optional (channels (gensym))) img &body body)
+  `(let ((,ymax-var (1- (array-dimension ,img 0)))
+         (,xmax-var (1- (array-dimension ,img 1)))
+         (,channels (when (= (array-rank ,img) 3)
+                      (array-dimension ,img 2))))
+     (declare (ignorable ,channels))
+     ,@body))
+
+
+(defun pixel-in-bounds (img y x)
+  (with-image-bounds (ymax xmax)
+      img
+    (and (>= y 0)
+         (< y ymax)
+         (>= x 0)
+         (< x xmax))))
