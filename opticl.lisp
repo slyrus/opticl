@@ -245,41 +245,103 @@
   (frob-rgba-image 8)
   (frob-rgba-image 16))
 
-
-(define-setf-expander pixel (image-var y x &environment env)
+(defun get-image-dimensions (image-var env)
   (multiple-value-bind (binding-type localp declarations)
       (cltl2:variable-information image-var env)
     (declare (ignore binding-type localp))
     (let ((type-decl (find 'type declarations :key #'car)))
-      (let ((image-dimensions (and type-decl
-                                   (listp type-decl)
-                                   (= (length type-decl) 4)
-                                   (fourth type-decl))))
-        (if image-dimensions
-            (let ((arity (or (and (= (length image-dimensions) 3)
-                                  (third image-dimensions))
-                             1))
-                  (temp-y (gensym))
-                  (temp-x (gensym)))
-              (if (= arity 1)
-                  (let ((store (gensym)))
-                    (values `(,temp-y ,temp-x)
-                            `(,y ,x)
-                            `(,store)
-                            `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
-                            `(aref ,image-var ,temp-y ,temp-x)))
-                  (let ((stores (map-into (make-list arity) #'gensym)))
-                    (values `(,temp-y ,temp-x)
-                            `(,y ,x)
-                            stores
-                            `(progn (setf ,@(loop for i from 0
-                                               for store in stores
-                                               collect `(aref ,image-var ,temp-y ,temp-x ,i)
-                                               collect store))
-                                    (values ,@stores))
-                            `(values ,@(loop for i from 0
-                                          for store in stores
-                                          collect `(aref ,image-var ,temp-y ,temp-x ,i))))))))))))
+      (and type-decl
+           (listp type-decl)
+           (= (length type-decl) 4)
+           (fourth type-decl)))))
+
+(defconstant +max-image-channels+ 4)
+
+(define-setf-expander pixel (image-var y x &environment env)
+  (let ((image-dimensions (get-image-dimensions image-var env)))
+    (if image-dimensions
+        (let ((arity (or (and (= (length image-dimensions) 3)
+                              (third image-dimensions))
+                         1))
+              (temp-y (gensym))
+              (temp-x (gensym)))
+          (if (= arity 1)
+              (let ((store (gensym)))
+                (values `(,temp-y ,temp-x)
+                        `(,y ,x)
+                        `(,store)
+                        `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
+                        `(aref ,image-var ,temp-y ,temp-x)))
+              (let ((stores (map-into (make-list arity) #'gensym)))
+                (values `(,temp-y ,temp-x)
+                        `(,y ,x)
+                        stores
+                        `(progn (setf ,@(loop for i from 0
+                                           for store in stores
+                                           collect `(aref ,image-var ,temp-y ,temp-x ,i)
+                                           collect store))
+                                (values ,@stores))
+                        `(values ,@(loop for i from 0
+                                      for store in stores
+                                      collect `(aref ,image-var ,temp-y ,temp-x ,i)))))))
+        (let ((syms (map-into (make-list +max-image-channels+) #'gensym)))
+          (let ((temp-y (gensym))
+                (temp-x (gensym)))
+            (values `(,temp-y ,temp-x)
+                    `(,y ,x)
+                    syms
+                    `(case (array-rank ,image-var)
+                       (3 (let ((d (array-dimension ,image-var 2)))
+                            (case d
+                              (1
+                               (values
+                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))))
+                              (2
+                               (values
+                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))
+                                (setf (aref ,image-var ,temp-y ,temp-x 1) ,(elt syms 1))))
+                              (3
+                               (values
+                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))
+                                (setf (aref ,image-var ,temp-y ,temp-x 1) ,(elt syms 1))
+                                (setf (aref ,image-var ,temp-y ,temp-x 2) ,(elt syms 2))))
+                              (4
+                               (values
+                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))
+                                (setf (aref ,image-var ,temp-y ,temp-x 1) ,(elt syms 1))
+                                (setf (aref ,image-var ,temp-y ,temp-x 2) ,(elt syms 2))
+                                (setf (aref ,image-var ,temp-y ,temp-x 3) ,(elt syms 3))))
+                              (t (loop for i below d
+                                    collect (setf (aref ,image-var ,temp-y ,temp-x i) (elt (list ,@syms) i)))))))
+                       (2 (setf (aref ,image-var ,temp-y ,temp-x) ,(elt syms 0))))
+                    `(case (array-rank ,image-var)
+                       (3
+                        (let ((d (array-dimension ,image-var 2)))
+                          (case d
+                            (1
+                             (values
+                              (aref ,image-var ,temp-y ,temp-x 0)))
+                            (2
+                             (values
+                              (aref ,image-var ,temp-y ,temp-x 0)
+                              (aref ,image-var ,temp-y ,temp-x 1)))
+                            (3
+                             (values
+                              (aref ,image-var ,temp-y ,temp-x 0)
+                              (aref ,image-var ,temp-y ,temp-x 1)
+                              (aref ,image-var ,temp-y ,temp-x 2)))
+                            (4
+                             (values
+                              (aref ,image-var ,temp-y ,temp-x 0)
+                              (aref ,image-var ,temp-y ,temp-x 1)
+                              (aref ,image-var ,temp-y ,temp-x 2)
+                              (aref ,image-var ,temp-y ,temp-x 3)))
+                            (t (values-list
+                                (loop for i below d
+                                   collect (aref ,image-var ,temp-y ,temp-x i)))))))
+                       (2 (aref ,image-var ,temp-y ,temp-x)))))))))
+
+
 
 (defmacro pixel (image-var y x &environment env)
   (multiple-value-bind (binding-type localp declarations)
