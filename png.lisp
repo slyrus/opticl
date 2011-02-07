@@ -102,12 +102,12 @@
      (with-image-bounds (ymax xmax)
          image
        (let ((displaced
-              (make-array (* ymax xmax 3)
+              (make-array (* ymax xmax 4)
                           :element-type '(unsigned-byte 8)
                           :initial-contents
                           (make-array (* ymax xmax 4)
                                       :element-type '(unsigned-byte 8)
-                                      :displaced-to (transpose-image image)))))
+                                      :displaced-to image))))
          (zpng:write-png-stream 
           (make-instance 'zpng:png
                          :color-type :truecolor-alpha
@@ -125,7 +125,7 @@
                           :initial-contents
                           (make-array (* ymax xmax)
                                       :element-type '(unsigned-byte 8)
-                                      :displaced-to (transpose-image image)))))
+                                      :displaced-to image))))
          (zpng:write-png-stream 
           (make-instance 'zpng:png
                          :color-type :grayscale
