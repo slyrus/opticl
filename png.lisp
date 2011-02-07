@@ -15,11 +15,12 @@
       (cond ((and (eq colour-type :truecolor)
                   (eql bit-depth 8))
              (let ((img (make-8-bit-rgb-image height width)))
+               (declare (type 8-bit-rgb-image img))
                (loop for i below height
                   do 
                     (loop for j below width
                        do 
-                         (setf (pixel/8-bit-rgb-image img i j)
+                         (setf (pixel img i j)
                                (values (aref image-data j i 0)
                                        (aref image-data j i 1)
                                        (aref image-data j i 2)))))
@@ -28,11 +29,12 @@
             ((and (eq colour-type :truecolor-alpha)
                   (eql bit-depth 8))
              (let ((img (make-8-bit-rgba-image height width)))
+               (declare (type 8-bit-rgb-image img))
                (loop for i below height
                   do 
                     (loop for j below width
                        do 
-                         (setf (pixel/8-bit-rgba-image img i j)
+                         (setf (pixel img i j)
                                (values (aref image-data j i 0)
                                        (aref image-data j i 1)
                                        (aref image-data j i 2)
@@ -45,11 +47,12 @@
             ((and (eq colour-type :indexed-colour)
                   (eql bit-depth 8))
              (let ((img (make-8-bit-rgb-image height width)))
+               (declare (type 8-bit-rgb-image img))
                (loop for i below height
                   do 
                     (loop for j below width
                        do 
-                         (setf (pixel/8-bit-rgb-image img i j)
+                         (setf (pixel img i j)
                                (values (aref image-data j i 0)
                                        (aref image-data j i 1)
                                        (aref image-data j i 2)))))
@@ -58,11 +61,12 @@
             ((and (eq colour-type :greyscale)
                   (eql bit-depth 8))
              (let ((img (make-8-bit-gray-image height width)))
+               (declare (type 8-bit-rgb-image img))
                (loop for i below height
                   do 
                     (loop for j below width
                        do 
-                         (setf (pixel/8-bit-gray-image img i j)
+                         (setf (pixel img i j)
                                (aref image-data j i))))
                img))
 

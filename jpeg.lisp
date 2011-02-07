@@ -17,12 +17,13 @@
     (cond
       ((= ncomp +ncomp-rgb+)
        (let ((image (make-8-bit-rgb-image height width)))
+         (declare (type 8-bit-rgb-image image))
          (loop for i below height
             do 
               (loop for j below width
                  do 
                    (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
-                     (setf (pixel/8-bit-rgb-image image i j)
+                     (setf (pixel image i j)
                            (values (aref buffer (+ 2 pixoff))
                                    (aref buffer (+ 1 pixoff))
                                    (aref buffer  pixoff))))))
@@ -30,11 +31,12 @@
       ((= ncomp 1)
        (let ((image (make-8-bit-gray-image height width))
              (pixoff 0))
+         (declare (type 8-bit-gray-image image))
          (loop for i below height
             do 
               (loop for j below width
                  do 
-                   (setf (pixel/8-bit-gray-image image i j)
+                   (setf (pixel image i j)
                          (aref buffer pixoff))
                    (incf pixoff)))
          image)))))
@@ -55,7 +57,7 @@
               (loop for j below width
                do 
                  (setf (aref jpeg-array pixoff) 
-                       (pixel/8-bit-gray-image image i j))
+                       (pixel image i j))
                  (incf pixoff)))
          (jpeg::encode-image-stream stream jpeg-array +ncomp-gray+ height width
                                     :q-tabs *gray-q-tabs*))))
@@ -72,7 +74,7 @@
                (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
                  (multiple-value-bind
                        (r g b)
-                     (pixel/8-bit-rgb-image image i j)
+                     (pixel image i j)
                    (setf (aref jpeg-array pixoff) b
                          (aref jpeg-array (incf pixoff)) g
                          (aref jpeg-array (incf pixoff)) r)))))
@@ -94,7 +96,7 @@
                    (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
                      (multiple-value-bind
                            (r g b a)
-                         (pixel/8-bit-rgba-image image i j)
+                         (pixel image i j)
                        (declare (ignore a))
                        (setf (aref jpeg-array pixoff) b
                              (aref jpeg-array (incf pixoff)) g
