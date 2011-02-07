@@ -1,70 +1,13 @@
 
 (in-package #:opticl)
 
-;;; We have two approaches for twiddling the bits in an opticl
-;;; image. We can either use the slow generic functions, or we can use
-;;; the fast pixel/<n>-bit-<type>-image functions. We explore a bit of
-;;; both of those approaches here.
-;;;
-;;; for fill image, we use some macro hackery to generate fast
-;;; functions for each of the image types, and then define a helper
-;;; function to dispatch to the right fast function, based on the type
-;;; of the image (vector) passed in. Note that we can't do CLOS
-;;; dispatch on the particular specialized array type, or this would
-;;; be a lot cleaner...
-;;;
-
-
-(macrolet
-    ((frob-fill-image (type bits channel-names)
-       (let ((function-name
-              (intern (string-upcase (format nil "fill-image/~A" (symbol-name type)))))
-             (pixel-function
-              (intern (string-upcase (format nil "pixel/~A" (symbol-name type))))))
-         `(defun ,function-name (img ,@channel-names)
-            (declare (type (unsigned-byte ,bits) ,@channel-names))
-            (destructuring-bind (height width &optional channels)
-                (array-dimensions img)
-              (declare (ignore channels))
-              (loop for i below height
-                 do (loop for j below width 
-                       do 
-                         (setf (,pixel-function img i j)
-                               (values ,@channel-names)))))))))
-  (frob-fill-image 1-bit-gray-image 1 (k))
-  (frob-fill-image 2-bit-gray-image 2 (k))
-  (frob-fill-image 4-bit-gray-image 4 (k))
-  (frob-fill-image 8-bit-gray-image 8 (k))
-  (frob-fill-image 16-bit-gray-image 16 (k))
-  
-  (frob-fill-image 4-bit-rgb-image 4 (r g b))
-  (frob-fill-image 8-bit-rgb-image 8 (r g b))
-  (frob-fill-image 16-bit-rgb-image 16 (r g b))
-  
-  (frob-fill-image 4-bit-rgba-image 4 (r g b a))
-  (frob-fill-image 8-bit-rgba-image 8 (r g b a))
-  (frob-fill-image 16-bit-rgba-image 16 (r g b a)))
-
 (defun fill-image (img &rest vals)
-  (etypecase img
-    (1-bit-gray-image (apply #'fill-image/1-bit-gray-image img vals))
-    (2-bit-gray-image (apply #'fill-image/2-bit-gray-image img vals))
-    (4-bit-gray-image (apply #'fill-image/4-bit-gray-image img vals))
-    (8-bit-gray-image (apply #'fill-image/8-bit-gray-image img vals))
-    (16-bit-gray-image (apply #'fill-image/16-bit-gray-image img vals))
-    
-    (4-bit-rgb-image (apply #'fill-image/4-bit-rgb-image img vals))
-    (8-bit-rgb-image (apply #'fill-image/8-bit-rgb-image img vals))
-    (16-bit-rgb-image (apply #'fill-image/16-bit-rgb-image img vals))
-
-    (4-bit-rgba-image (apply #'fill-image/4-bit-rgba-image img vals))
-    (8-bit-rgba-image (apply #'fill-image/8-bit-rgba-image img vals))
-    (16-bit-rgba-image (apply #'fill-image/16-bit-rgba-image img vals))))
-
-;;;
-;;; For the remaining functions, we take the slow approach. These
-;;; should get replaced with fast paths, as exmplified by fill-image
-;;; above.
+  (with-image-bounds (height width)
+      img
+    (loop for i below height
+       do (loop for j below width 
+             do 
+               (setf (pixel img i j) (values-list vals))))))
 
 (defun horizontal-line (img y x0 x1 &rest vals)
   (declare (type fixnum y x0 x1))

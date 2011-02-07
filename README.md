@@ -31,31 +31,37 @@ For a quick example, let's load an image (of a truck) from a JPEG
 file, invert the red channel and save the image back out to another
 jpeg file:
 
+
     (defpackage #:impatient (:use #:cl #:opticl))
     (in-package #:impatient)
 
     (let ((img (read-jpeg-file "test/images/truck.jpeg")))
-      (destructuring-bind (height width channels)
-          (array-dimensions img)
-        (declare (ignore channels))
-        (loop for i below height
-           do (loop for j below width 
-                 do 
-                 (multiple-value-bind (r g b)
-                     (pixel/8-bit-rgb-image img i j)
-                   (declare (type (unsigned-byte 8) r g b))
-                   (setf (pixel/8-bit-rgb-image img i j)
-                         (values (- 255 r) g b))))))
+      (typecase img
+        (8-bit-rgb-image
+         (locally
+             (declare (type 8-bit-rgb-image img))
+           (with-image-bounds (height width)
+               img
+             (time
+              (loop for i below height
+                 do (loop for j below width 
+                       do 
+                       (multiple-value-bind (r g b)
+                           (pixel img i j)
+                         (declare (type (unsigned-byte 8) r g b))
+                         (setf (pixel img i j)
+                               (values (- 255 r) g b))))))))))
       (write-jpeg-file "test/output/inv-r-truck.jpeg" img))
+
 
 If we time the `(loop for i below...)` using the time macro, with SBCL we see
 the following:
 
     Evaluation took:
-      0.009 seconds of real time
-      0.009671 seconds of total run time (0.009663 user, 0.000008 system)
-      111.11% CPU
-      20,533,416 processor cycles
+      0.006 seconds of real time
+      0.005708 seconds of total run time (0.005538 user, 0.000170 system)
+      100.00% CPU
+      11,694,688 processor cycles
       0 bytes consed
 
 Which shows that we're able to perform simple arithmetic operations on
