@@ -72,6 +72,7 @@
   (frob-rgba-image 8)
   (frob-rgba-image 16))
 
+
 (defun get-image-dimensions (image-var env)
   (multiple-value-bind (binding-type localp declarations)
       (cltl2:variable-information image-var env)
@@ -171,35 +172,28 @@
 
 
 (defmacro pixel (image-var y x &environment env)
-  (multiple-value-bind (binding-type localp declarations)
-      (cltl2:variable-information image-var env)
-    (declare (ignore binding-type localp))
-    (let ((type-decl (find 'type declarations :key #'car)))
-      (let ((image-dimensions (and type-decl
-                                   (listp type-decl)
-                                   (= (length type-decl) 4)
-                                   (fourth type-decl))))
-        (if image-dimensions
-            (progn
-              (case (length image-dimensions)
-                (2 `(aref ,image-var ,y ,x))
-                (3 `(values ,@(loop for i below (third image-dimensions)
-                                 collect `(aref ,image-var ,y ,x ,i))))))
-            `(case (array-rank ,image-var)
-               (2 (aref ,image-var ,y ,x))
-               (3 (case (array-dimension ,image-var 2)
-                    (2 (values
-                        (aref ,image-var ,y ,x 0)
-                        (aref ,image-var ,y ,x 1)))
-                    (3 (values
-                        (aref ,image-var ,y ,x 0)
-                        (aref ,image-var ,y ,x 1)
-                        (aref ,image-var ,y ,x 2)))
-                    (4 (values
-                        (aref ,image-var ,y ,x 0)
-                        (aref ,image-var ,y ,x 1)
-                        (aref ,image-var ,y ,x 2)
-                        (aref ,image-var ,y ,x 3)))))))))))
+  (let ((image-dimensions (get-image-dimensions image-var env)))
+    (if image-dimensions
+        (progn
+          (case (length image-dimensions)
+            (2 `(aref ,image-var ,y ,x))
+            (3 `(values ,@(loop for i below (third image-dimensions)
+                             collect `(aref ,image-var ,y ,x ,i))))))
+        `(case (array-rank ,image-var)
+           (2 (aref ,image-var ,y ,x))
+           (3 (case (array-dimension ,image-var 2)
+                (2 (values
+                    (aref ,image-var ,y ,x 0)
+                    (aref ,image-var ,y ,x 1)))
+                (3 (values
+                    (aref ,image-var ,y ,x 0)
+                    (aref ,image-var ,y ,x 1)
+                    (aref ,image-var ,y ,x 2)))
+                (4 (values
+                    (aref ,image-var ,y ,x 0)
+                    (aref ,image-var ,y ,x 1)
+                    (aref ,image-var ,y ,x 2)
+                    (aref ,image-var ,y ,x 3)))))))))
 
 
 (defun constrain (val min max)
