@@ -89,12 +89,12 @@
                           :initial-contents
                           (make-array (* ymax xmax 3)
                                       :element-type '(unsigned-byte 8)
-                                      :displaced-to (transpose-image image)))))
+                                      :displaced-to image))))
          (zpng:write-png-stream 
           (make-instance 'zpng:png
                          :color-type :truecolor
-                         :height xmax
-                         :width ymax
+                         :height ymax
+                         :width xmax
                          :bpp 8
                          :image-data displaced)
           stream))))
