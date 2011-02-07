@@ -179,10 +179,46 @@ access the pixel and color-value data efficiently and without
 allocating additional memory on the heap (consing).
 
 The trade-off in this approach is that doing so requires that we know
-what kind of image with which are dealing. If we have an 8-bit RGB
-image, we can use the `8-bit-rgb-pixel` and `(setf 8-bit-rgb-pixel)`
-functions to read and write, respectively, pixel data. Other reader
-and writer functions are provided for the other matrix types.
+the kind of image with which are dealing, at least if we want to do so
+efficiently. Fortunately, CL's type system gets us most of the way
+there. I say most of the way there, as there is one limitation in
+standard, which we will see in a moment. In the example above you'll notice a line which reads:
+
+    (declare (type 8-bit-rgb-image img))
+
+This declaration tells the compiler that the variable image is of the
+type 8-bit-rgb-image and the compiler is able to optimize the code
+effectively. The problem is that this is great for things inside the
+compiler, the compiler sees the declaration and can act accordingly,
+but only the compiler can do so. In CL, these declarations are opaque
+to the user/library programmer. This limitation wasn't lost on the
+early CL implementors, but facilities for inspecting declarations
+didn't make it into the CL spec, but rather, eventually, found there
+way into the less-widely implemented Common Lisp the Lanuage, 2nd
+Edition (CLtL2) book by Guy Steele. SBCL has a contrib library called
+sb-cltl2 that provides the key facility we need,
+`cltl2:variable-information`. We can use that function in code called
+from our define-setf-expander, as shown below in get-image-dimensions,
+to see if there is a declaration in effect:
+
+    (defun get-image-dimensions (image-var env)
+      (multiple-value-bind (binding-type localp declarations)
+          (cltl2:variable-information image-var env)
+        (declare (ignore binding-type localp))
+        (let ((type-decl (find 'type declarations :key #'car)))
+          (and type-decl
+               (listp type-decl)
+               (= (length type-decl) 4)
+               (fourth type-decl)))))
+
+This allows us to glean information from the information provided
+to the compiler that enables opticl to efficiently operate on its
+images, when given appropriate declarations, and still work,
+albeit less efficiently, in the absence of the appropriate type
+declarations.
+
+(Note: I still need to look into the availability of the CLtL2
+functionality on other CL implementations.)
 
 It is the representation of image data as native CL arrays and the
 efficient performance of these reader and writer functions that offer
