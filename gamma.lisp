@@ -20,8 +20,6 @@ appropriate value for each pixel."
                        (t val))))))
     curve))
 
-(defparameter *gamma-045* (make-gamma-curve-lookup-table 0.45d0))
-
 (defmethod apply-gamma-curve-lookup-table (image gamma-curve)
   "applys a gamma curve (usually created with
   make-gamma-curve-lookup-table to perform a gamma curve
