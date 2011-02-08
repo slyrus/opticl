@@ -5,7 +5,7 @@
   :licence "BSD"
   :serial t
   :default-component-class cl-source-file
-  :depends-on (retrospectiff zpng png-read cl-jpeg)
+  :depends-on (retrospectiff zpng png-read #-abcl cl-jpeg)
   :components
   ((:static-file "README.md")
    (:static-file "COPYRIGHT")
@@ -14,5 +14,6 @@
    (:file "imageops")
    (:file "shapes")
    (:file "tiff")
-   (:file "jpeg")
+   #-abcl (:file "jpeg")
+   #+abcl (:file "opticl-abcl")
    (:file "png")))

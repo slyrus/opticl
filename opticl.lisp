@@ -74,8 +74,9 @@
 
 
 (defun get-image-dimensions (image-var env)
+  #+(or sbcl ccl)
   (multiple-value-bind (binding-type localp declarations)
-      (cltl2:variable-information image-var env)
+      (opticl-cltl2:variable-information image-var env)
     (declare (ignore binding-type localp))
     (let ((type-decl (find 'type declarations :key #'car)))
       (and type-decl
@@ -109,8 +110,7 @@
                                            collect `(aref ,image-var ,temp-y ,temp-x ,i)
                                            collect store))
                                 (values ,@stores))
-                        `(values ,@(loop for i from 0
-                                      for store in stores
+                        `(values ,@(loop for i from 0 below (length stores)
                                       collect `(aref ,image-var ,temp-y ,temp-x ,i)))))))
         (let ((syms (map-into (make-list +max-image-channels+) #'gensym)))
           (let ((temp-y (gensym))

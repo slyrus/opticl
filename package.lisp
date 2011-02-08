@@ -77,5 +77,8 @@
 #+sbcl
 (require :sb-cltl2)
 
-#+sbcl
-(rename-package 'sb-cltl2 'sb-cltl2 '(cltl2))
+(defpackage :opticl-cltl2
+  #+sbcl (:import-from :sb-cltl2 :variable-information)
+  #+ccl (:import-from :ccl :variable-information)
+  #+(or sbcl ccl) (:export :variable-information))
+
