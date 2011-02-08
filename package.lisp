@@ -58,6 +58,11 @@
    #:draw-line
    #:draw-triangle
 
+   ;; Various Image Operations
+   #:make-gamma-curve-lookup-table
+   #:apply-gamma-curve-lookup-table
+   #:apply-gamma
+
    ;; I/O
    #:read-jpeg-file
    #:read-jpeg-stream

@@ -12,6 +12,7 @@
    (:file "package")
    (:file "opticl")
    (:file "imageops")
+   (:file "gamma")
    (:file "shapes")
    (:file "tiff")
    #-abcl (:file "jpeg")
