@@ -1,22 +1,6 @@
 
 (in-package :opticl)
 
-(defun matrix-multiply (a b)
-  (destructuring-bind (a-rows a-columns)
-      (array-dimensions a)
-    (destructuring-bind (b-rows b-columns)
-        (array-dimensions b)
-      (if (= a-columns b-rows)
-          (let* ((c (make-array (list a-rows b-columns)
-                                :element-type (array-element-type a))))
-            (dotimes (i a-rows)
-              (dotimes (j b-columns)
-                (let ((v 0))
-                  (dotimes (r a-columns)
-                    (incf v (* (aref a i r) (aref b r j))))
-                  (setf (aref c i j) v))))
-            c)))))
-
 (deftype affine-transformation ()
   `(simple-array single-float (3 3)))
 
@@ -48,14 +32,13 @@
     (setf (aref xfrm 2 2) 1d0)
     xfrm))
 
-
 (defun matrix-multiply (matrix-a matrix-b)
   (destructuring-bind (matrix-a-rows matrix-a-columns)
       (array-dimensions matrix-a)
     (destructuring-bind (matrix-b-rows matrix-b-columns)
         (array-dimensions matrix-b)
       (if (= matrix-a-columns matrix-b-rows)
-          (let* ((c (make-array (list a-rows matrix-b-columns)
+          (let* ((c (make-array (list matrix-a-rows matrix-b-columns)
                                 :element-type (array-element-type matrix-a))))
             (dotimes (i matrix-a-rows)
               (dotimes (j matrix-b-columns)
@@ -65,30 +48,27 @@
                   (setf (aref c i j) v))))
             c)))))
 
-(defun post-multiply-by-row-vector (matrix-a row-vector)
+(defun post-multiply-by-column-vector (matrix-a column-vector)
   (destructuring-bind (matrix-a-rows matrix-a-columns)
       (array-dimensions matrix-a)
-    (let ((len (length row-vector)))
-      (let* ((c (make-array (list matrix-a-rows len)
+    (when (= (length column-vector) matrix-a-columns)
+      (let* ((c (make-array matrix-a-rows
                             :element-type (array-element-type matrix-a))))
         (dotimes (i matrix-a-rows)
-          (dotimes (j len)
-            (let ((v 0))
-              (dotimes (r matrix-a-columns)
-                (incf v (* (aref matrix-a i r) (aref row-vector j))))
-              (setf (aref c i j) v))))
+          (let ((v 0))
+            (dotimes (r matrix-a-columns)
+              (incf v (* (aref matrix-a i r) (aref column-vector r))))
+            (setf (aref c i) v)))
         c))))
 
-
-(defun transform-coord
+(defun transform-coord (y x xfrm)
   "applies the affine transformation xfrm to the point {x,y} and
   returns the position of the point after applying the transformation"
-  (let ((coord1 (make-array (list 3 1)
+  (let ((coord1 (make-array 3
                             :element-type 'double-float
-                            :initial-contents `((,(coerce y 'double-float))
-                                                (,(coerce x 'double-float))
-                                                (1d0)))))
-    
-    (let ((coord2 (matrix-multiply xfrm coord1)))
-      (values (aref coord2 0 0) (aref coord2 1 0)))))
+                            :initial-element 1d0)))
+    (setf (aref coord1 0) (coerce y 'double-float)
+          (aref coord1 1) (coerce x 'double-float))
+    (let ((coord2 (post-multiply-by-column-vector xfrm coord1)))
+      (values (aref coord2 0) (aref coord2 1)))))
 
