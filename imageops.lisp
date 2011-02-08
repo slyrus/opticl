@@ -25,3 +25,12 @@
                do (setf (pixel zimg i j) (pixel img i j))))
       zimg)))
 
+(defun map-array (fn array)
+  (let* ((len (reduce #'* (array-dimensions array)))
+         (elt-type (array-element-type array))
+         (disp (make-array len
+                           :element-type elt-type
+                           :displaced-to array)))
+    (make-array (array-dimensions array)
+                :element-type elt-type
+                :displaced-to (map `(vector ,elt-type) fn disp))))
