@@ -74,10 +74,11 @@
                                      (initial-contents nil initial-contents-p))
                 (apply #'make-array (list height width) 
                        :element-type ,element-type
-                       (when initial-element-p
-                         `(:initial-element ,initial-element))
-                       (when initial-contents-p
-                         `(:initial-contents ,initial-contents))))))))
+                       (append
+                        (when initial-element-p
+                          `(:initial-element ,initial-element))
+                        (when initial-contents-p
+                          `(:initial-contents ,initial-contents)))))))))
      (frobber ()
        `(progn
           ,@(loop for (name image-type element-type) in *image-types*
