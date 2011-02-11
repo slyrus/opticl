@@ -38,77 +38,52 @@
            ,@body))))
 
 
-;;; Grayscale (Single Channel?) Image Types
-(deftype 1-bit-gray-image () '(integer-image 1 1))
- (defun make-1-bit-gray-image (height width)
-   (make-array (list height width) :element-type '(unsigned-byte 1)))
+(defparameter *image-types*
+  '((1-bit-gray-image '(integer-image 1 1) '(unsigned-byte 1))
+    (2-bit-gray-image '(integer-image 1 2) '(unsigned-byte 2))
+    (4-bit-gray-image '(integer-image 1 4) '(unsigned-byte 4))
+    (8-bit-gray-image '(integer-image 1 8) '(unsigned-byte 8))
+    (16-bit-gray-image '(integer-image 1 16) '(unsigned-byte 16))
+    (32-bit-gray-image '(integer-image 1 32) '(unsigned-byte 32))
+    (single-float-gray-image '(single-float-image 1) 'single-float)
+    (double-float-gray-image '(double-float-image 1) 'double-float)
 
-(deftype 2-bit-gray-image () '(integer-image 1 2))
- (defun make-2-bit-gray-image (height width)
-   (make-array (list height width) :element-type '(unsigned-byte 2)))
+    (4-bit-rgb-image '(integer-image 3 4) '(unsigned-byte 4))
+    (8-bit-rgb-image '(integer-image 3 8) '(unsigned-byte 8))
+    (16-bit-rgb-image '(integer-image 3 16) '(unsigned-byte 16))
+    (single-float-rgb-image '(single-float-image 3) 'single-float)
+    (double-float-rgb-image '(double-float-image 3) 'double-float)
 
-(deftype 4-bit-gray-image () '(integer-image 1 4))
- (defun make-4-bit-gray-image (height width)
-   (make-array (list height width) :element-type '(unsigned-byte 4)))
+    (4-bit-rgba-image '(integer-image 4 4) '(unsigned-byte 4))
+    (8-bit-rgba-image '(integer-image 4 8) '(unsigned-byte 8))
+    (16-bit-rgba-image '(integer-image 4 16) '(unsigned-byte 16))
+    (single-float-rgba-image '(single-float-image 4) 'single-float)
+    (double-float-rgba-image '(double-float-image 4) 'double-float)
+    ))
 
-(deftype 8-bit-gray-image () '(integer-image 1 8))
-(defun make-8-bit-gray-image (height width)
-  (make-array (list height width) :element-type '(unsigned-byte 8)))
-
-(deftype 16-bit-gray-image () '(integer-image 1 16))
-(defun make-16-bit-gray-image (height width)
-  (make-array (list height width) :element-type '(unsigned-byte 16)))
-
-(deftype single-float-gray-image () '(single-float-image 1))
-(defun make-single-float-gray-image (height width)
-  (make-array (list height width) :element-type 'single-float))
-
-(deftype double-float-gray-image () '(double-float-image 1))
-(defun make-double-float-gray-image (height width)
-  (make-array (list height width) :element-type 'double-float))
-
-;;; RGB Image Types
- (deftype 4-bit-rgb-image () '(integer-image 3 4))
- (defun make-4-bit-rgb-image (height width)
-   (make-array (list height width 3) :element-type '(unsigned-byte 4)))
-
- (deftype 8-bit-rgb-image () '(integer-image 3 8))
- (defun make-8-bit-rgb-image (height width)
-   (make-array (list height width 3) :element-type '(unsigned-byte 8)))
-
-(deftype 16-bit-rgb-image () '(integer-image 3 16))
- (defun make-16-bit-rgb-image (height width)
-   (make-array (list height width 3) :element-type '(unsigned-byte 16)))
-
-(deftype single-float-rgb-image () '(single-float-image 3))
-(defun make-single-float-rgb-image (height width)
-  (make-array (list height width) :element-type 'single-float))
-
-(deftype double-float-rgb-image () '(double-float-image 3))
-(defun make-double-float-rgb-image (height width)
-  (make-array (list height width) :element-type 'double-float))
-
-;;; RGBA Image Types
-(deftype 4-bit-rgba-image () '(integer-image 4 4))
-(defun make-4-bit-rgba-image (height width)
-  (make-array (list height width 4) :element-type '(unsigned-byte 4)))
-
-(deftype 8-bit-rgba-image () '(integer-image 4 8))
-(defun make-8-bit-rgba-image (height width)
-  (make-array (list height width 4) :element-type '(unsigned-byte 8)))
-
-(deftype 16-bit-rgba-image () '(integer-image 4 16))
-(defun make-16-bit-rgba-image (height width)
-  (make-array (list height width 4) :element-type '(unsigned-byte 16)))
-
-(deftype single-float-rgba-image () '(single-float-image 4))
-(defun make-single-float-rgba-image (height width)
-  (make-array (list height width) :element-type 'single-float))
-
-(deftype double-float-rgba-image () '(double-float-image 4))
-(defun make-double-float-rgba-image (height width)
-  (make-array (list height width) :element-type 'double-float))
-
+(macrolet
+    ((frob-image (name image-type element-type)
+       (let ((type
+              (read-from-string (format nil "~A" name))))
+         (let ((ctor-function
+                (read-from-string (format nil "make-~A" type))))
+           `(progn
+              (deftype ,type () ,image-type)
+              (defun ,ctor-function (height width &key
+                                     (initial-element nil initial-element-p)
+                                     (initial-contents nil initial-contents-p))
+                (apply #'make-array (list height width) 
+                       :element-type ,element-type
+                       (when initial-element-p
+                         `(:initial-element ,initial-element))
+                       (when initial-contents-p
+                         `(:initial-contents ,initial-contents))))))))
+     (frobber ()
+       `(progn
+          ,@(loop for (name image-type element-type) in *image-types*
+               collect 
+               `(frob-image ,name ,image-type ,element-type)))))
+  (frobber))
 
 
 (defun get-image-dimensions (image-var env)
