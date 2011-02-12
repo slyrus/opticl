@@ -27,6 +27,10 @@
    #:with-image-bounds
    #:pixel-in-bounds
 
+   #:resize-image
+   #:transform-image
+   #:make-affine-transformation
+
    ;; Drawing primitives
    #:fill-image
    #:draw-circle

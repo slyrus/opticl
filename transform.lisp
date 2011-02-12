@@ -225,11 +225,11 @@
       img
     (let ((yscale (/ y oldy))
           (xscale (/ x oldx)))
-      (let ((xfrm (opticl::make-affine-transformation :x-scale xscale :y-scale yscale))
+      (let ((xfrm (make-affine-transformation :x-scale xscale :y-scale yscale))
             (new-image (make-array (append (list y x)
                                            (when channels (list channels)))
                                    :element-type (array-element-type img))))
-        (let ((n (opticl::transform-image
+        (let ((n (transform-image
                   img new-image xfrm
                   :u (split-around-zero oldy)
                   :v (split-around-zero oldx)
