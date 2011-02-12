@@ -18,23 +18,6 @@
         (new-matrix (make-8-bit-gray-image 4 4)))
     (opticl::transform-image *q* new-matrix xfrm :u '(-2d0 . 2d0) :v '(-2d0 . 2d0) :x '(-2d0 . 2d0) :y '(-2d0 . 2d0))))
 
-(defun split-around-zero (k &key integer)
-  (let ((khalf (/ k 2.0d0)))
-    (if integer
-        (cons (floor (- khalf)) (ceiling khalf))
-        (cons (+ (- khalf) 0.5d0) (+ khalf 0.5d0)))))
+(write-png-file "test/output/resized-circles2.png"
+                (opticl::resize-image *circles* 960 1280))
 
-(defun resize-image (img y x)
-  (with-image-bounds (oldy oldx)
-      img
-    (let ((yscale (/ y oldy))
-          (xscale (/ x oldx)))
-      (let ((xfrm (opticl::make-affine-transformation :x-scale xscale :y-scale yscale))
-            (new-image (make-8-bit-gray-image y x)))
-        (let ((n (opticl::transform-image
-                  img new-image xfrm
-                  :u (split-around-zero oldy)
-                  :v (split-around-zero oldx)
-                  :y (split-around-zero y)
-                  :x (split-around-zero x))))
-          n)))))

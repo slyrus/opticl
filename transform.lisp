@@ -214,3 +214,26 @@
                     (when background-supplied-p (list :background background))
                     (when interpolation-supplied-p (list :interpolation interpolation))))))))))
 
+(defun split-around-zero (k &key integer)
+  (let ((khalf (/ k 2.0d0)))
+    (if integer
+        (cons (floor (- khalf)) (ceiling khalf))
+        (cons (+ (- khalf) 0.5d0) (+ khalf 0.5d0)))))
+
+(defun resize-image (img y x)
+  (with-image-bounds (oldy oldx channels)
+      img
+    (let ((yscale (/ y oldy))
+          (xscale (/ x oldx)))
+      (let ((xfrm (opticl::make-affine-transformation :x-scale xscale :y-scale yscale))
+            (new-image (make-array (append (list y x)
+                                           (when channels (list channels)))
+                                   :element-type (array-element-type img))))
+        (let ((n (opticl::transform-image
+                  img new-image xfrm
+                  :u (split-around-zero oldy)
+                  :v (split-around-zero oldx)
+                  :y (split-around-zero y)
+                  :x (split-around-zero x))))
+          n)))))
+
