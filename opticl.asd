@@ -12,6 +12,8 @@
    (:file "package")
    (:file "opticl")
    (:file "imageops")
+   (:file "invert")
+   (:file "transform")
    (:file "gamma")
    (:file "shapes")
    (:file "tiff")
