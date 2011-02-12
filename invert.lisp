@@ -49,7 +49,7 @@
              (not (zerop (aref a i column))))
          (unless (= i n) i))))) 
 
-(defmethod swap-rows (a k l)
+(defun swap-rows (a k l)
   (let* ((columns (array-dimension a 1)))
     (dotimes (j columns)
       (let ((temp (aref a k j)))
