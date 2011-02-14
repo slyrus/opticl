@@ -90,54 +90,232 @@
     (let ((coord2 (post-multiply-by-column-vector xfrm coord1)))
       (values (aref coord2 0) (aref coord2 1)))))
 
+(defun bilinear-interpolate (g00 g01 g10 g11 a b)
+  (+ g00
+     (* a (- g10 g00))
+     (* b (- g01 g00))
+     (* a b (- (+ g00 g11)
+                 (+ g10 g01)))))
+
+(defmacro quadratic-kernel (s type)
+  (let ((minus-half (coerce -0.5 `,type))
+        (half (coerce 0.5 `,type))
+        (minus-one-point-five  (coerce -1.5 `,type))
+        (one-point-five (coerce 1.5 `,type))
+        (five (coerce 5 `,type))
+        (minus-two (coerce -2 `,type))
+        (two (coerce 2 `,type))
+        (one (coerce 1 `,type))
+        (zero (coerce 0 `,type)))
+    `(cond ((<= ,minus-half ,s ,half)
+            (+ (* ,minus-two (* ,s ,s)) ,one))
+           ((<= ,minus-one-point-five ,s ,one-point-five)
+            (+ (* ,s ,s) (- (/ (* ,five (abs ,s)) ,two)) ,one-point-five))
+           (t ,zero))))
+
+(defun quadratic-kernel-2 (s)
+  (cond ((<= -.5d0 s .5d0)
+         (+ (* -2d0 (* s s) 1d0)))
+        ((<= -1.5d0 s 1.5d0)
+         (+ (* s s) (- (/ (* 5 (abs s)) 2)) 1.5))
+        (t 0d0)))
+
+(defmacro quadratic-interpolate
+    (g00 g01 g02
+     g10 g11 g12 
+     g20 g21 g22 a b
+     &optional (type 'double-float))
+  `(let ((a0 (quadratic-kernel (- -1 ,a) ,type))
+         (a1 (quadratic-kernel (- ,a) ,type))
+         (a2 (quadratic-kernel (- 1 ,a) ,type))
+         (b0 (quadratic-kernel (- -1 ,b) ,type))
+         (b1 (quadratic-kernel (- ,b) ,type))
+         (b2 (quadratic-kernel (- 1 ,b) ,type)))
+     (+ (* a0 (+ (* b0 ,g00)
+                 (* b1 ,g01)
+                 (* b2 ,g02)))
+        (* a1 (+ (* b0 ,g10)
+                 (* b1 ,g11)
+                 (* b2 ,g12)))
+        (* a2 (+ (* b0 ,g20)
+                 (* b1 ,g21)
+                 (* b2 ,g22))))))
+
+(defmacro make-constrain-fn (min max)
+  `(lambda (val)
+     (cond ((<= val ,min) ,min)
+           ((>= val ,max) ,max)
+           (t (round val)))))
+
 (defun %transform-image (matrix-m matrix-n xfrm
                          &key
-                         (interpolation :nearest-neighbor)
+                         (interpolate :nearest-neighbor)
                          background)
-  (declare (optimize (debug 3)))
-  (with-image-bounds (matrix-m-rows matrix-m-columns channels)
-      matrix-m
-    (with-image-bounds (matrix-n-rows matrix-n-columns)
-        matrix-n
-      (let ((background (or background
-                            (loop for i below (or channels 1) collect 0)))
-            (inv-xfrm (invert-matrix xfrm))
-            (coord1 (make-array 3 :element-type 'double-float)))
-        #+nil (print inv-xfrm)
-        (setf (aref coord1 2) 1d0)
-        (dotimes (i matrix-n-rows)
-          (setf (aref coord1 0) (coerce i 'double-float))
-          (dotimes (j matrix-n-columns)
-            (setf (aref coord1 1) (coerce j 'double-float))
+  (let ((fit-function
+         (let ((type (array-element-type matrix-n)))
+           (cond
+             ((equal type '(unsigned-byte 1))
+              (make-constrain-fn 0 1))
+             ((equal type '(unsigned-byte 2))
+              (make-constrain-fn 0 3))
+             ((equal type '(unsigned-byte 4))
+              (make-constrain-fn 0 15))
+             ((equal type '(unsigned-byte 8))
+              (make-constrain-fn 0 255))
+             ((equal type '(unsigned-byte 16))
+              (make-constrain-fn 0 #xffff))
+             ((equal type '(unsigned-byte 32))
+              (make-constrain-fn 0 #xffffffff))
+             (t #'identity)))))
+    (with-image-bounds (matrix-m-rows matrix-m-columns channels)
+        matrix-m
+      (with-image-bounds (matrix-n-rows matrix-n-columns)
+          matrix-n
+        (let ((background (or background
+                              (loop for i below (or channels 1) collect 0)))
+              (inv-xfrm (invert-matrix xfrm))
+              (coord1 (make-array 3 :element-type 'double-float)))
+          #+nil (print inv-xfrm)
+          (setf (aref coord1 2) 1d0)
+          (dotimes (i matrix-n-rows)
+            (setf (aref coord1 0) (coerce i 'double-float))
+            (dotimes (j matrix-n-columns)
+              (setf (aref coord1 1) (coerce j 'double-float))
 
-            (multiple-value-bind (oldy oldx)
-                ;; faster way
-                ;;
-                ;; since we don't need the full matrix multiply, based
-                ;; on what we know is in the affine transformation
-                ;; matrix, we can get away with fewer operations (Foley
-                ;; et al., 1996, p. 213)
-                (values (+ (* (aref coord1 0) (aref inv-xfrm 0 0))
-                           (* (aref coord1 1) (aref inv-xfrm 0 1))
-                           (aref inv-xfrm 0 2))
-                        (+ (* (aref coord1 0) (aref inv-xfrm 1 0))
-                           (* (aref coord1 1) (aref inv-xfrm 1 1))
-                           (aref inv-xfrm 1 2)))
-              ;; slower way
-              #+nil (transform-coord (aref coord1 0)
-                                     (aref coord1 1)
-                                     inv-xfrm)
+              (multiple-value-bind (oldy oldx)
+                  ;; faster way
+                  ;;
+                  ;; since we don't need the full matrix multiply, based
+                  ;; on what we know is in the affine transformation
+                  ;; matrix, we can get away with fewer operations (Foley
+                  ;; et al., 1996, p. 213)
+                  (values (+ (* (aref coord1 0) (aref inv-xfrm 0 0))
+                             (* (aref coord1 1) (aref inv-xfrm 0 1))
+                             (aref inv-xfrm 0 2))
+                          (+ (* (aref coord1 0) (aref inv-xfrm 1 0))
+                             (* (aref coord1 1) (aref inv-xfrm 1 1))
+                             (aref inv-xfrm 1 2)))
+                ;; slower way
+                #+nil (transform-coord (aref coord1 0)
+                                       (aref coord1 1)
+                                       inv-xfrm)
               
-              (case interpolation
-                ((nil :nearest-neighbor)
-                 (let ((oldy (round (- oldy +epsilon+)))
-                       (oldx (round (- oldx +epsilon+))))
-                   #+nil (print (list oldy oldx))
-                   (if (and (< -1 oldy matrix-m-rows)
-                            (< -1 oldx matrix-m-columns))
-                       (setf (pixel matrix-n i j) (pixel matrix-m oldy oldx))
-                       (setf (pixel matrix-n i j) (values-list background)))))
-                )))))))
+                (case interpolate
+                  ((nil :nearest-neighbor)
+                   (let ((oldy (round (- oldy +epsilon+)))
+                         (oldx (round (- oldx +epsilon+))))
+                     #+nil (print (list oldy oldx))
+                     (if (and (< -1 oldy matrix-m-rows)
+                              (< -1 oldx matrix-m-columns))
+                         (setf (pixel matrix-n i j) (pixel matrix-m oldy oldx))
+                         (setf (pixel matrix-n i j) (values-list background)))))
+                  (:quadratic
+                   (if (and
+                        (< most-negative-fixnum oldy most-positive-fixnum)
+                        (< most-negative-fixnum oldx most-positive-fixnum))
+                       (multiple-value-bind (l ry)
+                           (truncate (+ oldy +epsilon+))
+                         (multiple-value-bind (k rx)
+                             (truncate (+ oldx +epsilon+))
+                           (cond
+                             ((and (< -1 l matrix-m-rows)
+                                   (< -1 k matrix-m-columns))
+                              (let ((l0 (max (1- l) 0))
+                                    (l2 (min (1+ l) (1- matrix-m-rows)))
+                                    (k0 (max (1- k) 0))
+                                    (k2 (min (1+ k) (1- matrix-m-columns))))
+                                (if channels
+                                    (loop for channel below channels
+                                       do 
+                                       (setf (aref matrix-n i j channel)
+                                             (max
+                                              (min 
+                                               (round
+                                                (quadratic-interpolate
+                                                 
+                                                 (aref matrix-m l0 k0 channel)
+                                                 (aref matrix-m l0 k channel)
+                                                 (aref matrix-m l0 k2 channel)
+                                                 (aref matrix-m l k0 channel)
+                                                 (aref matrix-m l k channel)
+                                                 (aref matrix-m l k2 channel)
+                                                 (aref matrix-m l2 k0 channel)
+                                                 (aref matrix-m l2 k channel)
+                                                 (aref matrix-m l2 k2 channel)
+                                                 ry rx))
+                                               255)
+                                              0)))
+                                    (setf (pixel matrix-n i j)
+                                          (max
+                                           (min
+                                            (round
+                                             (quadratic-interpolate
+                                              (aref matrix-m l0 k0)
+                                              (aref matrix-m l0 k)
+                                              (aref matrix-m l0 k2)
+                                              (aref matrix-m l k0)
+                                              (aref matrix-m l k)
+                                              (aref matrix-m l k2)
+                                              (aref matrix-m l2 k0)
+                                              (aref matrix-m l2 k)
+                                              (aref matrix-m l2 k2)
+                                              ry rx))
+                                            255)
+                                           0)))))
+                             (t
+                              (setf (pixel matrix-n i j) (values-list background))))))
+                       (setf (pixel matrix-n i j) (values-list background))))
+                  ((:bilinear :bi-linear)
+                   (multiple-value-bind (l ry)
+                       (floor (+ oldy +epsilon+))
+                     (multiple-value-bind (k rx)
+                         (floor (+ oldx +epsilon+))
+                       (let ((l1 (1+ l))
+                             (k1 (1+ k)))
+                         (if channels
+                             (loop for channel below channels
+                                do 
+                                (setf (aref matrix-n i j channel)
+                                      (funcall fit-function
+                                       (bilinear-interpolate
+                                        (if (and (< -1 l matrix-m-rows)
+                                                 (< -1 k matrix-m-columns))
+                                            (aref matrix-m l k channel)
+                                            (values-list background))
+                                        (if (and (< -1 l matrix-m-rows)
+                                                 (< -1 k1 matrix-m-columns))
+                                            (aref matrix-m l k1 channel)
+                                            (values-list background))
+                                        (if (and (< -1 k matrix-m-columns)
+                                                 (< -1 l1 matrix-m-rows))
+                                            (aref matrix-m l1 k channel)
+                                            (values-list background))
+                                        (if (and (< -1 k1 matrix-m-columns)
+                                                 (< -1 l1 matrix-m-rows))
+                                            (aref matrix-m l1 k1 channel)
+                                            (values-list background))
+                                        ry rx))))
+                             (setf (aref matrix-n i j)
+                                   (funcall fit-function
+                                    (bilinear-interpolate
+                                     (if (and (< -1 l matrix-m-rows)
+                                              (< -1 k matrix-m-columns))
+                                         (aref matrix-m l k)
+                                         (values-list background))
+                                     (if (and (< -1 l matrix-m-rows)
+                                              (< -1 k1 matrix-m-columns))
+                                         (aref matrix-m l k1)
+                                         (values-list background))
+                                     (if (and (< -1 k matrix-m-columns)
+                                              (< -1 l1 matrix-m-rows))
+                                         (aref matrix-m l1 k)
+                                         (values-list background))
+                                     (if (and (< -1 k1 matrix-m-columns)
+                                              (< -1 l1 matrix-m-rows))
+                                         (aref matrix-m l1 k1)
+                                         (values-list background))
+                                     ry rx)))))))
+                   )))))))))
   matrix-n)
 
 
@@ -169,12 +347,12 @@
 
 (defun transform-image (matrix-m matrix-n xfrm
                              &key u v y x
-                             (interpolation :nearest-neighbor interpolation-supplied-p)
+                             (interpolate :nearest-neighbor interpolate-supplied-p)
                              (background nil background-supplied-p))
   "applies the affine transform xfrm to the contents of matrix m and
    places the contents in n. The default supported classes of
-   interpolation are :quadratic, :bilinear and :nearest-neighbor. If
-   no interpolation is supplied, the default is :nearest-neighbor."
+   interpolate are :quadratic, :bilinear and :nearest-neighbor. If
+   interpolate parameter is supplied, the default is :nearest-neighbor."
   (with-image-bounds (matrix-m-rows matrix-m-columns)
       matrix-m
     (with-image-bounds (matrix-n-rows matrix-n-columns)
@@ -212,7 +390,7 @@
             (apply #'%transform-image matrix-m matrix-n xfrm
                    (append
                     (when background-supplied-p (list :background background))
-                    (when interpolation-supplied-p (list :interpolation interpolation))))))))))
+                    (when interpolate-supplied-p (list :interpolate interpolate))))))))))
 
 (defun split-around-zero (k &key integer)
   (let ((khalf (/ k 2.0d0)))
