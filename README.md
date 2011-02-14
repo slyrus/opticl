@@ -1,9 +1,9 @@
-* opticl: A library for representing and processing images in Common Lisp (CL)
+# opticl: A library for representing and processing images in Common Lisp (CL)
 
 By Cyrus Harmon <ch-lisp@bobobeach.com>, February 2011. See COPYRIGHT
 file for license details.
 
-* Overview
+# Overview
 
 opticl is designed to be a high-performance, but relatively
 lightweight, library for representing, processing, loading, and saving
@@ -20,12 +20,12 @@ both broadly applicable in different contexts and to provide a core
 set of functionality that is of high-enough performance to be useful
 in time-(and resource-)sensitive operations.
 
-* Installation
+# Installation
 
 NOTE: THIS DOESN'T WORK YET!!!  The easiest way (will be) to use
 Zachary Beane's fabulous quicklisp library: `(ql:quickload 'opticl)`
 
-* For the Impatient
+# For the Impatient
 
 For a quick example, let's load an image (of a truck) from a JPEG
 file, invert the red channel and save the image back out to another
@@ -68,7 +68,7 @@ Which shows that we're able to perform simple arithmetic operations on
 each pixel of the image in 9 milliseconds, and that we don't need to
 cons to do so.
 
-* Image Representation
+# Image Representation
 
 In ch-image, images were represented by a set of CLOS classes which,
 in turn, either extended or wrapped classes from the CLEM
@@ -106,7 +106,7 @@ functions for creating and accessing and setting pixel values use
 these type declarations to enable SBCL to generate relatively
 efficient code for accessing image data.
 
-** Multi-dimensional Arrays
+## Multi-dimensional Arrays
 
 Common Lisp's multidimensional provide some attractive qualities for
 representing images. At the core, it is desirable to have a
@@ -136,7 +136,7 @@ compiler to generate high-performance code for processing images. It
 is chiefly this facility that distinguishes opticl from other CL image
 processing libraries such as ch-image and imago.
 
-** Multiple Values
+## Multiple Values
 
 Another facility afforded by CL, is the notion of multiple values. If
 one wants to represent a pixel of an 8-bit RGB image, and to perform
@@ -225,7 +225,7 @@ efficient performance of these reader and writer functions that offer
 the hope that opticl can serve as a general purpose image processing
 library suitable for use by a wide variety of CL programs.
 
-* Dependencies
+# Dependencies
 
 While opticl is designed to have minimal dependencies, I have decided
 that it is better to use existing libraries, where possible,
@@ -260,6 +260,6 @@ Once opticl is on quicklisp, this step will be replaced by:
 
     (ql:quickload 'opticl)
 
-* Examples
+# Examples
 
 TBW
