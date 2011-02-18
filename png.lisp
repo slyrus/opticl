@@ -111,8 +111,8 @@
          (zpng:write-png-stream 
           (make-instance 'zpng:png
                          :color-type :truecolor-alpha
-                         :height xmax
-                         :width ymax
+                         :height ymax
+                         :width xmax
                          :bpp 8
                          :image-data displaced)
           stream))))
@@ -129,8 +129,8 @@
          (zpng:write-png-stream 
           (make-instance 'zpng:png
                          :color-type :grayscale
-                         :height xmax
-                         :width ymax
+                         :height ymax
+                         :width xmax
                          :bpp 8
                          :image-data displaced)
           stream))))
