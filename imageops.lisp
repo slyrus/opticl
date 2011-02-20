@@ -37,13 +37,29 @@
 (defun copy-image (img)
   (with-image-bounds (ymax xmax channels)
       img
-    (let ((zimg (make-array
+    (let ((new-image (make-array
                  (cons ymax (cons xmax (when channels (list channels))))
                  :element-type (array-element-type img))))
       (loop for i below ymax
          do (loop for j below xmax
-               do (setf (pixel zimg i j) (pixel img i j))))
-      zimg)))
+               do (setf (pixel new-image i j) (pixel img i j))))
+      new-image)))
+
+(defun crop-image (img y1 x1 y2 x2)
+  (with-image-bounds (ymax xmax channels)
+      img
+    (let ((new-image (make-array
+                      (cons ymax (cons xmax (when channels (list channels))))
+                      :element-type (array-element-type img)))
+          (new-rows (1+ (- y2 y1)))
+          (new-cols (1+ (- x2 x1))))
+      (loop for i-src from y1 below y2
+         for i-dest below new-rows
+         do (loop for j-src from x1 below x2
+               for j-dest below new-cols
+               do 
+                 (setf (pixel new-image i-dest j-dest) (pixel img i-src j-src))))
+      new-image)))
 
 (defun map-array (fn array)
   (let* ((len (reduce #'* (array-dimensions array)))

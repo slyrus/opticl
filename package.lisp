@@ -27,6 +27,9 @@
    #:with-image-bounds
    #:pixel-in-bounds
 
+   #:copy-image
+   #:crop-image
+
    #:resize-image
    #:transform-image
    #:make-affine-transformation
