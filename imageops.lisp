@@ -3,6 +3,26 @@
 
 (in-package :opticl)
 
+(defun constrain (val min max)
+  (let ((val (if (< val min) min val)))
+    (if (> val max)
+        max
+        val)))
+
+(defun pixel-in-bounds (img y x)
+  (with-image-bounds (ymax xmax)
+      img
+    (and (>= y 0) (< y ymax)
+         (>= x 0) (< x xmax))))
+
+(defmacro when-pixel-in-bounds ((img y x) &body body)
+  (let ((ymax (gensym)) (xmax (gensym)))
+    `(let ((,ymax (1- (array-dimension ,img 0)))
+           (,xmax (1- (array-dimension ,img 1))))
+       (if (and (<= 0 ,y ,ymax)
+                (<= 0 ,x ,xmax))
+           ,@body))))
+
 (defun transpose-image (img)
   (with-image-bounds (ymax xmax channels)
       img

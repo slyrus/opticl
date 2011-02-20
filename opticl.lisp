@@ -29,15 +29,6 @@
                           `(* * ,channels))
                       channels)))
 
-(defmacro check-bounds ((img y x) &body body)
-  (let ((ymax (gensym)) (xmax (gensym)))
-    `(let ((,ymax (1- (array-dimension ,img 0)))
-           (,xmax (1- (array-dimension ,img 1))))
-       (if (and (<= 0 ,y ,ymax)
-                (<= 0 ,x ,xmax))
-           ,@body))))
-
-
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *image-types*
     '((1-bit-gray-image '(integer-image 1 1) '(unsigned-byte 1) 1)
@@ -89,8 +80,7 @@
                `(frob-image ,name ,image-type ,element-type ,num-channels)))))
   (frobber))
 
-
-(defun get-image-dimensions (image-var env)
+(defun %get-image-dimensions (image-var env)
   #+(or sbcl ccl)
   (multiple-value-bind (binding-type localp declarations)
       (opticl-cltl2:variable-information image-var env)
@@ -104,7 +94,7 @@
 (defconstant +max-image-channels+ 4)
 
 (define-setf-expander pixel (image-var y x &environment env)
-  (let ((image-dimensions (get-image-dimensions image-var env)))
+  (let ((image-dimensions (%get-image-dimensions image-var env)))
     (if image-dimensions
         (let ((arity (or (and (= (length image-dimensions) 3)
                               (third image-dimensions))
@@ -186,10 +176,8 @@
                                    collect (aref ,image-var ,temp-y ,temp-x i)))))))
                        (2 (aref ,image-var ,temp-y ,temp-x)))))))))
 
-
-
 (defmacro pixel (image-var y x &environment env)
-  (let ((image-dimensions (get-image-dimensions image-var env)))
+  (let ((image-dimensions (%get-image-dimensions image-var env)))
     (if image-dimensions
         (progn
           (case (length image-dimensions)
@@ -212,13 +200,6 @@
                     (aref ,image-var ,y ,x 2)
                     (aref ,image-var ,y ,x 3)))))))))
 
-
-(defun constrain (val min max)
-  (let ((val (if (< val min) min val)))
-    (if (> val max)
-        max
-        val)))
-
 (defmacro with-image-bounds ((ymax-var xmax-var &optional (channels (gensym))) img &body body)
   `(let ((,ymax-var (array-dimension ,img 0))
          (,xmax-var (array-dimension ,img 1))
@@ -227,11 +208,3 @@
      (declare (ignorable ,channels))
      ,@body))
 
-
-(defun pixel-in-bounds (img y x)
-  (with-image-bounds (ymax xmax)
-      img
-    (and (>= y 0)
-         (< y ymax)
-         (>= x 0)
-         (< x xmax))))
