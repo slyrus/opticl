@@ -182,31 +182,31 @@ type of an image (if present):
 
 Now we can use the following define-setf-expander:
 
-(define-setf-expander pixel (image-var y x &environment env)
-  (let ((image-dimensions (get-image-dimensions image-var env)))
-    (let ((arity (or (and (= (length image-dimensions) 3)
-                          (third image-dimensions))
-                     1))
-          (temp-y (gensym))
-          (temp-x (gensym)))
-      (if (= arity 1)
-          (let ((store (gensym)))
-            (values `(,temp-y ,temp-x)
-                    `(,y ,x)
-                    `(,store)
-                    `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
-                    `(aref ,image-var ,temp-y ,temp-x)))
-          (let ((stores (map-into (make-list arity) #'gensym)))
-            (values `(,temp-y ,temp-x)
-                    `(,y ,x)
-                    stores
-                    `(progn (setf ,@(loop for i from 0
-                                       for store in stores
-                                       collect `(aref ,image-var ,temp-y ,temp-x ,i)
-                                       collect store))
-                            (values ,@stores))
-                    `(values ,@(loop for i from 0 below (length stores)
-                                  collect `(aref ,image-var ,temp-y ,temp-x ,i)))))))))
+    (define-setf-expander pixel (image-var y x &environment env)
+      (let ((image-dimensions (get-image-dimensions image-var env)))
+        (let ((arity (or (and (= (length image-dimensions) 3)
+                              (third image-dimensions))
+                         1))
+              (temp-y (gensym))
+              (temp-x (gensym)))
+          (if (= arity 1)
+              (let ((store (gensym)))
+                (values `(,temp-y ,temp-x)
+                        `(,y ,x)
+                        `(,store)
+                        `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
+                        `(aref ,image-var ,temp-y ,temp-x)))
+              (let ((stores (map-into (make-list arity) #'gensym)))
+                (values `(,temp-y ,temp-x)
+                        `(,y ,x)
+                        stores
+                        `(progn (setf ,@(loop for i from 0
+                                           for store in stores
+                                           collect `(aref ,image-var ,temp-y ,temp-x ,i)
+                                           collect store))
+                                (values ,@stores))
+                        `(values ,@(loop for i from 0 below (length stores)
+                                      collect `(aref ,image-var ,temp-y ,temp-x ,i)))))))))
 
 Of course we still want this to work in the case where we don't have
 the type information, so we have a fallback path, and we need to
@@ -300,8 +300,7 @@ reintroduce the +max-image-channels+ constant, yielding:
 This gives us non-consing pixel value setting for multiple- (and
 single-) channel images.
 
-
-Questions:
+## Questions:
 
  * Should grayscale images have be 3-dimensional arrays with a 3-rd
    dimension of 1 instead of 2-d images? It would simplify some code
