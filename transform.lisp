@@ -28,21 +28,29 @@
   (let ((xfrm (make-array (list 3 3)
                           :element-type 'double-float
                           :initial-element 0d0)))
-    (setf (aref xfrm 0 0) (- (* (cos theta) y-scale)
+    
+    (setf (aref xfrm 0 0) (+ (* (cos theta) y-scale)
                              (* (sin theta) x-scale x-shear)))
-    (setf (aref xfrm 0 1) (- (* (cos theta) y-scale y-shear)
-                             (* (sin theta) x-scale)))
-    (setf (aref xfrm 0 2) (coerce y-shift 'double-float))
+    
+    (setf (aref xfrm 0 1) (+ (* (sin theta) x-scale)
+                             (* (cos theta) y-scale y-shear)))
 
-    (setf (aref xfrm 1 0) (+ (* (sin theta) y-scale)
-                             (* (cos theta) x-scale x-shear)))
-    (setf (aref xfrm 1 1) (+ (* (sin theta) y-scale y-shear)
-                             (* (cos theta) x-scale)))
+    ;; (setf (aref xfrm 0 2) 0d0) ;; already 0!
+
+    (setf (aref xfrm 1 0) (- (* (cos theta) x-scale x-shear)
+                             (* (sin theta) y-scale)))
+    
+    (setf (aref xfrm 1 1) (- (* (cos theta) x-scale)
+                             (* (sin theta) y-scale y-shear)))
+    
+    ;; (setf (aref xfrm 1 2) 0d0) ;; already 0!
+    
+    (setf (aref xfrm 0 2) (coerce y-shift 'double-float))
+    
     (setf (aref xfrm 1 2) (coerce x-shift 'double-float))
-  
-    (setf (aref xfrm 2 0) 0d0)
-    (setf (aref xfrm 2 1) 0d0)
+    
     (setf (aref xfrm 2 2) 1d0)
+    
     xfrm))
 
 (defun matrix-multiply (matrix-a matrix-b)
@@ -77,7 +85,7 @@
 (defun %transform-coord (coord xfrm)
   "applies the affine transformation xfrm to the point {x,y} and
   returns the position of the point after applying the transformation"
-  (post-multiply-by-column-vector xfrm coord))
+  (matrix-multiply xfrm coord))
 
 (defun transform-coord (y x xfrm)
   "applies the affine transformation xfrm to the point {x,y} and
@@ -174,9 +182,7 @@
         (let ((background (or background
                               (loop for i below (or channels 1) collect 0)))
               (inv-xfrm (invert-matrix xfrm))
-              (coord1 (make-array 3 :element-type 'double-float)))
-          #+nil (print inv-xfrm)
-          (setf (aref coord1 2) 1d0)
+              (coord1 (make-array 3 :element-type 'double-float :initial-element 1d0)))
           (dotimes (i matrix-n-rows)
             (setf (aref coord1 0) (coerce i 'double-float))
             (dotimes (j matrix-n-columns)
@@ -189,22 +195,21 @@
                   ;; on what we know is in the affine transformation
                   ;; matrix, we can get away with fewer operations (Foley
                   ;; et al., 1996, p. 213)
-                  (values (+ (* (aref coord1 0) (aref inv-xfrm 0 0))
-                             (* (aref coord1 1) (aref inv-xfrm 0 1))
+                  (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0) )
+                             (* (aref inv-xfrm 0 1) (aref coord1 1) )
                              (aref inv-xfrm 0 2))
-                          (+ (* (aref coord1 0) (aref inv-xfrm 1 0))
-                             (* (aref coord1 1) (aref inv-xfrm 1 1))
+                          (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
+                             (* (aref inv-xfrm 1 1) (aref coord1 1))
                              (aref inv-xfrm 1 2)))
-                ;; slower way
-                #+nil (transform-coord (aref coord1 0)
-                                       (aref coord1 1)
-                                       inv-xfrm)
+                  ;; slower way
+                  #+nil (transform-coord (aref coord1 0)
+                                         (aref coord1 1)
+                                         inv-xfrm)
               
                 (case interpolate
                   ((nil :nearest-neighbor)
                    (let ((oldy (round (- oldy +epsilon+)))
                          (oldx (round (- oldx +epsilon+))))
-                     #+nil (print (list oldy oldx))
                      (if (and (< -1 oldy matrix-m-rows)
                               (< -1 oldx matrix-m-columns))
                          (setf (pixel matrix-n i j) (pixel matrix-m oldy oldx))
@@ -345,52 +350,50 @@
                   (max q1 q2 q3 q4) ;; x2'
                   ))))))
 
-(defun transform-image (matrix-m matrix-n xfrm
+(defun transform-image (matrix-m xfrm
                              &key u v y x
                              (interpolate :nearest-neighbor interpolate-supplied-p)
                              (background nil background-supplied-p))
   "applies the affine transform xfrm to the contents of matrix m and
-   places the contents in n. The default supported classes of
-   interpolate are :quadratic, :bilinear and :nearest-neighbor. If
-   interpolate parameter is supplied, the default is :nearest-neighbor."
-  (with-image-bounds (matrix-m-rows matrix-m-columns)
+   places the contents in n. The supported classes of interpolate
+   are :bilinear and :nearest-neighbor. If interpolate parameter is
+   not supplied, the default is :nearest-neighbor."
+  (with-image-bounds (matrix-m-rows matrix-m-columns channels)
       matrix-m
-    (with-image-bounds (matrix-n-rows matrix-n-columns)
-        matrix-n
-      (let ((xfrm-shift (copy-transform xfrm)))
-        (unless v
-          (setf v (cons 0 matrix-m-rows)))
-        (unless u
-          (setf u (cons 0 matrix-m-columns)))
-        (multiple-value-bind (y1 x1 y2 x2)
-            (compute-bounds (car v) (car u) (cdr v) (cdr u) xfrm)
-          #+nil (print (list y1 x1 y2 x2))
-          (unless y
-            (setf y (cons (floor (+ y1 +epsilon+))
-                          (floor (- y2 +epsilon+)))))
-          (unless x
-            (setf x (cons (floor (+ x1 +epsilon+))
-                          (floor (- x2 +epsilon+)))))
-          #+nil (print (list y x)))
-                
-        ;; Need to rework math to do the right thing here!
-
-        (let ((pre-shift1 (make-affine-transformation
-                           :y-shift (car v) :x-shift (car u)))
-              (pre-shift2 (make-affine-transformation
-                           :y-scale (/ (- (cdr v) (car v)) matrix-m-rows)
-                           :x-scale (/ (- (cdr u) (car u)) matrix-m-columns))))
-          (setf xfrm-shift (matrix-multiply xfrm-shift (matrix-multiply pre-shift1 pre-shift2)))
-          (let ((post-shift (make-affine-transformation
-                             :y-shift (- (1+ (car y))) :x-shift (- (1+ (car x)))))
-                (post-shift2 (make-affine-transformation
-                              :y-scale (/ matrix-n-rows (- (cdr y) (car y))) 
-                              :x-scale (/ matrix-n-columns (- (cdr x) (car x))))))
-            (setf xfrm-shift (matrix-multiply post-shift (matrix-multiply post-shift2 xfrm-shift)))
-            (apply #'%transform-image matrix-m matrix-n xfrm
-                   (append
-                    (when background-supplied-p (list :background background))
-                    (when interpolate-supplied-p (list :interpolate interpolate))))))))))
+    (let ((xfrm-shift (copy-transform xfrm)))
+      (unless v (setf v (cons 0 matrix-m-rows)))
+      (unless u (setf u (cons 0 matrix-m-columns)))
+      (multiple-value-bind (y1 x1 y2 x2)
+          (compute-bounds (car v) (car u) (cdr v) (cdr u) xfrm)
+        (unless y (setf y (cons (floor (+ y1 +epsilon+))
+                                (floor (- y2 +epsilon+)))))
+        (unless x (setf x (cons (floor (+ x1 +epsilon+))
+                                (floor (- x2 +epsilon+))))))
+      (let ((matrix-n-rows (- (cdr y) (car y)))
+            (matrix-n-columns (- (cdr x) (car x))))
+        (let ((matrix-n
+               (make-array
+                (list* matrix-n-rows matrix-n-columns (when channels (list channels)))
+                :element-type (array-element-type matrix-m))))
+          (let ((pre-shift1 (make-affine-transformation
+                             :y-shift (car v) :x-shift (car u)))
+                (pre-shift2 (make-affine-transformation
+                             :y-scale (/ (- (cdr v) (car v)) matrix-m-rows)
+                             :x-scale (/ (- (cdr u) (car u)) matrix-m-columns))))
+            (setf xfrm-shift (matrix-multiply xfrm-shift
+                                              (matrix-multiply pre-shift1 pre-shift2)))
+            (let ((post-shift (make-affine-transformation
+                               :y-shift (- (1+ (car y))) :x-shift (- (1+ (car x)))))
+                  (post-shift2 (make-affine-transformation
+                                :y-scale (/ matrix-n-rows (- (cdr y) (car y))) 
+                                :x-scale (/ matrix-n-columns (- (cdr x) (car x))))))
+              (setf xfrm-shift
+                    (matrix-multiply post-shift
+                                     (matrix-multiply post-shift2 xfrm)))
+              (apply #'%transform-image matrix-m matrix-n xfrm-shift
+                     (append
+                      (when background-supplied-p (list :background background))
+                      (when interpolate-supplied-p (list :interpolate interpolate)))))))))))
 
 (defun split-around-zero (k &key integer)
   (let ((khalf (/ k 2.0d0)))
@@ -403,12 +406,9 @@
       img
     (let ((yscale (/ y oldy))
           (xscale (/ x oldx)))
-      (let ((xfrm (make-affine-transformation :x-scale xscale :y-scale yscale))
-            (new-image (make-array (append (list y x)
-                                           (when channels (list channels)))
-                                   :element-type (array-element-type img))))
+      (let ((xfrm (make-affine-transformation :x-scale xscale :y-scale yscale)))
         (let ((n (transform-image
-                  img new-image xfrm
+                  img xfrm
                   :u (split-around-zero oldy)
                   :v (split-around-zero oldx)
                   :y (split-around-zero y)
