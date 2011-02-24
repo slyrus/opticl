@@ -49,8 +49,8 @@
   (with-image-bounds (ymax xmax channels)
       img
     (declare (ignore ymax xmax))
-    (let ((new-rows (1+ (- y2 y1)))
-          (new-cols (1+ (- x2 x1))))
+    (let ((new-rows (- y2 y1))
+          (new-cols (- x2 x1)))
       (let ((new-image (make-array
                          (cons new-rows (cons new-cols (when channels (list channels))))
                          :element-type (array-element-type img))))
