@@ -351,9 +351,10 @@
                   ))))))
 
 (defun transform-image (matrix-m xfrm
-                             &key u v y x
-                             (interpolate :nearest-neighbor interpolate-supplied-p)
-                             (background nil background-supplied-p))
+                        &key u v y x
+                        (transform-bounds t)
+                        (interpolate :nearest-neighbor interpolate-supplied-p)
+                        (background nil background-supplied-p))
   "applies the affine transform xfrm to the contents of matrix m and
    places the contents in n. The supported classes of interpolate
    are :bilinear and :nearest-neighbor. If interpolate parameter is
@@ -363,12 +364,16 @@
     (let ((xfrm-shift (copy-transform xfrm)))
       (unless v (setf v (cons 0 matrix-m-rows)))
       (unless u (setf u (cons 0 matrix-m-columns)))
-      (multiple-value-bind (y1 x1 y2 x2)
-          (compute-bounds (car v) (car u) (cdr v) (cdr u) xfrm)
-        (unless y (setf y (cons (floor (+ y1 +epsilon+))
-                                (floor (- y2 +epsilon+)))))
-        (unless x (setf x (cons (floor (+ x1 +epsilon+))
-                                (floor (- x2 +epsilon+))))))
+      (if transform-bounds
+          (multiple-value-bind (y1 x1 y2 x2)
+              (compute-bounds (car v) (car u) (cdr v) (cdr u) xfrm)
+            (unless y (setf y (cons (floor (+ y1 +epsilon+))
+                                    (floor (- y2 +epsilon+)))))
+            (unless x (setf x (cons (floor (+ x1 +epsilon+))
+                                    (floor (- x2 +epsilon+))))))
+          (progn
+            (unless y (setf y v))
+            (unless x (setf x u))))
       (let ((matrix-n-rows (- (cdr y) (car y)))
             (matrix-n-columns (- (cdr x) (car x))))
         (let ((matrix-n
