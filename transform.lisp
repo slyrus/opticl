@@ -374,8 +374,8 @@
           (progn
             (unless y (setf y v))
             (unless x (setf x u))))
-      (let ((matrix-n-rows (- (cdr y) (car y)))
-            (matrix-n-columns (- (cdr x) (car x))))
+      (let ((matrix-n-rows (ceiling (- (cdr y) (car y))))
+            (matrix-n-columns (ceiling (- (cdr x) (car x)))))
         (let ((matrix-n
                (make-array
                 (list* matrix-n-rows matrix-n-columns (when channels (list channels)))
@@ -413,10 +413,6 @@
           (xscale (/ x oldx)))
       (let ((xfrm (make-affine-transformation :x-scale xscale :y-scale yscale)))
         (let ((n (transform-image
-                  img xfrm
-                  :u (split-around-zero oldy)
-                  :v (split-around-zero oldx)
-                  :y (split-around-zero y)
-                  :x (split-around-zero x))))
+                  img xfrm)))
           n)))))
 
