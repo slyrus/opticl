@@ -18,37 +18,27 @@
                                       0d0)))
 
 (defun make-affine-transformation (&key
-                                   (y-shift 0d0)
-                                   (x-shift 0d0)
+                                   (y-shift 0d0) (x-shift 0d0)
                                    (theta 0d0)
-                                   (y-scale 1d0)
-                                   (x-scale 1d0)
-                                   (y-shear 0d0)
-                                   (x-shear 0d0))
-  (let ((xfrm (make-array (list 3 3)
+                                   (y-scale 1d0) (x-scale 1d0)
+                                   (y-shear 0d0) (x-shear 0d0))
+  (let ((xfrm (make-array '(3 3)
                           :element-type 'double-float
-                          :initial-element 0d0)))
-    
-    (setf (aref xfrm 0 0) (+ (* (cos theta) y-scale)
-                             (* (sin theta) x-scale x-shear)))
-    
-    (setf (aref xfrm 0 1) (+ (* (sin theta) x-scale)
-                             (* (cos theta) y-scale y-shear)))
+                          :initial-element 0d0))
+        (cos-theta (cos theta))
+        (sin-theta (sin theta)))
+    (setf (aref xfrm 0 0) (+ (* cos-theta y-scale)
+                             (* sin-theta x-scale x-shear)))
+    (setf (aref xfrm 0 1) (+ (* sin-theta x-scale)
+                             (* cos-theta y-scale y-shear)))
 
-    ;; (setf (aref xfrm 0 2) 0d0) ;; already 0!
-
-    (setf (aref xfrm 1 0) (- (* (cos theta) x-scale x-shear)
-                             (* (sin theta) y-scale)))
-    
-    (setf (aref xfrm 1 1) (- (* (cos theta) x-scale)
-                             (* (sin theta) y-scale y-shear)))
-    
-    ;; (setf (aref xfrm 1 2) 0d0) ;; already 0!
+    (setf (aref xfrm 1 0) (- (* cos-theta x-scale x-shear)
+                             (* sin-theta y-scale)))
+    (setf (aref xfrm 1 1) (- (* cos-theta x-scale)
+                             (* sin-theta y-scale y-shear)))
     
     (setf (aref xfrm 0 2) (coerce y-shift 'double-float))
-    
     (setf (aref xfrm 1 2) (coerce x-shift 'double-float))
-    
     (setf (aref xfrm 2 2) 1d0)
     
     xfrm))
