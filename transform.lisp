@@ -399,10 +399,22 @@
 (defun resize-image (img y x)
   (with-image-bounds (oldy oldx channels)
       img
-    (let ((yscale (/ y oldy))
-          (xscale (/ x oldx)))
+    (let ((yscale (/ y oldy)) (xscale (/ x oldx)))
       (let ((xfrm (make-affine-transformation :x-scale xscale :y-scale yscale)))
-        (let ((n (transform-image
-                  img xfrm)))
-          n)))))
+        (transform-image img xfrm)))))
+
+(defun rotate-image-around-center (img theta &key
+                                   (transform-bounds t))
+  (with-image-bounds (height width channels)
+      img
+    ;; shift the image center to 0, 0, rotate by theta and shift back
+    (let ((pre-shift (make-affine-transformation :y-shift (- (/ height 2))
+                                                 :x-shift (- (/ width 2))))
+          (rotate (make-affine-transformation :theta theta))
+          (post-shift (make-affine-transformation :y-shift (/ height 2)
+                                                  :x-shift (/ width 2))))
+      (let ((composed
+             ;; transformation matricies must be multiplied in reverse order!
+             (reduce #'matrix-multiply (reverse (list pre-shift rotate post-shift)))))
+        (transform-image img composed :transform-bounds transform-bounds))))))
 
