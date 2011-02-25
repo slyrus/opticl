@@ -3,6 +3,16 @@
 
 (in-package :opticl)
 
+(deftype image (&key channels element-type)
+  `(simple-array ,(if element-type
+                      element-type
+                      '*)
+                 ,(if (numberp channels)
+                      (if (= channels 1)
+                          `(* *)
+                          `(* * ,channels))
+                      channels)))
+
 (deftype integer-image (&optional channels bits-per-channel)
   `(simple-array ,(if (numberp bits-per-channel)
                       `(unsigned-byte ,bits-per-channel)
