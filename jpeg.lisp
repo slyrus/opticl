@@ -43,7 +43,8 @@
 
 (defun read-jpeg-file (pathname)
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
-    (read-jpeg-stream stream)))
+    (read-jpeg-stream stream)
+    (truename pathname)))
 
 (defun write-jpeg-stream (stream image)
   (typecase image

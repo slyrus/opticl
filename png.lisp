@@ -140,4 +140,5 @@
   (with-open-file (stream pathname :direction :output
                           :if-exists :supersede
                           :element-type '(unsigned-byte 8))
-    (write-png-stream stream image)))
+    (write-png-stream stream image)
+    (truename pathname)))
