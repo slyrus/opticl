@@ -416,5 +416,5 @@
       (let ((composed
              ;; transformation matricies must be multiplied in reverse order!
              (reduce #'matrix-multiply (reverse (list pre-shift rotate post-shift)))))
-        (transform-image img composed :transform-bounds transform-bounds))))))
+        (transform-image img composed :transform-bounds transform-bounds)))))
 
