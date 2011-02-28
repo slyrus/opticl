@@ -90,16 +90,17 @@
          (write-byte (char-code #\Newline) stream)
          (loop for i below height
             do (loop for j below width
-                  do (let ((val (pixel image i j)))
-                       (write-byte val stream))))))
+                  do (write-byte (pixel image i j) stream)))))
       (16-bit-gray-image
-       (write-integer #xffff stream)
-       (write-byte (char-code #\Newline) stream)
-       (loop for i below height
-          do (loop for j below width
-                do (let ((val (pixel image i j)))
-                     (write-byte (ash val -8) stream)
-                     (write-byte (logand val #xff) stream))))))))
+       (locally
+           (declare (type 16-bit-gray-image image))
+         (write-integer #xffff stream)
+         (write-byte (char-code #\Newline) stream)
+         (loop for i below height
+            do (loop for j below width
+                  do (let ((val (pixel image i j)))
+                       (write-byte (ash val -8) stream)
+                       (write-byte (logand val #xff) stream)))))))))
 
 (defun write-pgm-file (pathname image)
   (with-open-file (stream pathname :direction :output
