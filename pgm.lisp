@@ -70,8 +70,36 @@
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
     (read-pgm-stream stream)))
 
+(defun write-integer (int stream)
+  (map nil (lambda (x) (write-byte (char-code x) stream)) (format nil "~D" int)))
+
 (defun write-pgm-stream (stream image)
-  (error "not yet!"))
+  (map nil (lambda (x) (write-byte (char-code x) stream)) "P5")
+  (write-byte (char-code #\Newline) stream)
+  (with-image-bounds (height width)
+      image
+    (write-integer width stream)
+    (write-byte (char-code #\Newline) stream)
+    (write-integer height stream)
+    (write-byte (char-code #\Newline) stream)
+    (typecase image
+      (8-bit-gray-image
+       (locally
+           (declare (type 8-bit-gray-image image))
+         (write-integer #xff stream)
+         (write-byte (char-code #\Newline) stream)
+         (loop for i below height
+            do (loop for j below width
+                  do (let ((val (pixel image i j)))
+                       (write-byte val stream))))))
+      (16-bit-gray-image
+       (write-integer #xffff stream)
+       (write-byte (char-code #\Newline) stream)
+       (loop for i below height
+          do (loop for j below width
+                do (let ((val (pixel image i j)))
+                     (write-byte (ash val -8) stream)
+                     (write-byte (logand val #xff) stream))))))))
 
 (defun write-pgm-file (pathname image)
   (with-open-file (stream pathname :direction :output
