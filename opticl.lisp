@@ -135,9 +135,9 @@
             (values `(,temp-y ,temp-x)
                     `(,y ,x)
                     syms
-                    `(case (array-rank ,image-var)
+                    `(ecase (array-rank ,image-var)
                        (3 (let ((d (array-dimension ,image-var 2)))
-                            (case d
+                            (ecase d
                               (1
                                (values
                                 (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))))
@@ -159,10 +159,10 @@
                               (t (loop for i below d
                                     collect (setf (aref ,image-var ,temp-y ,temp-x i) (elt (list ,@syms) i)))))))
                        (2 (setf (aref ,image-var ,temp-y ,temp-x) ,(elt syms 0))))
-                    `(case (array-rank ,image-var)
+                    `(ecase (array-rank ,image-var)
                        (3
                         (let ((d (array-dimension ,image-var 2)))
-                          (case d
+                          (ecase d
                             (1
                              (values
                               (aref ,image-var ,temp-y ,temp-x 0)))
@@ -190,13 +190,13 @@
   (let ((image-dimensions (%get-image-dimensions image-var env)))
     (if image-dimensions
         (progn
-          (case (length image-dimensions)
+          (ecase (length image-dimensions)
             (2 `(aref ,image-var ,y ,x))
             (3 `(values ,@(loop for i below (third image-dimensions)
                              collect `(aref ,image-var ,y ,x ,i))))))
-        `(case (array-rank ,image-var)
+        `(ecase (array-rank ,image-var)
            (2 (aref ,image-var ,y ,x))
-           (3 (case (array-dimension ,image-var 2)
+           (3 (ecase (array-dimension ,image-var 2)
                 (2 (values
                     (aref ,image-var ,y ,x 0)
                     (aref ,image-var ,y ,x 1)))
