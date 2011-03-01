@@ -89,11 +89,17 @@
     (let ((out (output-image "snow-packbits.jpeg")))
       (write-jpeg-file out img))))
 
-(defun test-read-pgm (&key (binary t))
-  (let* ((file (test-image "knight0.pgm"))
+(defun test-pgm-read-binary ()
+  (let* ((file (test-image "tower-gray-binary.pgm"))
          (img (read-pgm-file file)))
-    (let ((out (output-image "knight0.pgm")))
-      (write-pgm-file out img :binary binary))))
+    (let ((out (output-image "tower-gray-binary.pgm")))
+      (write-pgm-file out img))))
+
+(defun test-pgm-read-ascii ()
+  (let* ((file (test-image "tower-gray-ascii.pgm"))
+         (img (read-pgm-file file)))
+    (let ((out (output-image "tower-gray-binary.pgm")))
+      (write-pgm-file out img))))
 
 (defun test-pbm-read-ascii ()
   (let* ((file (test-image "goat-ascii.pbm"))
