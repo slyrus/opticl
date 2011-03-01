@@ -337,10 +337,10 @@
     (write-integer height stream)
     (write-byte (char-code #\Newline) stream)
     (etypecase image
-      (8-bit-rgb-image
-       (write-integer #xff stream))
-      (16-bit-rgb-image
-       (write-integer #xffff stream)))
+      (8-bit-rgb-image (write-integer #xff stream))
+      (8-bit-rgba-image (write-integer #xff stream))
+      (16-bit-rgb-image (write-integer #xffff stream))
+      (16-bit-rgba-image (write-integer #xffff stream)))
     (write-byte (char-code #\Newline) stream)
     (loop for i below height
        do (loop for j below width
@@ -350,7 +350,7 @@
                  (write-byte (char-code #\Space) stream)))
          (write-byte (char-code #\Newline) stream))))
 
-(defun %write-8-bit-rgb-ppm-data (stream image height width)
+(defun %write-8-bit-rgb-ppm-binary-data (stream image height width)
   (write-integer #xff stream)
   (write-byte (char-code #\Newline) stream)
   (loop for i below height
@@ -361,7 +361,7 @@
                 (write-byte g stream)
                 (write-byte b stream)))))
 
-(defun %write-16-bit-rgb-ppm-data (stream image height width)
+(defun %write-16-bit-rgb-ppm-binary-data (stream image height width)
   (write-integer #xffff stream)
   (write-byte (char-code #\Newline) stream)
   (loop for i below height
@@ -383,13 +383,13 @@
     (write-byte (char-code #\Newline) stream)
     (etypecase image
       (8-bit-rgb-image
-       (%write-8-bit-rgb-ppm-data stream image height width))
+       (%write-8-bit-rgb-ppm-binary-data stream image height width))
       (8-bit-rgba-image
-       (%write-8-bit-rgb-ppm-data stream image height width))
+       (%write-8-bit-rgb-ppm-binary-data stream image height width))
       (16-bit-rgb-image
-       (%write-16-bit-rgb-ppm-data stream image height width))
+       (%write-16-bit-rgb-ppm-binary-data stream image height width))
       (16-bit-rgba-image
-       (%write-16-bit-rgb-ppm-data stream image height width)))))
+       (%write-16-bit-rgb-ppm-binary-data stream image height width)))))
 
 (defun write-ppm-stream (stream image &key (binary t))
   (if binary
