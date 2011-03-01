@@ -317,9 +317,9 @@
 (defun read-ppm-stream (stream)
   (let ((magic (make-array 2 :element-type '(unsigned-byte 8))))
     (read-sequence magic stream)
-    (cond ((equalp magic #(80 50)) ;; P2 magic number
+    (cond ((equalp magic #(80 51)) ;; P3 magic number
            (%read-ppm-ascii-stream stream))
-          ((equalp magic #(80 53)) ;; P5 magic number
+          ((equalp magic #(80 54)) ;; P6 magic number
            (%read-ppm-binary-stream stream))
           (t (error "Invalid PPM Magic Number")))))
 

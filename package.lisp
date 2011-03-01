@@ -62,6 +62,24 @@
 
    #:read-tiff-file
    #:read-tiff-stream
+   
+   #:read-pnm-stream
+   #:read-pnm-file
+
+   #:read-pbm-stream
+   #:read-pbm-file
+   #:write-pbm-stream
+   #:write-pbm-file
+
+   #:read-pgm-stream
+   #:read-pgm-file
+   #:write-pgm-stream
+   #:write-pgm-file
+   
+   #:read-ppm-stream
+   #:read-ppf-file
+   #:write-ppm-stream
+   #:write-ppm-file
    ))
 
 
