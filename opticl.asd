@@ -19,4 +19,5 @@
    (:file "tiff")
    #-abcl (:file "jpeg")
    #+abcl (:file "opticl-abcl")
-   (:file "png")))
+   (:file "png")
+   (:file "pnm")))
