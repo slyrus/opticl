@@ -70,7 +70,7 @@
       (loop for i below height
          do (loop for j below width
                do (setf (pixel img i j)
-                        (ldb (byte 1 (mod (+ (* i width) j) 8))
+                        (ldb (byte 1 (- 7 (mod (+ (* i width) j) 8)))
                              (aref bytes (ash (+ (* i width) j) -3))))))
       img)))
 
@@ -100,8 +100,9 @@
        do (loop for j below width
              do
                (write-byte (char-code (digit-char (pixel image i j))) stream)
-               (when (= (mod (+ (* i width) j) 70) 0)
-                 (write-byte (char-code #\Newline) stream))))))
+               (if (and (plusp j) (= (mod (+ (* i width) j 1) 35) 0))
+                 (write-byte (char-code #\Newline) stream)
+                 (write-byte (char-code #\Space) stream))))))
 
 (defun %write-pbm-binary-stream (stream image)
   (map nil (lambda (x) (write-byte (char-code x) stream)) "P4")
@@ -117,9 +118,9 @@
       (loop for i below height
          do (loop for j below width
                do
-               (setf (ldb (byte 1 (mod (+ (* i width) j) 8))
-                          (aref bytes (ash (+ (* i width) j) -3)))
-                     (pixel image i j))))
+                 (setf (ldb (byte 1 (- 7 (mod (+ (* i width) j) 8)))
+                            (aref bytes (ash (+ (* i width) j) -3)))
+                       (pixel image i j))))
       (write-sequence bytes stream))))
 
 (defun write-pbm-stream (stream image &key (binary t))
