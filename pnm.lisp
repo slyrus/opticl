@@ -150,14 +150,14 @@
              do 
              (loop for j below width
                 do (setf (pixel img i j)
-                         (read-number stream))))
+                         (parse-integer (read-number stream)))))
           img)
         (let ((img (make-16-bit-gray-image height width)))    
           (loop for i below height
              do 
                (loop for j below width
                   do (setf (pixel img i j)
-                           (read-number stream))))
+                           (parse-integer (read-number stream)))))
           img))))
 
 (defun %read-pgm-binary-stream (stream)
