@@ -88,3 +88,45 @@
          (img (read-tiff-file file)))
     (let ((out (output-image "snow-packbits.jpeg")))
       (write-jpeg-file out img))))
+
+(defun test-read-pgm (&key (binary t))
+  (let* ((file (test-image "knight0.pgm"))
+         (img (opticl:read-pgm-file file)))
+    (let ((out (output-image "knight0.pgm")))
+      (opticl:write-pgm-file out img :binary binary))))
+
+(defun test-pbm-read-ascii ()
+  (let* ((file (test-image "goat-ascii.pbm"))
+         (img (opticl:read-pnm-file file)))
+    img))
+
+(defun test-pbm-write-ascii ()
+  (let* ((file (test-image "goat-ascii.pbm"))
+         (img (opticl:read-pbm-file file)))
+    (let ((out (output-image "goat-ascii.pbm")))
+      (opticl:write-pbm-file out img :binary nil))))
+
+(defun test-pbm-read-binary-write-ascii ()
+  (let* ((file (test-image "goat.pbm"))
+         (img (opticl:read-pbm-file file)))
+    (let ((out (output-image "goat-ascii.pbm")))
+      (opticl:write-pbm-file out img :binary nil))))
+
+(defun test-pbm-write-binary ()
+  (let* ((file (test-image "goat-ascii.pbm"))
+         (img (opticl:read-pbm-file file)))
+    (let ((out (output-image "goat-binary.pbm")))
+      (opticl:write-pbm-file out img))))
+
+(defun test-ppm-write-ascii ()
+  (let* ((file (test-image "truck.png"))
+         (img (opticl:read-png-file file)))
+    (let ((out (output-image "truck-ascii.ppm")))
+      (opticl:write-ppm-file out img :binary nil))))
+
+(defun test-ppm-write-binary ()
+  (let* ((file (test-image "truck.png"))
+         (img (opticl:read-png-file file)))
+    (let ((out (output-image "truck-binary.ppm")))
+      (opticl:write-ppm-file out img))))
+
