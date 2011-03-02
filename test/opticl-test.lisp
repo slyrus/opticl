@@ -7,17 +7,13 @@
   (reduce #'merge-pathnames (list filename "images/")
           :from-end t
           :initial-value (asdf:component-pathname
-                          (reduce #'asdf:find-component
-                                  '("opticl-test" "test")
-                                  :initial-value nil))))
+                          (asdf:find-system "opticl-test"))))
 
 (defun output-image (filename)
   (reduce #'merge-pathnames (list filename "output/")
           :from-end t
           :initial-value (asdf:component-pathname
-                          (reduce #'asdf:find-component
-                                  '("opticl-test" "test")
-                                  :initial-value nil))))
+                          (asdf:find-system "opticl-test"))))
 
 (defun tiff-image (filename)
   (reduce #'merge-pathnames (list filename "images/")

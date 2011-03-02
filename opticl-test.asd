@@ -5,11 +5,11 @@
   :licence "BSD"
   :default-component-class cl-source-file
   :depends-on (opticl)
+  :pathname #.(make-pathname :directory '(:relative "test"))
   :components
-  ((:module :test
-            :serial t
-            :components ((:file "package")
-                         (:file "opticl-test")
-                         (:file "shapes-test")
-                         (:file "transform-test")
-                         (:file "gamma-test")))))
+  ((:file "package")
+   (:file "opticl-test")
+   (:file "shapes-test")
+   (:file "transform-test")
+   (:file "gamma-test")
+   (:module "images")))
