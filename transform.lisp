@@ -139,12 +139,6 @@
                  (* b1 ,g21)
                  (* b2 ,g22))))))
 
-(defmacro make-constrain-fn (min max)
-  `(lambda (val)
-     (cond ((<= val ,min) ,min)
-           ((>= val ,max) ,max)
-           (t (round val)))))
-
 (defun %transform-image (matrix-m matrix-n xfrm
                          &key
                          (interpolate :nearest-neighbor)

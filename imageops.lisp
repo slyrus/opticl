@@ -3,6 +3,24 @@
 
 (in-package :opticl)
 
+(defun sum (array)
+  (let ((acc 0))
+    (map-array (lambda (v) (incf acc v)) array)
+    acc))
+
+(defun sum-range (array vendr vstartr vendc vstartc)
+  (let ((acc 0))
+    (loop for i from vstartr below vendr
+       do (loop for j from vstartc below vendc
+             do (incf acc (aref array i j))))
+    acc))
+
+(defmacro make-constrain-fn (min max)
+  `(lambda (val)
+     (cond ((<= val ,min) ,min)
+           ((>= val ,max) ,max)
+           (t (round val)))))
+
 (defun constrain (val min max)
   (let ((val (if (< val min) min val)))
     (if (> val max)
@@ -71,3 +89,9 @@
     (make-array (array-dimensions array)
                 :element-type elt-type
                 :displaced-to (map `(vector ,elt-type) fn disp))))
+
+(defun trim-image (img y-pixels x-pixels)
+  (with-image-bounds (height width)
+      img
+    (crop-image img y-pixels x-pixels (- height y-pixels) (- width x-pixels))))
+

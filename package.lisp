@@ -29,10 +29,18 @@
 
    #:copy-image
    #:crop-image
+   #:trim-image
+   
+   #:map-array
 
    #:resize-image
    #:transform-image
    #:make-affine-transformation
+
+   ;; convolution and friends
+   #:discrete-convolve
+   #:sharpen-image
+   #:blur-image
 
    ;; Drawing primitives
    #:fill-image
@@ -80,6 +88,7 @@
    #:read-ppf-file
    #:write-ppm-stream
    #:write-ppm-file
+   
    ))
 
 

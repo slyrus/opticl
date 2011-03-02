@@ -14,6 +14,7 @@
    (:file "imageops")
    (:file "invert")
    (:file "transform")
+   (:file "convolve")
    (:file "gamma")
    (:file "shapes")
    (:file "tiff")
