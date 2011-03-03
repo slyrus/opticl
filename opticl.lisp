@@ -218,3 +218,27 @@
      (declare (ignorable ,channels))
      ,@body))
 
+(defmacro do-pixels ((i-var j-var) image &body body)
+  (alexandria:once-only (image)
+    (alexandria:with-gensyms (height width)
+      `(with-image-bounds (,height ,width) ,image
+         (loop for ,i-var below ,height
+            do (loop for ,j-var below ,width
+                  do ,@body))))))
+
+(defun clear-image (image)
+  (with-image-bounds (height width channels)
+      image
+    (declare (ignore height width))
+    (if channels
+        (ecase channels
+          (2 (do-pixels (i j) image
+               (setf (pixel image i j) (values 0 0))))
+          (3 (do-pixels (i j) image
+               (setf (pixel image i j) (values 0 0 0))))
+          (4 (do-pixels (i j) image
+               (setf (pixel image i j) (values 0 0 0 0)))))
+        (do-pixels (i j) image
+               (setf (pixel image i j) 0))))
+  image)
+
