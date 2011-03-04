@@ -92,14 +92,15 @@
 
 (defun %get-image-dimensions (image-var env)
   #+(or sbcl ccl)
-  (multiple-value-bind (binding-type localp declarations)
-      (opticl-cltl2:variable-information image-var env)
-    (declare (ignore binding-type localp))
-    (let ((type-decl (find 'type declarations :key #'car)))
-      (and type-decl
-           (listp type-decl)
-           (= (length type-decl) 4)
-           (fourth type-decl)))))
+  (when (symbolp image-var)
+    (multiple-value-bind (binding-type localp declarations)
+        (opticl-cltl2:variable-information image-var env)
+      (declare (ignore binding-type localp))
+      (let ((type-decl (find 'type declarations :key #'car)))
+        (and type-decl
+             (listp type-decl)
+             (= (length type-decl) 4)
+             (fourth type-decl))))))
 
 (defconstant +max-image-channels+ 4)
 
