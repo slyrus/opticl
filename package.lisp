@@ -70,6 +70,8 @@
 
    #:read-tiff-file
    #:read-tiff-stream
+   #:write-tiff-file
+   #:write-tiff-stream
    
    #:read-pnm-stream
    #:read-pnm-file
