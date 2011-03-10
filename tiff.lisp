@@ -104,8 +104,6 @@ image or an 8-bit grayscale image"
     (read-tiff-stream stream)))
 
 
-#|
-
 ;;;
 ;;; Writing TIFF files
 (defun make-tiff-image (image)
@@ -255,10 +253,3 @@ image or an 8-bit grayscale image"
   (let ((tiff-image (make-tiff-image image)))
     (tiff:write-tiff-file pathname tiff-image)))
 
-|#
-
-(defun write-tiff-stream (stream image)
-  (declare (ignore stream image)))
-
-(defun write-tiff-file (pathname image)
-  (declare (ignore pathname image)))
