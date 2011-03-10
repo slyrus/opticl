@@ -245,11 +245,13 @@ image or an 8-bit grayscale image"
 
     (t (error "Cannot write a TIFF image from ~A" (type-of image)))))
 
-(defun write-tiff-stream (stream image)
+(defun write-tiff-stream (stream image &key byte-order)
   (let ((tiff-image (make-tiff-image image)))
-    (tiff:write-tiff-stream stream tiff-image)))
+    (apply #'tiff:write-tiff-stream stream tiff-image
+           (when byte-order `(:byte-order ,byte-order)))))
 
-(defun write-tiff-file (pathname image)
+(defun write-tiff-file (pathname image &key byte-order)
   (let ((tiff-image (make-tiff-image image)))
-    (tiff:write-tiff-file pathname tiff-image)))
+    (apply #'tiff:write-tiff-file pathname tiff-image
+           (when byte-order `(:byte-order ,byte-order)))))
 
