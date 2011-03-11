@@ -179,8 +179,8 @@
                   ;; on what we know is in the affine transformation
                   ;; matrix, we can get away with fewer operations (Foley
                   ;; et al., 1996, p. 213)
-                  (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0) )
-                             (* (aref inv-xfrm 0 1) (aref coord1 1) )
+                  (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0))
+                             (* (aref inv-xfrm 0 1) (aref coord1 1))
                              (aref inv-xfrm 0 2))
                           (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
                              (* (aref inv-xfrm 1 1) (aref coord1 1))
@@ -198,7 +198,8 @@
                               (< -1 oldx matrix-m-columns))
                          (setf (pixel matrix-n i j) (pixel matrix-m oldy oldx))
                          (setf (pixel matrix-n i j) (values-list background)))))
-                  (:quadratic
+                  ;; quadratic is broken :(
+                  #+nil (:quadratic
                    (if (and
                         (< most-negative-fixnum oldy most-positive-fixnum)
                         (< most-negative-fixnum oldx most-positive-fixnum))
