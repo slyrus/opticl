@@ -7,6 +7,7 @@
 
    #:image
    #:pixel
+   #:pixel*
 
    #:1-bit-gray-image #:make-1-bit-gray-image
    #:2-bit-gray-image #:make-2-bit-gray-image
@@ -44,13 +45,21 @@
 
    ;; Drawing primitives
    #:fill-image
+   #:fill-image*
    #:draw-circle
+   #:draw-circle*
    #:fill-circle
+   #:fill-circle*
    #:draw-rectangle
+   #:draw-rectangle*
    #:horizontal-line
+   #:horizontal-line*
    #:vertical-line
+   #:vertical-line*
    #:draw-line
+   #:draw-line*
    #:draw-triangle
+   #:draw-triangle*
 
    ;; Various Image Operations
    #:make-gamma-curve-lookup-table
@@ -87,12 +96,32 @@
    #:write-pgm-file
    
    #:read-ppm-stream
-   #:read-ppf-file
+   #:read-ppm-file
    #:write-ppm-stream
    #:write-ppm-file
-   
+
+   #:read-image-file
+   #:read-image-stream
+   #:write-image-file
+   #:write-image-stream
+
+   ;; conversion
+   #:convert-image-to-grayscale
+   #:convert-image-to-grayscale-luminance
+   #:convert-image-to-rgb
+   #:convert-image-to-rgba
+
    ))
 
+(in-package :opticl)
+
+(defun ignore-warning (condition)
+  (declare (ignore condition))
+  (muffle-warning))
+
+(handler-bind ((warning #'ignore-warning))
+  (defpackage :opticl-color
+    (:use :cl)))
 
 #+sbcl
 (require :sb-cltl2)

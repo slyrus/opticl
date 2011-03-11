@@ -13,6 +13,24 @@
                           `(* * ,channels))
                       channels)))
 
+(deftype gray-image (&key element-type)
+  `(simple-array ,(if element-type
+                      element-type
+                      '*)
+                 (* *)))
+
+(deftype rgb-image (&key element-type)
+  `(simple-array ,(if element-type
+                      element-type
+                      '*)
+                 (* * 3)))
+
+(deftype rgba-image (&key element-type)
+  `(simple-array ,(if element-type
+                      element-type
+                      '*)
+                 (* * 4)))
+
 (deftype integer-image (&optional channels bits-per-channel)
   `(simple-array ,(if (numberp bits-per-channel)
                       `(unsigned-byte ,bits-per-channel)
@@ -212,6 +230,24 @@
                     (aref ,image-var ,y ,x 2)
                     (aref ,image-var ,y ,x 3)))))))))
 
+(defun pixel* (image y x)
+  "pixel* returns the value(s) at position y, x as a list. This
+function conses, but occasionally one wants the image intensity values
+as a list, rather than as multiple values. This is a convenience
+function to provide this, largely to provide symmetry
+with (setf (pixel* ...) ...)"
+  (multiple-value-list (pixel image y x)))
+
+(defmacro set-pixel* (image y x list)
+  `(setf (pixel ,image ,y ,x) (values-list ,list)))
+
+(defsetf pixel* set-pixel*
+  "(setf (pixel* img y x) list) sets the values of pixel y, x in img
+to the values contained in list. (setf (pixel ...) ...) is the more
+efficient way to do this, but if one wants to pass a set of values as
+a list instead of as multiple-values (for named colors perhaps), this
+function does that.")
+
 (defmacro with-image-bounds ((ymax-var xmax-var &optional (channels (gensym))) img &body body)
   `(let ((,ymax-var (array-dimension ,img 0))
          (,xmax-var (array-dimension ,img 1))
@@ -243,4 +279,112 @@
         (do-pixels (i j) image
                (setf (pixel image i j) 0))))
   image)
+
+(defun mean (&rest numbers)
+  (/ (apply #'+ numbers) (length numbers)))
+
+(defun convert-image-to-grayscale (image)
+  (etypecase image
+    (gray-image image)
+    ((or rgb-image rgba-image)
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (gray-image (make-array (list y x) :element-type type)))
+         (if (subtypep type 'integer)
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (round (mean r g b)))))
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (coerce (mean r g b) type)))))
+         gray-image)))))
+
+(defun convert-image-to-grayscale-luminance (image)
+  (etypecase image
+    (gray-image image)
+    ((or rgb-image rgba-image)
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (gray-image (make-array (list y x) :element-type type)))
+         (if (subtypep type 'integer)
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (round 
+                        (+ (* r 0.2989)
+                           (* g 0.5870)
+                           (* b 0.1140))))))
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (coerce (round 
+                        (+ (* r 0.2989)
+                           (* g 0.5870)
+                           (* b 0.1140))) type)))))
+         gray-image)))))
+
+
+(defun convert-image-to-rgb (image)
+  (etypecase image
+    (gray-image
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (rgb-image (make-array (list y x 3) :element-type type)))
+         (do-pixels (i j)
+             image
+           (let ((val (pixel image i j)))
+             (setf (pixel rgb-image i j) 
+                   (values val val val))))
+         rgb-image)))
+    (rgb-image image)
+    (rgba-image
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (rgb-image (make-array (list y x 3) :element-type type)))
+         (do-pixels (i j)
+             image
+           (setf (pixel rgb-image i j) 
+                 (pixel image i j)))
+         rgb-image)))))
+
+(defun convert-image-to-rgba (image)
+  (declare (optimize (debug 3)))
+  (etypecase image
+    (gray-image
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (rgba-image (make-array (list y x 4) :element-type type)))
+         (do-pixels (i j)
+             image
+           (let ((val (pixel image i j)))
+             (setf (pixel rgba-image i j) 
+                   (values val val val 255))))
+         rgba-image)))
+    (rgb-image 
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (rgba-image (make-array (list y x 4) :element-type type)))
+         (do-pixels (i j)
+             image
+           (setf (pixel* rgba-image i j) 
+                 (append (multiple-value-list (pixel image i j))
+                         (list 255))))
+         rgba-image)))
+    (rgba-image image)))
 

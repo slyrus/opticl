@@ -9,6 +9,9 @@
              do 
                (setf (pixel img i j) (values-list vals))))))
 
+(defun fill-image* (img list)
+  (multiple-value-call #'fill-image img (values-list list)))
+
 (defun horizontal-line (img y x0 x1 &rest vals)
   (declare (type fixnum y x0 x1))
   (with-image-bounds (ymax xmax)
@@ -18,6 +21,9 @@
           (x1 (constrain x1 0 (1- xmax))))
       (loop for x fixnum from x0 to x1
          do (setf (pixel img y x) (values-list vals))))))
+
+(defun horizontal-line* (img y x0 x1 list)
+  (multiple-value-call #'horizontal-line img y x0 x1 (values-list list)))
 
 (defun vertical-line (img y0 y1 x &rest vals)
   (declare (type fixnum y0 y1 x))
@@ -29,6 +35,9 @@
       (loop for y fixnum from y0 to y1
          do (when (pixel-in-bounds img y x)
               (setf (pixel img y x) (values-list vals)))))))
+
+(defun vertical-line* (img y0 y1 x list)
+  (multiple-value-call #'vertical-line img y0 y1 x (values-list list)))
 
 (defun draw-line (img y0 x0 y1 x1 &rest vals)
   (declare (type fixnum y0 x0 y1 x1))
@@ -80,6 +89,9 @@
                 (when (pixel-in-bounds img y x)
                   (setf (pixel img y x) (values-list vals))))))))))
 
+(defun draw-line* (img y0 x0 y1 x1 list)
+  (multiple-value-call #'draw-line y0 x0 y1 x1 img (values-list list)))
+
 (defun draw-circle (img center-y center-x radius &rest vals)
   "draws a circle centered at (x, y) with radius r on a image."
   (declare (type fixnum center-y center-x radius))
@@ -116,6 +128,9 @@
           (incf x)
           (circle-points y x))))))
 
+(defun draw-circle* (img center-y center-x radius list)
+  (multiple-value-call #'draw-circle img center-y center-x radius (values-list list)))
+
 (defun fill-circle (img center-y center-x radius &rest vals)
   "draws a filled circle centered at (x, y) with radius r on a image."
   (declare (type fixnum center-y center-x radius))
@@ -145,21 +160,33 @@
         (incf x)
         (circle-lines y x)))))
 
+(defun fill-circle* (img center-y center-x radius list)
+  (multiple-value-call #'fill-circle img center-y center-x radius (values-list list)))
+
 (defun draw-rectangle (img y0 x0 y1 x1 &rest vals)
   (apply #'horizontal-line img y0 x0 x1 vals)
   (apply #'vertical-line img y0 y1 x0 vals)
   (apply #'vertical-line img y0 y1 x1 vals)
   (apply #'horizontal-line img y1 x0 x1 vals))
 
+(defun draw-rectangle* (img y0 x0 y1 x1 list)
+  (multiple-value-call #'draw-rectangle img y0 x0 y1 x1 (values-list list)))
+
 (defun fill-rectangle (img y0 x0 y1 x1 &rest vals)
   (loop for x from x0 to x1
      do 
        (apply #'vertical-line img y0 y1 x vals)))
 
+(defun fill-rectangle* (img y0 x0 y1 x1 list)
+  (multiple-value-call #'fill-rectangle img y0 x0 y1 x1 (values-list list)))
+
 (defun draw-triangle (img y0 x0 y1 x1 y2 x2 &rest vals)
   (apply #'draw-line img y0 x0 y1 x1 vals)
   (apply #'draw-line img y1 x1 y2 x2 vals)
   (apply #'draw-line img y2 x2 y0 x0 vals))
+
+(defun draw-triangle* (img y0 x0 y1 x1 y2 x2 list)
+  (multiple-value-call #'draw-triangle img y0 x0 y1 x1 y2 x2 (values-list list)))
 
 (defun draw-polygon (img points &rest vals)
   (loop for p across points
@@ -167,3 +194,6 @@
               (p2 (elt p 1)))
           (when (and (consp p1) (consp p2))
             (apply #'draw-line img (car p1) (cdr p1) (car p2) (cdr p2) vals)))))
+
+(defun draw-polygon* (img points list)
+  (multiple-value-call #'draw-polygon img points (values-list list)))
