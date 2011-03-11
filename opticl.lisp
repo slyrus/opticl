@@ -264,6 +264,30 @@ function does that.")
             do (loop for ,j-var below ,width
                   do ,@body))))))
 
+(defmacro set-pixels ((i-var j-var) image &body body)
+  (alexandria:once-only (image)
+    (alexandria:with-gensyms (height width)
+      `(with-image-bounds (,height ,width) ,image
+         (loop for ,i-var below ,height
+            do (loop for ,j-var below ,width
+                  do (setf (pixel ,image ,i-var ,j-var)
+                           (progn
+                             ,@body))))))))
+
+(defmacro do-region-pixels ((i-var j-var y1 x1 y2 x2) image &body body)
+  (declare (ignorable image))
+  `(loop for ,i-var from ,y1 below ,y2
+      do (loop for ,j-var from ,x1 below ,x2
+            do ,@body)))
+
+(defmacro set-region-pixels ((i-var j-var y1 x1 y2 x2) image &body body)
+  (declare (ignorable image))
+  `(loop for ,i-var from ,y1 below ,y2
+      do (loop for ,j-var from ,x1 below ,x2
+            do (setf (pixel ,image ,i-var ,j-var)
+                     (progn
+                       ,@body)))))
+
 (defun clear-image (image)
   (with-image-bounds (height width channels)
       image
