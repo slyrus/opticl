@@ -309,6 +309,7 @@ function does that.")
 
 (defun convert-image-to-8-bit-grayscale (image)
   (etypecase image
+    (8-bit-gray-image image)
     (1-bit-gray-image 
      (with-image-bounds (y x)
          image
@@ -316,6 +317,48 @@ function does that.")
          (do-pixels (i j) image
            (setf (pixel gray-image i j)
                  (if (plusp (pixel image i j)) 255 0)))
+         gray-image)))
+    ((or rgb-image rgba-image)
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (gray-image (make-8-bit-gray-image y x)))
+         (if (subtypep type 'integer)
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (round (mean r g b)))))
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (coerce (round (mean r g b)) type)))))
+         gray-image)))))
+
+(defun convert-image-to-grayscale (image)
+  (etypecase image
+    (gray-image image)
+    ((or rgb-image rgba-image)
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (gray-image (make-array (list y x) :element-type type)))
+         (if (subtypep type 'integer)
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (round (mean r g b)))))
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (coerce (round (mean r g b)) type)))))
          gray-image)))))
 
 (defun convert-image-to-grayscale-luminance (image)
