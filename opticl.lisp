@@ -307,27 +307,15 @@ function does that.")
 (defun mean (&rest numbers)
   (/ (apply #'+ numbers) (length numbers)))
 
-(defun convert-image-to-grayscale (image)
+(defun convert-image-to-8-bit-grayscale (image)
   (etypecase image
-    (gray-image image)
-    ((or rgb-image rgba-image)
-     (with-image-bounds (y x channels)
+    (1-bit-gray-image 
+     (with-image-bounds (y x)
          image
-       (let* ((type (array-element-type image))
-              (gray-image (make-array (list y x) :element-type type)))
-         (if (subtypep type 'integer)
-             (do-pixels (i j)
-                 image
-               (multiple-value-bind (r g b)
-                   (pixel image i j)
-                 (setf (pixel gray-image i j)
-                       (round (mean r g b)))))
-             (do-pixels (i j)
-                 image
-               (multiple-value-bind (r g b)
-                   (pixel image i j)
-                 (setf (pixel gray-image i j)
-                       (coerce (mean r g b) type)))))
+       (let* ((gray-image (make-8-bit-gray-image y x)))
+         (do-pixels (i j) image
+           (setf (pixel gray-image i j)
+                 (if (plusp (pixel image i j)) 255 0)))
          gray-image)))))
 
 (defun convert-image-to-grayscale-luminance (image)
@@ -358,7 +346,6 @@ function does that.")
                            (* g 0.5870)
                            (* b 0.1140))) type)))))
          gray-image)))))
-
 
 (defun convert-image-to-rgb (image)
   (etypecase image
