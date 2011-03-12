@@ -189,11 +189,10 @@
                   #+nil (transform-coord (aref coord1 0)
                                          (aref coord1 1)
                                          inv-xfrm)
-              
-                (case interpolate
+                (ecase interpolate
                   ((nil :nearest-neighbor)
-                   (let ((oldy (round (- oldy +epsilon+)))
-                         (oldx (round (- oldx +epsilon+))))
+                   (let ((oldy (floor (+ oldy +epsilon+)))
+                         (oldx (floor (+ oldx +epsilon+))))
                      (if (and (< -1 oldy matrix-m-rows)
                               (< -1 oldx matrix-m-columns))
                          (setf (pixel matrix-n i j) (pixel matrix-m oldy oldx))
@@ -255,6 +254,9 @@
                              (t
                               (setf (pixel matrix-n i j) (values-list background))))))
                        (setf (pixel matrix-n i j) (values-list background))))
+                  ;; FIXME: bilinear interpolation has some weird edge
+                  ;; effects. We should switch to nearest-neighbor at
+                  ;; the edge maybe?
                   ((:bilinear :bi-linear)
                    (multiple-value-bind (l ry)
                        (floor (+ oldy +epsilon+))
@@ -353,9 +355,9 @@
           (multiple-value-bind (y1 x1 y2 x2)
               (compute-bounds (car v) (car u) (cdr v) (cdr u) xfrm)
             (unless y (setf y (cons (floor (+ y1 +epsilon+))
-                                    (floor (- y2 +epsilon+)))))
+                                    (ceiling (- y2 +epsilon+)))))
             (unless x (setf x (cons (floor (+ x1 +epsilon+))
-                                    (floor (- x2 +epsilon+))))))
+                                    (ceiling (- x2 +epsilon+))))))
           (progn
             (unless y (setf y v))
             (unless x (setf x u))))
@@ -373,7 +375,7 @@
             (setf xfrm-shift (matrix-multiply xfrm-shift
                                               (matrix-multiply pre-shift1 pre-shift2)))
             (let ((post-shift (make-affine-transformation
-                               :y-shift (- (1+ (car y))) :x-shift (- (1+ (car x)))))
+                               :y-shift (- (car y)) :x-shift (- (car x))))
                   (post-shift2 (make-affine-transformation
                                 :y-scale (/ matrix-n-rows (- (cdr y) (car y))) 
                                 :x-scale (/ matrix-n-columns (- (cdr x) (car x))))))
@@ -395,8 +397,28 @@
   (with-image-bounds (oldy oldx channels)
       img
     (let ((yscale (/ y oldy)) (xscale (/ x oldx)))
-      (let ((xfrm (make-affine-transformation :x-scale xscale :y-scale yscale)))
+      (let ((xfrm (make-affine-transformation :y-scale yscale :x-scale xscale)))
         (transform-image img xfrm)))))
+
+(defun fit-image-into (img ymax xmax &key pad)
+  (with-image-bounds (oldy oldx channels)
+      img
+    (let ((scale (min (/ ymax oldy) (/ xmax oldx))))
+      (let ((xfrm (make-affine-transformation :y-scale scale :x-scale scale)))
+        (if pad 
+            (let ((y (* scale oldy)) (x (* scale oldx)))
+              (let ((maxdim (max y x)))
+                (let ((ypad (- maxdim y))
+                      (xpad (- maxdim x)))
+                  (let ((halfypad (/ ypad 2))
+                        (halfxpad (/ xpad 2)))
+                    (apply #'transform-image img xfrm
+                           (when pad 
+                             (list :y (cons (floor (- halfypad))
+                                            (floor (- ymax halfypad)))
+                                   :x (cons (floor (- halfxpad))
+                                            (floor (- xmax halfxpad))))))))))
+            (transform-image img xfrm))))))
 
 (defun rotate-image-around-center (img theta &key
                                    (transform-bounds t))
