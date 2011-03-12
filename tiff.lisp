@@ -15,9 +15,11 @@ image or an 8-bit grayscale image"
                      (samples-per-pixel tiff:tiff-image-samples-per-pixel) 
                      (bits-per-sample tiff:tiff-image-bits-per-sample) 
                      (image-data tiff:tiff-image-data)
-                     (color-map tiff::tiff-image-color-map))
+                     (color-map tiff::tiff-image-color-map)
+                     (min-is-white tiff::tiff-image-min-is-white))
         tiff-image
       (cond
+
         (color-map  ;; indexed RGB
          (let ((image (make-8-bit-rgb-image image-length image-width)))
            (declare (type 8-bit-rgb-image image))
@@ -31,6 +33,22 @@ image or an 8-bit grayscale image"
                                      (aref color-map
                                            (aref image-data pixoff)))))))
            image))
+
+        ((and (= samples-per-pixel 1)
+              (equalp bits-per-sample 1)) ;; black and white
+         (let ((image (make-1-bit-gray-image image-length image-width)))
+           (declare (type 1-bit-gray-image image))
+           (loop for i below image-length
+              do 
+                (loop for j below image-width
+                   do (setf (pixel image i j)
+                            (if min-is-white
+                                (ldb (byte 1 (- 7 (mod (+ (* i image-width) j) 8)))
+                                     (lognot (aref image-data (ash (+ (* i image-width) j) -3))))
+                                (ldb (byte 1 (- 7 (mod (+ (* i image-width) j) 8)))
+                                     (aref image-data (ash (+ (* i image-width) j) -3)))))))
+           image))
+
         ((and (= samples-per-pixel 1)
               (equalp bits-per-sample 8)) ;; 8-bit Grayscale
          (let ((image (make-8-bit-gray-image image-length image-width)))
@@ -60,7 +78,7 @@ image or an 8-bit grayscale image"
            image))
 
         ((and (= samples-per-pixel 4)
-              (equalp bits-per-sample #(8 8 8 8))) ;; 8-bit ARGB
+              (equalp bits-per-sample #(8 8 8 8))) ;; 8-bit RGBA
          (let ((image (make-8-bit-rgba-image image-length image-width)))
            (declare (type 8-bit-rgba-image image))
            (loop for i below image-length
@@ -95,7 +113,7 @@ image or an 8-bit grayscale image"
            image))
             
         ((and (= samples-per-pixel 4)
-              (equalp bits-per-sample #(16 16 16 16))) ;; 16-bit ARGB
+              (equalp bits-per-sample #(16 16 16 16))) ;; 16-bit RGBA
          (let ((image (make-16-bit-rgba-image image-length image-width)))
            (declare (type 16-bit-rgba-image image))
            (loop for i below image-length
