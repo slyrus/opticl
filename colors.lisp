@@ -1,12 +1,13 @@
 
 (in-package :opticl-color)
 
-(defun whitespace-p (char)
-  (member char '(#\Space #\Tab)))
-
-(defun trim-leading-whitespace (str)
-  (let ((pos (position-if-not #'whitespace-p str)))
-    (subseq str pos)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun whitespace-p (char)
+    (member char '(#\Space #\Tab)))
+  
+  (defun trim-leading-whitespace (str)
+    (let ((pos (position-if-not #'whitespace-p str)))
+      (subseq str pos))))
 
 (macrolet ((frob-colors ()
              (let ((file (merge-pathnames
