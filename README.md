@@ -246,10 +246,11 @@ less painful (for the quicklisp user anyway) than the used to be.
    chipz
    babel
   cl-jpeg
+  skippy
 
 To install the dependencies using quicklisp:
 
-    (ql:quickload 'zpng 'png-read 'cl-jpeg)
+    (ql:quickload 'alexandria 'zpng 'png-read 'cl-jpeg 'skippy)
 
 Retrospectiff must be installed by hand using a recent version from
 [github](https://github.com/slyrus/retrospectiff):
