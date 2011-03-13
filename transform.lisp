@@ -401,12 +401,12 @@
         (transform-image img xfrm)))))
 
 (defun fit-image-into (img &key y-max x-max pad)
-  (if (or ymax xmax)
+  (if (or y-max x-max)
       (with-image-bounds (oldy oldx channels)
           img
         (let ((scale (apply #'min 
-                            (append (when ymax (list (/ ymax oldy)))
-                                    (when xmax (list (/ xmax oldx)))))))
+                            (append (when y-max (list (/ y-max oldy)))
+                                    (when x-max (list (/ x-max oldx)))))))
           (let ((xfrm (make-affine-transformation :y-scale scale :x-scale scale)))
             (if pad 
                 (let ((y (* scale oldy)) (x (* scale oldx)))
@@ -418,9 +418,9 @@
                         (apply #'transform-image img xfrm
                                (when pad 
                                  (list :y (cons (floor (- halfypad))
-                                                (floor (- ymax halfypad)))
+                                                (floor (- y-max halfypad)))
                                        :x (cons (floor (- halfxpad))
-                                                (floor (- xmax halfxpad))))))))))
+                                                (floor (- x-max halfxpad))))))))))
                 (transform-image img xfrm)))))))
 
 (defun rotate-image-around-center (img theta &key
