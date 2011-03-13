@@ -421,7 +421,8 @@
                                                 (floor (- y-max halfypad)))
                                        :x (cons (floor (- halfxpad))
                                                 (floor (- x-max halfxpad))))))))))
-                (transform-image img xfrm)))))))
+                (transform-image img xfrm)))))
+      img))
 
 (defun rotate-image-around-center (img theta &key
                                    (transform-bounds t))
