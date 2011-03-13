@@ -30,16 +30,43 @@
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
     (read-gif-stream stream)))
 
+(defun uniform-color-map (r-levels b-levels g-levels
+                          &key (max-val 255))
+  (let ((array (make-array (* r-levels b-levels g-levels))))
+    (loop for r below r-levels
+       do (loop for g below g-levels
+             do (loop for b below b-levels
+                   do
+                     (setf (aref array (+ (* r g-levels b-levels)
+                                          (* g b-levels) 
+                                          b))
+                           (list (floor (* r (/ max-val (1- r-levels))))
+                                 (floor (* g (/ max-val (1- g-levels))))
+                                 (floor (* b (/ max-val (1- b-levels)))))))))
+    array))
+
+(defun assign-color (r g b r-levels g-levels b-levels &key (max-val 255))
+  (values (* (round (/ r (/ max-val (1- r-levels))))
+             (/ max-val (1- r-levels)))
+          (* (round (/ g (/ max-val (1- g-levels))))
+             (/ max-val (1- g-levels)))
+          (* (round (/ b (/ max-val (1- b-levels))))
+             (/ max-val (1- b-levels)))))
+
 (defun 8-bit-rgb-image-to-skippy-image (image color-table)
   (with-image-bounds (height width)
       image
     (let ((gif-image (skippy:make-image :height height :width width)))
-      (do-pixels (i j) image
-        (multiple-value-bind (r g b)
-            (pixel image i j)
-          (let ((color (skippy:ensure-color (skippy:rgb-color r g b)
-                                            color-table)))
-            (setf (skippy:pixel-ref gif-image j i) color))))
+      (let ((color-map (uniform-color-map 6 6 6)))
+        (do-pixels (i j) image
+          (multiple-value-bind (r g b)
+              (pixel image i j)
+            (multiple-value-bind (assigned-r assigned-g assigned-b)
+                (assign-color r g b 6 6 6)
+              (let ((color-index (skippy:ensure-color
+                            (skippy:rgb-color assigned-r assigned-g assigned-b)
+                            color-table)))
+                (setf (skippy:pixel-ref gif-image j i) color-index))))))
       gif-image)))
 
 (defun write-gif-stream (stream image)
