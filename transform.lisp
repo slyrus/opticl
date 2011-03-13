@@ -400,25 +400,28 @@
       (let ((xfrm (make-affine-transformation :y-scale yscale :x-scale xscale)))
         (transform-image img xfrm)))))
 
-(defun fit-image-into (img ymax xmax &key pad)
-  (with-image-bounds (oldy oldx channels)
-      img
-    (let ((scale (min (/ ymax oldy) (/ xmax oldx))))
-      (let ((xfrm (make-affine-transformation :y-scale scale :x-scale scale)))
-        (if pad 
-            (let ((y (* scale oldy)) (x (* scale oldx)))
-              (let ((maxdim (max y x)))
-                (let ((ypad (- maxdim y))
-                      (xpad (- maxdim x)))
-                  (let ((halfypad (/ ypad 2))
-                        (halfxpad (/ xpad 2)))
-                    (apply #'transform-image img xfrm
-                           (when pad 
-                             (list :y (cons (floor (- halfypad))
-                                            (floor (- ymax halfypad)))
-                                   :x (cons (floor (- halfxpad))
-                                            (floor (- xmax halfxpad))))))))))
-            (transform-image img xfrm))))))
+(defun fit-image-into (img &key y-max x-max pad)
+  (if (or ymax xmax)
+      (with-image-bounds (oldy oldx channels)
+          img
+        (let ((scale (apply #'min 
+                            (append (when ymax (list (/ ymax oldy)))
+                                    (when xmax (list (/ xmax oldx)))))))
+          (let ((xfrm (make-affine-transformation :y-scale scale :x-scale scale)))
+            (if pad 
+                (let ((y (* scale oldy)) (x (* scale oldx)))
+                  (let ((maxdim (max y x)))
+                    (let ((ypad (- maxdim y))
+                          (xpad (- maxdim x)))
+                      (let ((halfypad (/ ypad 2))
+                            (halfxpad (/ xpad 2)))
+                        (apply #'transform-image img xfrm
+                               (when pad 
+                                 (list :y (cons (floor (- halfypad))
+                                                (floor (- ymax halfypad)))
+                                       :x (cons (floor (- halfxpad))
+                                                (floor (- xmax halfxpad))))))))))
+                (transform-image img xfrm)))))))
 
 (defun rotate-image-around-center (img theta &key
                                    (transform-bounds t))

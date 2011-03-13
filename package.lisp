@@ -35,6 +35,7 @@
    #:map-array
 
    #:resize-image
+   #:fit-image-into
    #:transform-image
    #:make-affine-transformation
 
