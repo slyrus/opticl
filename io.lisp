@@ -1,6 +1,19 @@
 
 (in-package :opticl)
 
+(defparameter *image-stream-reader-hash-table* (make-hash-table))
+(map nil (lambda (z)
+           (destructuring-bind (x y) z
+             (setf (gethash x *image-stream-reader-hash-table*) y)))
+     '((:tiff read-tiff-stream)
+      (:tif read-tiff-stream)
+      (:jpeg read-jpeg-stream)
+      (:jpg read-jpeg-stream)
+      (:png read-png-stream)
+      (:pbm read-pbm-stream)
+      (:pgm read-pgm-stream)
+      (:ppm read-ppm-stream)))
+
 (defparameter *image-file-reader-hash-table* (make-hash-table))
 (map nil (lambda (z)
            (destructuring-bind (x y) z
@@ -26,6 +39,16 @@
        (:pbm write-pbm-file)
        (:pgm write-pgm-file)
        (:ppm write-ppm-file)))
+
+(defun get-image-stream-reader (type)
+  (let* ((key (intern (string-upcase type) :keyword)))
+    (gethash key *image-stream-reader-hash-table*)))
+
+(defun read-image-stream (stream type)
+  (let ((fn (get-image-stream-reader type)))
+    (if fn
+        (funcall fn stream)
+        (error "Cannot read image stream ~S of type ~S" stream type))))
 
 (defun get-image-file-reader (file)
   (typecase file
