@@ -5,7 +5,7 @@
   :licence "BSD"
   :serial t
   :default-component-class cl-source-file
-  :depends-on (alexandria retrospectiff zpng png-read #-abcl cl-jpeg skippy)
+  :depends-on (alexandria retrospectiff zpng png-read cl-jpeg skippy)
   :components
   ((:static-file "README.md")
    (:static-file "COPYRIGHT")
@@ -20,8 +20,7 @@
    (:file "gamma")
    (:file "shapes")
    (:file "tiff")
-   #-abcl (:file "jpeg")
-   #+abcl (:file "opticl-abcl")
+   (:file "jpeg")
    (:file "png")
    (:file "pnm")
    (:file "gif")
