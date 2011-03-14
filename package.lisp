@@ -9,6 +9,12 @@
    #:pixel
    #:pixel*
 
+   #:do-pixels
+   #:set-pixels
+   
+   #:do-region-pixels
+   #:set-region-pixels
+
    #:1-bit-gray-image #:make-1-bit-gray-image
    #:2-bit-gray-image #:make-2-bit-gray-image
    #:4-bit-gray-image #:make-4-bit-gray-image
@@ -43,6 +49,8 @@
    #:discrete-convolve
    #:sharpen-image
    #:blur-image
+
+   #:clear-image
 
    ;; Drawing primitives
    #:fill-image
@@ -111,6 +119,7 @@
    #:convert-image-to-grayscale-luminance
    #:convert-image-to-rgb
    #:convert-image-to-rgba
+   #:convert-image-to-8-bit-grayscale
 
    ))
 

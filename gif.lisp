@@ -53,20 +53,23 @@
           (* (round (/ b (/ max-val (1- b-levels))))
              (/ max-val (1- b-levels)))))
 
+(defparameter *red-levels* 6)
+(defparameter *green-levels* 6)
+(defparameter *blue-levels* 6)
+
 (defun 8-bit-rgb-image-to-skippy-image (image color-table)
   (with-image-bounds (height width)
       image
     (let ((gif-image (skippy:make-image :height height :width width)))
-      (let ((color-map (uniform-color-map 6 6 6)))
-        (do-pixels (i j) image
-          (multiple-value-bind (r g b)
-              (pixel image i j)
-            (multiple-value-bind (assigned-r assigned-g assigned-b)
-                (assign-color r g b 6 6 6)
-              (let ((color-index (skippy:ensure-color
-                            (skippy:rgb-color assigned-r assigned-g assigned-b)
-                            color-table)))
-                (setf (skippy:pixel-ref gif-image j i) color-index))))))
+      (do-pixels (i j) image
+        (multiple-value-bind (r g b)
+            (pixel image i j)
+          (multiple-value-bind (assigned-r assigned-g assigned-b)
+              (assign-color r g b  *red-levels* *green-levels* *blue-levels*)
+            (let ((color-index (skippy:ensure-color
+                                (skippy:rgb-color assigned-r assigned-g assigned-b)
+                                color-table)))
+              (setf (skippy:pixel-ref gif-image j i) color-index)))))
       gif-image)))
 
 (defun write-gif-stream (stream image)

@@ -15,8 +15,8 @@ image or an 8-bit grayscale image"
                      (samples-per-pixel tiff:tiff-image-samples-per-pixel) 
                      (bits-per-sample tiff:tiff-image-bits-per-sample) 
                      (image-data tiff:tiff-image-data)
-                     (color-map tiff::tiff-image-color-map)
-                     (min-is-white tiff::tiff-image-min-is-white))
+                     (color-map tiff:tiff-image-color-map)
+                     (min-is-white tiff:tiff-image-min-is-white))
         tiff-image
       (cond
 
