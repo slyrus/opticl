@@ -393,12 +393,13 @@
         (cons (floor (- khalf)) (ceiling khalf))
         (cons (+ (- khalf) 0.5d0) (+ khalf 0.5d0)))))
 
-(defun resize-image (img y x)
+(defun resize-image (img y x &key interpolate)
   (with-image-bounds (oldy oldx channels)
       img
     (let ((yscale (/ y oldy)) (xscale (/ x oldx)))
       (let ((xfrm (make-affine-transformation :y-scale yscale :x-scale xscale)))
-        (transform-image img xfrm)))))
+        (apply #'transform-image img xfrm
+               (when interpolate `(:interpolate ,interpolate)))))))
 
 (defun fit-image-into (img &key y-max x-max pad)
   (if (or y-max x-max)
