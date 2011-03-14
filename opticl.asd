@@ -16,6 +16,7 @@
    (:file "invert")
    (:file "transform")
    (:file "convolve")
+   (:file "morphology")
    (:file "gamma")
    (:file "shapes")
    (:file "tiff")
