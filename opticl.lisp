@@ -157,7 +157,7 @@
                     syms
                     `(ecase (array-rank ,image-var)
                        (3 (let ((d (array-dimension ,image-var 2)))
-                            (ecase d
+                            (case d
                               (1
                                (values
                                 (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))))
@@ -182,7 +182,7 @@
                     `(ecase (array-rank ,image-var)
                        (3
                         (let ((d (array-dimension ,image-var 2)))
-                          (ecase d
+                          (case d
                             (1
                              (values
                               (aref ,image-var ,temp-y ,temp-x 0)))
@@ -307,6 +307,8 @@ function does that.")
 (defun mean (&rest numbers)
   (/ (apply #'+ numbers) (length numbers)))
 
+;;; work around ABCL etypecase bug
+#-abcl
 (defun convert-image-to-8-bit-grayscale (image)
   (etypecase image
     (8-bit-gray-image image)
@@ -337,6 +339,43 @@ function does that.")
                  (setf (pixel gray-image i j)
                        (coerce (round (mean r g b)) type)))))
          gray-image)))))
+
+;;; work around ABCL etypecase bug
+#+abcl
+(defun convert-image-to-8-bit-grayscale (image)
+  (cond
+    ((typep image '8-bit-gray-image) image)
+    
+    ((typep image '1-bit-gray-image) 
+     (with-image-bounds (y x)
+         image
+       (let* ((gray-image (make-8-bit-gray-image y x)))
+         (do-pixels (i j) image
+           (setf (pixel gray-image i j)
+                 (if (plusp (pixel image i j)) 255 0)))
+         gray-image)))
+    
+    ((or (typep image 'rgb-image)
+         (typep image 'rgba-image))
+     (with-image-bounds (y x channels)
+         image
+       (let* ((type (array-element-type image))
+              (gray-image (make-8-bit-gray-image y x)))
+         (if (subtypep type 'integer)
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (round (mean r g b)))))
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (coerce (round (mean r g b)) type)))))
+         gray-image)))))
+
 
 (defun convert-image-to-grayscale (image)
   (etypecase image
