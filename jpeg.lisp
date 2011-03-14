@@ -7,6 +7,8 @@
 (defconstant +ncomp-rgb+ 3)
 
 (defparameter *rgb-sampling* '((1 1)(1 1)(1 1)))
+(defparameter *rgb-q-tabs* (vector jpeg::*q-luminance-hi*
+                                   jpeg::*q-chrominance-hi*))
 (defparameter *gray-q-tabs* (vector jpeg::*q-luminance*))
 
 ;;;
@@ -79,8 +81,9 @@
                          (aref jpeg-array (incf pixoff)) g
                          (aref jpeg-array (incf pixoff)) r)))))
          (jpeg::encode-image-stream stream jpeg-array +ncomp-rgb+ height width
-                                    :sampling *rgb-sampling*))))
-
+                                    :sampling *rgb-sampling*
+                                    :q-tabs *rgb-q-tabs*))))
+    
     ;; NB: The JPEG format doesn't, AAICT, have a well-specified way
     ;; of writing an RGBA image. So, for now at least, we'll punt and
     ;; write it as an RGB image.
@@ -102,7 +105,8 @@
                              (aref jpeg-array (incf pixoff)) g
                              (aref jpeg-array (incf pixoff)) r)))))
          (jpeg::encode-image-stream stream jpeg-array +ncomp-rgb+ height width
-                                    :sampling *rgb-sampling*))))
+                                    :sampling *rgb-sampling*
+                                    :q-tabs *rgb-q-tabs*))))
 
     (t (error "Cannot write a JPEG image from ~A" (type-of image)))))
 
