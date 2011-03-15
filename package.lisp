@@ -119,6 +119,11 @@
    #:write-ppm-stream
    #:write-ppm-file
 
+   #:read-gif-stream
+   #:read-gif-file
+   #:write-gif-stream
+   #:write-gif-file
+
    #:read-image-file
    #:read-image-stream
    #:write-image-file
