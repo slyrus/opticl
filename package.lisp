@@ -53,6 +53,11 @@
    #:sharpen-image
    #:blur-image
 
+   ;; morphological operations
+   #:morphological-op
+   #:dilate
+   #:erode
+   
    #:clear-image
 
    ;; Drawing primitives
@@ -64,6 +69,8 @@
    #:fill-circle*
    #:draw-rectangle
    #:draw-rectangle*
+   #:fill-rectangle
+   #:fill-rectangle*
    #:horizontal-line
    #:horizontal-line*
    #:vertical-line
