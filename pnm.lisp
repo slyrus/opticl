@@ -49,7 +49,6 @@
 ;;; PBM Files
 
 (defun %read-pbm-ascii-stream (stream)
-  (declare (optimize (debug 3)))
   (let ((width (parse-integer (read-number stream)))
         (height (parse-integer (read-number stream))))
     (let ((img (make-1-bit-gray-image height width)))    

@@ -8,7 +8,6 @@
 (defun read-tiff-stream (stream)
   "reads a TIFF image from a stream and returns either a 32-bit ARGB
 image or an 8-bit grayscale image"
-  (declare (optimize (debug 3)))
   (let ((tiff-image (tiff:read-tiff-stream stream)))
     (with-accessors ((image-length tiff:tiff-image-length)
                      (image-width tiff:tiff-image-width)

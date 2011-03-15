@@ -12,7 +12,6 @@
 
 (defun discrete-convolve (u v)
   "Perform a discrete convolution of matrix u with matrix v"
-  (declare (optimize (debug 3)))
   (let ((fit-function
          (let ((type (array-element-type u)))
            (cond
