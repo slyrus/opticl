@@ -304,3 +304,23 @@ function does that.")
                (setf (pixel image i j) 0))))
   image)
 
+(defun copy-array (src &key
+                     (element-type (array-element-type src))
+                     (fill-pointer (and (array-has-fill-pointer-p src)
+                                        (fill-pointer src)))
+                     (adjustable (adjustable-array-p src)))
+  "Returns an undisplaced copy of ARRAY, with same fill-pointer and
+adjustability (if any) as the original, unless overridden by the keyword
+arguments."
+  (let ((dims (array-dimensions src)))
+    ;; Dictionary entry for ADJUST-ARRAY requires adjusting a
+    ;; displaced array to a non-displaced one to make a copy.
+    (let* ((src-displaced (make-array (reduce #'* dims) :displaced-to src
+                                      :element-type element-type))
+           (dest (make-array dims :element-type element-type
+                             :fill-pointer fill-pointer
+                             :adjustable adjustable))
+           (dest-displaced (make-array (reduce #'* dims) :displaced-to dest
+                                       :element-type element-type)))
+      (replace dest-displaced src-displaced)
+      dest)))
