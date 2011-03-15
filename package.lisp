@@ -125,15 +125,15 @@
    #:write-image-stream
 
    ;; conversion
+   #:coerce-image
 
+   ;;
    ;; deprectated!!! do not use!!!
    #:convert-image-to-grayscale
    #:convert-image-to-grayscale-luminance
    #:convert-image-to-rgb
    #:convert-image-to-rgba
    #:convert-image-to-8-bit-grayscale
-
-   #:coerce-image
    ))
 
 (in-package :opticl)
