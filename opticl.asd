@@ -11,6 +11,7 @@
    (:static-file "COPYRIGHT")
    (:file "package")
    (:file "opticl")
+   (:file "coerce")
    (:file "colors")
    (:file "imageops")
    (:file "invert")

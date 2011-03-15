@@ -15,16 +15,19 @@
    #:do-region-pixels
    #:set-region-pixels
 
+   #:gray-image
    #:1-bit-gray-image #:make-1-bit-gray-image
    #:2-bit-gray-image #:make-2-bit-gray-image
    #:4-bit-gray-image #:make-4-bit-gray-image
    #:8-bit-gray-image #:make-8-bit-gray-image
    #:16-bit-gray-image #:make-16-bit-gray-image
 
+   #:rgb-image
    #:4-bit-rgb-image #:make-4-bit-rgb-image
    #:8-bit-rgb-image #:make-8-bit-rgb-image
    #:16-bit-rgb-image #:make-16-bit-rgb-image
 
+   #:rgba-image
    #:4-bit-rgba-image #:make-4-bit-rgba-image
    #:8-bit-rgba-image #:make-8-bit-rgba-image
    #:16-bit-rgba-image #:make-16-bit-rgba-image
@@ -115,12 +118,15 @@
    #:write-image-stream
 
    ;; conversion
+
+   ;; deprectated!!! do not use!!!
    #:convert-image-to-grayscale
    #:convert-image-to-grayscale-luminance
    #:convert-image-to-rgb
    #:convert-image-to-rgba
    #:convert-image-to-8-bit-grayscale
 
+   #:coerce-image
    ))
 
 (in-package :opticl)
