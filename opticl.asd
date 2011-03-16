@@ -25,4 +25,5 @@
    (:file "png")
    (:file "pnm")
    (:file "gif")
-   (:file "io")))
+   (:file "io")
+   (:file "cluster")))

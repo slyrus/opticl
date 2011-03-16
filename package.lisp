@@ -132,6 +132,9 @@
    ;; conversion
    #:coerce-image
 
+   ;; k-means clustering
+   #:k-means-cluster-image-pixels
+
    ;;
    ;; deprectated!!! do not use!!!
    #:convert-image-to-grayscale

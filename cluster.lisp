@@ -25,7 +25,7 @@
 
 (declaim (ftype (function (fixnum fixnum fixnum fixnum fixnum fixnum) fixnum) l2-distance-3))
 
-(defun cluster-image-pixels (image k &key (max-iterations 20))
+(defun k-means-cluster-image-pixels (image k &key (max-iterations 20))
   (etypecase image
     (8-bit-gray-image
      (with-image-bounds (height width channels)
@@ -85,7 +85,6 @@
               with old-means
               until stop
               do
-                (print iter)
                 (assign-to-means)
                 (recompute-means)
                 (when (and old-means (equalp old-means means))
