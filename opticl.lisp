@@ -65,6 +65,7 @@
       (8-bit-gray-image '(integer-image 1 8) '(unsigned-byte 8) 1)
       (16-bit-gray-image '(integer-image 1 16) '(unsigned-byte 16) 1)
       (32-bit-gray-image '(integer-image 1 32) '(unsigned-byte 32) 1)
+      (fixnum-gray-image '(integer-image 1 fixnum) 'fixnum 1)
       (single-float-gray-image '(single-float-image 1) 'single-float 1)
       (double-float-gray-image '(double-float-image 1) 'double-float 1)
 
@@ -217,6 +218,8 @@
         `(ecase (array-rank ,image-var)
            (2 (aref ,image-var ,y ,x))
            (3 (ecase (array-dimension ,image-var 2)
+                (1 (values
+                    (aref ,image-var ,y ,x 0)))
                 (2 (values
                     (aref ,image-var ,y ,x 0)
                     (aref ,image-var ,y ,x 1)))
@@ -253,7 +256,9 @@ function does that.")
          (,xmax-var (array-dimension ,img 1))
          (,channels (when (= (array-rank ,img) 3)
                       (array-dimension ,img 2))))
-     (declare (ignorable ,channels))
+     (declare (ignorable ,channels)
+              (type fixnum ,ymax-var)
+              (type fixnum ,xmax-var))
      ,@body))
 
 (defmacro do-pixels ((i-var j-var) image &body body)
