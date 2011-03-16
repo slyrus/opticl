@@ -250,7 +250,7 @@ less painful (for the quicklisp user anyway) than the used to be.
 
 To install the dependencies using quicklisp:
 
-    (ql:quickload 'alexandria 'zpng 'png-read 'cl-jpeg 'skippy)
+   (ql:quickload '(alexandria com.gigamonkeys.binary-data ieee-floats zpng png-read cl-jpeg skippy))
 
 Retrospectiff must be installed by hand using a recent version from
 [github](https://github.com/slyrus/retrospectiff):
