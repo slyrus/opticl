@@ -28,6 +28,13 @@
              image
            (setf (pixel gray-image i j) (pixel image i j)))
          gray-image)))
+    (fixnum-gray-image
+     (with-image-bounds (y x) image
+       (let ((gray-image (make-8-bit-gray-image y x)))
+         (do-pixels (i j)
+             image
+           (setf (pixel gray-image i j) (pixel image i j)))
+         gray-image)))
     ((or rgb-image rgba-image)
      (with-image-bounds (y x channels) image
        (let* ((type (array-element-type image))
