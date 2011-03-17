@@ -12,16 +12,13 @@
                       channels)))
 
 (deftype gray-image (&key element-type)
-  `(simple-array ,element-type
-                 (* *)))
+  `(simple-array ,element-type (* *)))
 
 (deftype rgb-image (&key element-type)
-  `(simple-array ,element-type
-                 (* * 3)))
+  `(simple-array ,element-type (* * 3)))
 
 (deftype rgba-image (&key element-type)
-  `(simple-array ,element-type
-                 (* * 4)))
+  `(simple-array ,element-type (* * 4)))
 
 (deftype integer-image (&key (channels 1) element-type)
   `(simple-array ,element-type
