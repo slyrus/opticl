@@ -22,7 +22,7 @@ in time-(and resource-)sensitive operations.
 
 # Installation
 
-NOTE: THIS DOESN'T WORK YET!!!  The easiest way (will be) to use
+NOTE: QUICKLISP DOESN'T WORK YET!!!  The easiest way (will be) to use
 Zachary Beane's fabulous quicklisp library: `(ql:quickload 'opticl)`
 
 # For the Impatient
@@ -65,7 +65,7 @@ the following:
       0 bytes consed
 
 Which shows that we're able to perform simple arithmetic operations on
-each pixel of the image in 9 milliseconds, and that we don't need to
+each pixel of the image in 6 milliseconds, and that we don't need to
 cons to do so.
 
 # Image Representation
@@ -130,11 +130,11 @@ will satisfy the conditions of being an `8-bit-rgb-image`.
 
 This enables both opticl code and user code to infer the dimensions
 and the kind of pixels represented in a(n appropriate) CL array that
-happens to be on opticl `image`. This, in turn, allows for both
-opticl code and user code to use type declarations to enable the
-compiler to generate high-performance code for processing images. It
-is chiefly this facility that distinguishes opticl from other CL image
-processing libraries such as ch-image and imago.
+happens to be on opticl `image`. This, in turn, allows for both opticl
+code and user code to use type declarations to enable the compiler to
+generate high-performance code for processing images. It is chiefly
+this facility that distinguishes opticl from other CL image processing
+libraries such as ch-image and imago.
 
 ## Multiple Values
 
@@ -182,7 +182,8 @@ The trade-off in this approach is that doing so requires that we know
 the kind of image with which are dealing, at least if we want to do so
 efficiently. Fortunately, CL's type system gets us most of the way
 there. I say most of the way there, as there is one limitation in
-standard, which we will see in a moment. In the example above you'll notice a line which reads:
+standard, which we will see in a moment. In the example above you'll
+notice a line which reads:
 
     (declare (type 8-bit-rgb-image img))
 
@@ -211,11 +212,10 @@ to see if there is a declaration in effect:
                (= (length type-decl) 4)
                (fourth type-decl)))))
 
-This allows us to glean information from the information provided
-to the compiler that enables opticl to efficiently operate on its
-images, when given appropriate declarations, and still work,
-albeit less efficiently, in the absence of the appropriate type
-declarations.
+This allows us to glean information from the information provided to
+the compiler that enables opticl to efficiently operate on its images,
+when given appropriate declarations, and still work, albeit less
+efficiently, in the absence of the appropriate type declarations.
 
 (Note: I still need to look into the availability of the CLtL2
 functionality on other CL implementations.)
@@ -233,7 +233,7 @@ especially for file I/O of various formats. In ch-image, I tried to
 make the file I/O sections optional dependencies, but this proved
 merely to sow confusion into the minds of the user. With the advent of
 quicklisp, dependencies on libraries that are in quicklisp are much
-less painful (for the quicklisp user anyway) than the used to be.
+less painful (for the quicklisp user anyway) than they used to be.
 
 * alexandria
 * retrospectiff (new version -- as of??)
@@ -261,6 +261,16 @@ Once opticl is on quicklisp, this step will be replaced by:
 
     (ql:quickload 'opticl)
 
+# opticl-test and opticl-examples
+
+In the interest of keeping the core opticl library small, I've split
+off some test code in into
+[opticl-test](https://github.com/slyrus/opticl-test) and more
+expository example code into
+[opticl-examples](https://github.com/slyrus/opticl-examples).
+
 # Examples
 
-TBW
+Some examples of using opticl code can be found here:
+
+[http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml](http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml)
