@@ -235,18 +235,18 @@ merely to sow confusion into the minds of the user. With the advent of
 quicklisp, dependencies on libraries that are in quicklisp are much
 less painful (for the quicklisp user anyway) than the used to be.
 
-  retrospectiff (new version -- as of??)
-   com.gigamonkeys.binary-data (also known as monkeylib-binary-data)
-    alexandria
-   ieee-floats
-  zpng
-   salza2
-  png-read
-   iterate
-   chipz
-   babel
-  cl-jpeg
-  skippy
+* alexandria
+* retrospectiff (new version -- as of??)
+* com.gigamonkeys.binary-data (also known as monkeylib-binary-data)
+* ieee-floats
+* zpng
+* salza2
+* png-read
+* iterate
+* chipz
+* babel
+* cl-jpeg
+* skippy
 
 To install the dependencies using quicklisp:
 
