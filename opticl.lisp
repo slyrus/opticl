@@ -4,9 +4,7 @@
 (in-package :opticl)
 
 (deftype image (&key channels element-type)
-  `(simple-array ,(if element-type
-                      element-type
-                      '*)
+  `(simple-array ,element-type
                  ,(if (numberp channels)
                       (if (= channels 1)
                           `(* *)
@@ -14,34 +12,26 @@
                       channels)))
 
 (deftype gray-image (&key element-type)
-  `(simple-array ,(if element-type
-                      element-type
-                      '*)
+  `(simple-array ,element-type
                  (* *)))
 
 (deftype rgb-image (&key element-type)
-  `(simple-array ,(if element-type
-                      element-type
-                      '*)
+  `(simple-array ,element-type
                  (* * 3)))
 
 (deftype rgba-image (&key element-type)
-  `(simple-array ,(if element-type
-                      element-type
-                      '*)
+  `(simple-array ,element-type
                  (* * 4)))
 
-(deftype integer-image (&optional channels bits-per-channel)
-  `(simple-array ,(if (numberp bits-per-channel)
-                      `(unsigned-byte ,bits-per-channel)
-                      bits-per-channel)
+(deftype integer-image (&key (channels 1) element-type)
+  `(simple-array ,element-type
                  ,(if (numberp channels)
                       (if (= channels 1)
                           `(* *)
                           `(* * ,channels))
                       channels)))
 
-(deftype single-float-image (&optional channels)
+(deftype single-float-image (&key (channels 1))
   `(simple-array single-float
                  ,(if (numberp channels)
                       (if (= channels 1)
@@ -49,7 +39,7 @@
                           `(* * ,channels))
                       channels)))
 
-(deftype double-float-image (&optional channels)
+(deftype double-float-image (&key (channels 1))
   `(simple-array double-float
                  ,(if (numberp channels)
                       (if (= channels 1)
@@ -59,44 +49,49 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *image-types*
-    '((1-bit-gray-image '(integer-image 1 1) '(unsigned-byte 1) 1)
-      (2-bit-gray-image '(integer-image 1 2) '(unsigned-byte 2) 1)
-      (4-bit-gray-image '(integer-image 1 4) '(unsigned-byte 4) 1)
-      (8-bit-gray-image '(integer-image 1 8) '(unsigned-byte 8) 1)
-      (16-bit-gray-image '(integer-image 1 16) '(unsigned-byte 16) 1)
-      (32-bit-gray-image '(integer-image 1 32) '(unsigned-byte 32) 1)
-      (fixnum-gray-image '(integer-image 1 fixnum) 'fixnum 1)
-      (single-float-gray-image '(single-float-image 1) 'single-float 1)
-      (double-float-gray-image '(double-float-image 1) 'double-float 1)
+    '((1-bit-gray-image integer-image :element-type (unsigned-byte 1))
+      (2-bit-gray-image integer-image :element-type (unsigned-byte 2))
+      (4-bit-gray-image integer-image :element-type (unsigned-byte 4))
+      (8-bit-gray-image integer-image :element-type (unsigned-byte 8))
+      (16-bit-gray-image integer-image :element-type (unsigned-byte 16))
+      (32-bit-gray-image integer-image :element-type (unsigned-byte 32))
+      (fixnum-gray-image integer-image :element-type fixnum)
+      (single-float-gray-image single-float-image :element-type single-float)
+      (double-float-gray-image double-float-image :element-type double-float)
 
-      (4-bit-rgb-image '(integer-image 3 4) '(unsigned-byte 4) 3)
-      (8-bit-rgb-image '(integer-image 3 8) '(unsigned-byte 8) 3)
-      (16-bit-rgb-image '(integer-image 3 16) '(unsigned-byte 16) 3)
-      (single-float-rgb-image '(single-float-image 3) 'single-float 3)
-      (double-float-rgb-image '(double-float-image 3) 'double-float 3)
+      (4-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 4))
+      (8-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 8))
+      (16-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 16))
+      (single-float-rgb-image single-float-image :channels 3 :element-type single-float)
+      (double-float-rgb-image double-float-image :channels 3 :element-type double-float)
 
-      (4-bit-rgba-image '(integer-image 4 4) '(unsigned-byte 4) 4)
-      (8-bit-rgba-image '(integer-image 4 8) '(unsigned-byte 8) 4)
-      (16-bit-rgba-image '(integer-image 4 16) '(unsigned-byte 16) 4)
-      (single-float-rgba-image '(single-float-image 4) 'single-float 4)
-      (double-float-rgba-image '(double-float-image 4) 'double-float 4)
+      (4-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 4))
+      (8-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 8))
+      (16-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 16))
+      (single-float-rgba-image single-float-image :channels 4 :element-type single-float)
+      (double-float-rgba-image double-float-image :channels 4 :element-type double-float)
       )))
 
 (macrolet
-    ((frob-image (name image-type element-type num-channels)
-       (let ((type
-              (read-from-string (format nil "~A" name))))
+    ((frob-image (name image-type &key channels element-type)
+       (let ((type (read-from-string (format nil "~A" name))))
          (let ((ctor-function
                 (read-from-string (format nil "make-~A" type))))
            `(progn
-              (deftype ,type () ,image-type)
+              (deftype ,type () ',(list* image-type
+                                         (append 
+                                          (when channels
+                                            `(:channels ,channels))
+                                          (when element-type
+                                            `(:element-type ,element-type)))))
               (defun ,ctor-function (height width &key
                                      (initial-element nil initial-element-p)
                                      (initial-contents nil initial-contents-p))
                 (apply #'make-array (append (list height width)
-                                            (when (> ,num-channels 1)
-                                              (list ,num-channels)))
-                       :element-type ,element-type
+                                            (when (and ,channels
+                                                       (> ,channels 1))
+                                              (list ,channels)))
+                       :element-type ',element-type
                        (append
                         (when initial-element-p
                           `(:initial-element ,initial-element))
@@ -104,9 +99,15 @@
                           `(:initial-contents ,initial-contents)))))))))
      (frobber ()
        `(progn
-          ,@(loop for (name image-type element-type num-channels) in *image-types*
+          ,@(loop for image-spec in *image-types*
                collect 
-               `(frob-image ,name ,image-type ,element-type ,num-channels)))))
+                 (destructuring-bind (name image-type &key channels element-type)
+                     image-spec
+                   `(frob-image ,name ,image-type 
+                                ,@(if channels
+                                      `(:channels ,channels))
+                                ,@(if element-type
+                                      `(:element-type ,element-type))))))))
   (frobber))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
