@@ -154,8 +154,8 @@
           (let ((syms (map-into (make-list +max-image-channels+) #'gensym)))
             (let ((temp-y (gensym))
                   (temp-x (gensym)))
-              (values `(,temp-y ,temp-x)
-                      `(,y ,x)
+              (values `(,@dummies ,temp-y ,temp-x)
+                      `(,@vals ,y ,x)
                       syms
                       `(ecase (array-rank ,getter)
                          (3 (let ((d (array-dimension ,getter 2)))
