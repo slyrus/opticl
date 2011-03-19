@@ -139,6 +139,85 @@
                  (* b1 ,g21)
                  (* b2 ,g22))))))
 
+
+(defun %fast-transform-rgb-image (matrix-m matrix-n xfrm)
+  (declare (optimize (speed 3)))
+  (typecase matrix-m
+    (8-bit-rgb-image
+     (locally
+         (declare (type 8-bit-rgb-image matrix-m matrix-n))
+       (with-image-bounds (matrix-m-rows matrix-m-columns channels)
+           matrix-m
+         (with-image-bounds (matrix-n-rows matrix-n-columns)
+             matrix-n
+           (let ((inv-xfrm (invert-matrix xfrm))
+                 (coord1 (make-array 3 :element-type 'double-float :initial-element 1d0)))
+             (declare (type (simple-array double-float (3 3)) inv-xfrm)
+                      (type (simple-array double-float (3)) coord1))
+             (dotimes (i matrix-n-rows)
+               (declare (type fixnum i))
+               (setf (aref coord1 0) (coerce i 'double-float))
+               (dotimes (j matrix-n-columns)
+                 (declare (type fixnum i))
+                 (setf (aref coord1 1) (coerce j 'double-float))
+                 (multiple-value-bind (oldy oldx)
+                     (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0))
+                                (* (aref inv-xfrm 0 1) (aref coord1 1))
+                                (aref inv-xfrm 0 2))
+                             (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
+                                (* (aref inv-xfrm 1 1) (aref coord1 1))
+                                (aref inv-xfrm 1 2)))
+                   (declare (type double-float oldx oldy))
+                   (let ((oldy-round (truncate (the double-float
+                                                 (+ (the double-float oldy)
+                                                    (the double-float +epsilon+)))))
+                         (oldx-round (truncate (the double-float
+                                                 (+ (the double-float oldx)
+                                                    (the double-float +epsilon+))))))
+                     (declare (type (signed-byte 64) oldy-round oldx-round))
+                     (when (and (< -1 oldy-round matrix-m-rows)
+                                (< -1 oldx-round matrix-m-columns))
+                       (setf (pixel matrix-n i j)
+                             (pixel matrix-m oldy-round oldx-round))))))))))))
+    (8-bit-rgba-image
+     (locally
+         (declare (type 8-bit-rgba-image matrix-m matrix-n))
+       (with-image-bounds (matrix-m-rows matrix-m-columns channels)
+           matrix-m
+         (with-image-bounds (matrix-n-rows matrix-n-columns)
+             matrix-n
+           (let ((inv-xfrm (invert-matrix xfrm))
+                 (coord1 (make-array 3 :element-type 'double-float :initial-element 1d0)))
+             (declare (type (simple-array double-float (3 3)) inv-xfrm)
+                      (type (simple-array double-float (3)) coord1))
+             (dotimes (i matrix-n-rows)
+               (declare (type fixnum i))
+               (setf (aref coord1 0) (coerce i 'double-float))
+               (dotimes (j matrix-n-columns)
+                 (declare (type fixnum i))
+                 (setf (aref coord1 1) (coerce j 'double-float))
+                 (multiple-value-bind (oldy oldx)
+                     (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0))
+                                (* (aref inv-xfrm 0 1) (aref coord1 1))
+                                (aref inv-xfrm 0 2))
+                             (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
+                                (* (aref inv-xfrm 1 1) (aref coord1 1))
+                                (aref inv-xfrm 1 2)))
+                   (declare (type double-float oldx oldy))
+                   (let ((oldy-round (truncate (the double-float
+                                                 (+ (the double-float oldy)
+                                                    (the double-float +epsilon+)))))
+                         (oldx-round (truncate (the double-float
+                                                 (+ (the double-float oldx)
+                                                    (the double-float +epsilon+))))))
+                     (declare (type (signed-byte 64) oldy-round oldx-round))
+                     (when (and (< -1 oldy-round matrix-m-rows)
+                                (< -1 oldx-round matrix-m-columns))
+                       (setf (pixel matrix-n i j)
+                             (pixel matrix-m oldy-round oldx-round)))))))))))))
+  matrix-n)
+
+
 (defun %transform-image (matrix-m matrix-n xfrm
                          &key
                          (interpolate :nearest-neighbor)
@@ -382,10 +461,15 @@
               (setf xfrm-shift
                     (matrix-multiply post-shift
                                      (matrix-multiply post-shift2 xfrm)))
-              (apply #'%transform-image matrix-m matrix-n xfrm-shift
-                     (append
-                      (when background-supplied-p (list :background background))
-                      (when interpolate-supplied-p (list :interpolate interpolate)))))))))))
+              (if (and (typep matrix-m '8-bit-rgb-image)
+                       (typep matrix-n '8-bit-rgb-image)
+                       (not background-supplied-p)
+                       (not interpolate-supplied-p))
+                  (%fast-transform-rgb-image matrix-m matrix-n xfrm-shift)
+                  (apply #'%transform-image matrix-m matrix-n xfrm-shift
+                         (append
+                          (when background-supplied-p (list :background background))
+                          (when interpolate-supplied-p (list :interpolate interpolate))))))))))))
 
 (defun split-around-zero (k &key integer)
   (let ((khalf (/ k 2.0d0)))
