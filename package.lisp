@@ -21,6 +21,7 @@
    #:4-bit-gray-image #:make-4-bit-gray-image
    #:8-bit-gray-image #:make-8-bit-gray-image
    #:16-bit-gray-image #:make-16-bit-gray-image
+   #:32-bit-gray-image #:make-32-bit-gray-image
 
    #:rgb-image
    #:4-bit-rgb-image #:make-4-bit-rgb-image

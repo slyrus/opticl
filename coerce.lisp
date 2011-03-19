@@ -167,7 +167,7 @@
                  (pixel image i j)))
          rgb-image)))))
 
-(defmethod coerce-image (image (type (eql 'rgba-image)) &rest args)
+(defmethod coerce-image (image (type (eql '8-bit-rgba-image)) &rest args)
   (declare (ignore args))
   (etypecase image
     (gray-image
@@ -193,6 +193,9 @@
                          (list 255))))
          rgba-image)))
     (rgba-image image)))
+
+(defmethod coerce-image (image (type (eql 'rgba-image)) &rest args)
+  (apply #'coerce-image image '8-bit-rgba-image args))
 
 ;;;
 ;;; deprecated convert functions
