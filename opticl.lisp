@@ -123,87 +123,90 @@
 (defconstant +max-image-channels+ 4)
 
 (define-setf-expander pixel (image-var y x &environment env)
-  (let ((image-dimensions (%get-image-dimensions image-var env)))
-    (if image-dimensions
-        (let ((arity (or (and (= (length image-dimensions) 3)
-                              (third image-dimensions))
-                         1))
-              (temp-y (gensym))
-              (temp-x (gensym)))
-          (if (= arity 1)
-              (let ((store (gensym)))
-                (values `(,temp-y ,temp-x)
-                        `(,y ,x)
-                        `(,store)
-                        `(setf (aref ,image-var ,temp-y ,temp-x) ,store)
-                        `(aref ,image-var ,temp-y ,temp-x)))
-              (let ((stores (map-into (make-list arity) #'gensym)))
-                (values `(,temp-y ,temp-x)
-                        `(,y ,x)
-                        stores
-                        `(progn (setf ,@(loop for i from 0
-                                           for store in stores
-                                           collect `(aref ,image-var ,temp-y ,temp-x ,i)
-                                           collect store))
-                                (values ,@stores))
-                        `(values ,@(loop for i from 0 below (length stores)
-                                      collect `(aref ,image-var ,temp-y ,temp-x ,i)))))))
-        (let ((syms (map-into (make-list +max-image-channels+) #'gensym)))
-          (let ((temp-y (gensym))
+  (multiple-value-bind (dummies vals newval setter getter)
+      (get-setf-expansion image-var env)
+    (declare (ignore newval setter))
+    (let ((image-dimensions (%get-image-dimensions getter env)))
+      (if image-dimensions
+          (let ((arity (or (and (= (length image-dimensions) 3)
+                                (third image-dimensions))
+                           1))
+                (temp-y (gensym))
                 (temp-x (gensym)))
-            (values `(,temp-y ,temp-x)
-                    `(,y ,x)
-                    syms
-                    `(ecase (array-rank ,image-var)
-                       (3 (let ((d (array-dimension ,image-var 2)))
+            (if (= arity 1)
+                (let ((store (gensym)))
+                  (values `(,@dummies ,temp-y ,temp-x)
+                          `(,@vals ,y ,x)
+                          `(,store)
+                          `(setf (aref ,getter ,temp-y ,temp-x) ,store)
+                          `(aref ,getter ,temp-y ,temp-x)))
+                (let ((stores (map-into (make-list arity) #'gensym)))
+                  (values `(,@dummies ,temp-y ,temp-x)
+                          `(,@vals ,y ,x)
+                          stores
+                          `(progn (setf ,@(loop for i from 0
+                                             for store in stores
+                                             collect `(aref ,getter ,temp-y ,temp-x ,i)
+                                             collect store))
+                                  (values ,@stores))
+                          `(values ,@(loop for i from 0 below (length stores)
+                                        collect `(aref ,getter ,temp-y ,temp-x ,i)))))))
+          (let ((syms (map-into (make-list +max-image-channels+) #'gensym)))
+            (let ((temp-y (gensym))
+                  (temp-x (gensym)))
+              (values `(,temp-y ,temp-x)
+                      `(,y ,x)
+                      syms
+                      `(ecase (array-rank ,getter)
+                         (3 (let ((d (array-dimension ,getter 2)))
+                              (case d
+                                (1
+                                 (values
+                                  (setf (aref ,getter ,temp-y ,temp-x 0) ,(elt syms 0))))
+                                (2
+                                 (values
+                                  (setf (aref ,getter ,temp-y ,temp-x 0) ,(elt syms 0))
+                                  (setf (aref ,getter ,temp-y ,temp-x 1) ,(elt syms 1))))
+                                (3
+                                 (values
+                                  (setf (aref ,getter ,temp-y ,temp-x 0) ,(elt syms 0))
+                                  (setf (aref ,getter ,temp-y ,temp-x 1) ,(elt syms 1))
+                                  (setf (aref ,getter ,temp-y ,temp-x 2) ,(elt syms 2))))
+                                (4
+                                 (values
+                                  (setf (aref ,getter ,temp-y ,temp-x 0) ,(elt syms 0))
+                                  (setf (aref ,getter ,temp-y ,temp-x 1) ,(elt syms 1))
+                                  (setf (aref ,getter ,temp-y ,temp-x 2) ,(elt syms 2))
+                                  (setf (aref ,getter ,temp-y ,temp-x 3) ,(elt syms 3))))
+                                (t (loop for i below d
+                                      collect (setf (aref ,getter ,temp-y ,temp-x i) (elt (list ,@syms) i)))))))
+                         (2 (setf (aref ,getter ,temp-y ,temp-x) ,(elt syms 0))))
+                      `(ecase (array-rank ,getter)
+                         (3
+                          (let ((d (array-dimension ,getter 2)))
                             (case d
                               (1
                                (values
-                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))))
+                                (aref ,getter ,temp-y ,temp-x 0)))
                               (2
                                (values
-                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))
-                                (setf (aref ,image-var ,temp-y ,temp-x 1) ,(elt syms 1))))
+                                (aref ,getter ,temp-y ,temp-x 0)
+                                (aref ,getter ,temp-y ,temp-x 1)))
                               (3
                                (values
-                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))
-                                (setf (aref ,image-var ,temp-y ,temp-x 1) ,(elt syms 1))
-                                (setf (aref ,image-var ,temp-y ,temp-x 2) ,(elt syms 2))))
+                                (aref ,getter ,temp-y ,temp-x 0)
+                                (aref ,getter ,temp-y ,temp-x 1)
+                                (aref ,getter ,temp-y ,temp-x 2)))
                               (4
                                (values
-                                (setf (aref ,image-var ,temp-y ,temp-x 0) ,(elt syms 0))
-                                (setf (aref ,image-var ,temp-y ,temp-x 1) ,(elt syms 1))
-                                (setf (aref ,image-var ,temp-y ,temp-x 2) ,(elt syms 2))
-                                (setf (aref ,image-var ,temp-y ,temp-x 3) ,(elt syms 3))))
-                              (t (loop for i below d
-                                    collect (setf (aref ,image-var ,temp-y ,temp-x i) (elt (list ,@syms) i)))))))
-                       (2 (setf (aref ,image-var ,temp-y ,temp-x) ,(elt syms 0))))
-                    `(ecase (array-rank ,image-var)
-                       (3
-                        (let ((d (array-dimension ,image-var 2)))
-                          (case d
-                            (1
-                             (values
-                              (aref ,image-var ,temp-y ,temp-x 0)))
-                            (2
-                             (values
-                              (aref ,image-var ,temp-y ,temp-x 0)
-                              (aref ,image-var ,temp-y ,temp-x 1)))
-                            (3
-                             (values
-                              (aref ,image-var ,temp-y ,temp-x 0)
-                              (aref ,image-var ,temp-y ,temp-x 1)
-                              (aref ,image-var ,temp-y ,temp-x 2)))
-                            (4
-                             (values
-                              (aref ,image-var ,temp-y ,temp-x 0)
-                              (aref ,image-var ,temp-y ,temp-x 1)
-                              (aref ,image-var ,temp-y ,temp-x 2)
-                              (aref ,image-var ,temp-y ,temp-x 3)))
-                            (t (values-list
-                                (loop for i below d
-                                   collect (aref ,image-var ,temp-y ,temp-x i)))))))
-                       (2 (aref ,image-var ,temp-y ,temp-x)))))))))
+                                (aref ,getter ,temp-y ,temp-x 0)
+                                (aref ,getter ,temp-y ,temp-x 1)
+                                (aref ,getter ,temp-y ,temp-x 2)
+                                (aref ,getter ,temp-y ,temp-x 3)))
+                              (t (values-list
+                                  (loop for i below d
+                                     collect (aref ,getter ,temp-y ,temp-x i)))))))
+                         (2 (aref ,getter ,temp-y ,temp-x))))))))))
 
 (defmacro pixel (image-var y x &environment env)
   (let ((image-dimensions (%get-image-dimensions image-var env)))
@@ -260,33 +263,31 @@ function does that.")
      ,@body))
 
 (defmacro do-pixels ((i-var j-var) image &body body)
-  (alexandria:once-only (image)
-    (alexandria:with-gensyms (height width)
-      `(with-image-bounds (,height ,width) ,image
-         (loop for ,i-var below ,height
-            do (loop for ,j-var below ,width
-                  do ,@body))))))
+  (alexandria:with-gensyms (height width)
+    `(with-image-bounds (,height ,width) ,image
+       (loop for ,i-var fixnum below ,height
+          do (loop for ,j-var fixnum below ,width
+                do ,@body)))))
 
 (defmacro set-pixels ((i-var j-var) image &body body)
-  (alexandria:once-only (image)
-    (alexandria:with-gensyms (height width)
-      `(with-image-bounds (,height ,width) ,image
-         (loop for ,i-var below ,height
-            do (loop for ,j-var below ,width
-                  do (setf (pixel ,image ,i-var ,j-var)
-                           (progn
-                             ,@body))))))))
+  (alexandria:with-gensyms (height width)
+    `(with-image-bounds (,height ,width) ,image
+       (loop for ,i-var fixnum below ,height
+          do (loop for ,j-var fixnum below ,width
+                do (setf (pixel ,image ,i-var ,j-var)
+                         (progn
+                           ,@body)))))))
 
 (defmacro do-region-pixels ((i-var j-var y1 x1 y2 x2) image &body body)
   (declare (ignorable image))
-  `(loop for ,i-var from ,y1 below ,y2
-      do (loop for ,j-var from ,x1 below ,x2
+  `(loop for ,i-var fixnum from ,y1 below ,y2
+      do (loop for ,j-var fixnum from ,x1 below ,x2
             do ,@body)))
 
 (defmacro set-region-pixels ((i-var j-var y1 x1 y2 x2) image &body body)
   (declare (ignorable image))
-  `(loop for ,i-var from ,y1 below ,y2
-      do (loop for ,j-var from ,x1 below ,x2
+  `(loop for ,i-var fixnum from ,y1 below ,y2
+      do (loop for ,j-var fixnum from ,x1 below ,x2
             do (setf (pixel ,image ,i-var ,j-var)
                      (progn
                        ,@body)))))
@@ -297,21 +298,20 @@ function does that.")
     (declare (ignore height width))
     (if channels
         (ecase channels
-          (2 (do-pixels (i j) image
-               (setf (pixel image i j) (values 0 0))))
-          (3 (do-pixels (i j) image
-               (setf (pixel image i j) (values 0 0 0))))
-          (4 (do-pixels (i j) image
-               (setf (pixel image i j) (values 0 0 0 0)))))
-        (do-pixels (i j) image
-               (setf (pixel image i j) 0))))
+          (2 (set-pixels (i j) image
+               (values 0 0)))
+          (3 (set-pixels (i j) image
+               (values 0 0 0)))
+          (4 (set-pixels (i j) image
+               (values 0 0 0 0))))
+        (set-pixels (i j) image 0)))
   image)
 
 (defun copy-array (src &key
-                     (element-type (array-element-type src))
-                     (fill-pointer (and (array-has-fill-pointer-p src)
-                                        (fill-pointer src)))
-                     (adjustable (adjustable-array-p src)))
+                   (element-type (array-element-type src))
+                   (fill-pointer (and (array-has-fill-pointer-p src)
+                                      (fill-pointer src)))
+                   (adjustable (adjustable-array-p src)))
   "Returns an undisplaced copy of ARRAY, with same fill-pointer and
 adjustability (if any) as the original, unless overridden by the keyword
 arguments."
