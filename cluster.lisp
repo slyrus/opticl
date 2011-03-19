@@ -129,12 +129,20 @@
                   (dotimes (q k)
                     (when (plusp (aref counts q))
                       (multiple-value-bind (m1 m2 m3)
-                            (pixel means q 0)
+                          (pixel means q 0)
                         (let ((factor (aref counts q)))
                           (setf (pixel means q 0)
                                 (values (truncate (/ m1 factor))
                                         (truncate (/ m2 factor))
-                                        (truncate (/ m3 factor)))))))))
+                                        (truncate (/ m3 factor))))))))
+                  (let ((new-means-list
+                         (loop for count across counts
+                            for i below k
+                            collect (list count (pixel* means i 0)))))
+                    (loop for (count mean) in (sort new-means-list #'> :key #'first)
+                       for i below k
+                       do (setf (pixel* means i 0) mean)
+                         (setf (aref counts i) count))))
                 (assign-to-means ()
                   (declare (type 8-bit-rgb-image image)
                            (optimize (speed 3)))
