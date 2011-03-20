@@ -176,6 +176,38 @@
                        (setf (pixel matrix-n i j)
                              (pixel matrix-m oldy-round oldx-round))))))))))))
 
+    (16-bit-gray-image
+     (locally
+         (declare (type 16-bit-gray-image matrix-m matrix-n))
+       (with-image-bounds (matrix-m-rows matrix-m-columns)
+           matrix-m
+         (with-image-bounds (matrix-n-rows matrix-n-columns)
+             matrix-n
+           (let ((inv-xfrm (invert-matrix xfrm))
+                 (coord1 (make-array 3 :element-type 'double-float :initial-element 1d0)))
+             (declare (type (simple-array double-float (3 3)) inv-xfrm)
+                      (type (simple-array double-float (3)) coord1))
+             (dotimes (i matrix-n-rows)
+               (declare (type fixnum i))
+               (setf (aref coord1 0) (coerce i 'double-float))
+               (dotimes (j matrix-n-columns)
+                 (declare (type fixnum i))
+                 (setf (aref coord1 1) (coerce j 'double-float))
+                 (multiple-value-bind (oldy oldx)
+                     (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0))
+                                (* (aref inv-xfrm 0 1) (aref coord1 1))
+                                (aref inv-xfrm 0 2))
+                             (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
+                                (* (aref inv-xfrm 1 1) (aref coord1 1))
+                                (aref inv-xfrm 1 2)))
+                   (declare (type (double-float -1000000d0 1000000d0) oldy oldx))
+                   (let ((oldy-round (truncate (+ oldy +epsilon+)))
+                         (oldx-round (truncate (+ oldx +epsilon+))))
+                     (when (and (< -1 oldy-round matrix-m-rows)
+                                (< -1 oldx-round matrix-m-columns))
+                       (setf (pixel matrix-n i j)
+                             (pixel matrix-m oldy-round oldx-round))))))))))))
+
     (8-bit-rgb-image
      (locally
          (declare (type 8-bit-rgb-image matrix-m matrix-n))
@@ -208,10 +240,76 @@
                                 (< -1 oldx-round matrix-m-columns))
                        (setf (pixel matrix-n i j)
                              (pixel matrix-m oldy-round oldx-round))))))))))))
-
+    
+    (16-bit-rgb-image
+     (locally
+         (declare (type 16-bit-rgb-image matrix-m matrix-n))
+       (with-image-bounds (matrix-m-rows matrix-m-columns channels)
+           matrix-m
+         (with-image-bounds (matrix-n-rows matrix-n-columns)
+             matrix-n
+           (let ((inv-xfrm (invert-matrix xfrm))
+                 (coord1 (make-array 3 :element-type 'double-float :initial-element 1d0)))
+             (declare (type (simple-array double-float (3 3)) inv-xfrm)
+                      (type (simple-array double-float (3)) coord1))
+             (dotimes (i matrix-n-rows)
+               (declare (type fixnum i))
+               (setf (aref coord1 0) (coerce i 'double-float))
+               (dotimes (j matrix-n-columns)
+                 (declare (type fixnum i))
+                 (setf (aref coord1 1) (coerce j 'double-float))
+                 (multiple-value-bind (oldy oldx)
+                     (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0))
+                                (* (aref inv-xfrm 0 1) (aref coord1 1))
+                                (aref inv-xfrm 0 2))
+                             (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
+                                (* (aref inv-xfrm 1 1) (aref coord1 1))
+                                (aref inv-xfrm 1 2)))
+                   (declare (type (double-float -1000000d0 1000000d0) oldy oldx))
+                   (let ((oldy-round (truncate (+ oldy +epsilon+)))
+                         (oldx-round (truncate (+ oldx +epsilon+))))
+                     (declare (type (signed-byte 64) oldy-round oldx-round))
+                     (when (and (< -1 oldy-round matrix-m-rows)
+                                (< -1 oldx-round matrix-m-columns))
+                       (setf (pixel matrix-n i j)
+                             (pixel matrix-m oldy-round oldx-round))))))))))))
+    
     (8-bit-rgba-image
      (locally
          (declare (type 8-bit-rgba-image matrix-m matrix-n))
+       (with-image-bounds (matrix-m-rows matrix-m-columns channels)
+           matrix-m
+         (with-image-bounds (matrix-n-rows matrix-n-columns)
+             matrix-n
+           (let ((inv-xfrm (invert-matrix xfrm))
+                 (coord1 (make-array 3 :element-type 'double-float :initial-element 1d0)))
+             (declare (type (simple-array double-float (3 3)) inv-xfrm)
+                      (type (simple-array double-float (3)) coord1))
+             (dotimes (i matrix-n-rows)
+               (declare (type fixnum i))
+               (setf (aref coord1 0) (coerce i 'double-float))
+               (dotimes (j matrix-n-columns)
+                 (declare (type fixnum i))
+                 (setf (aref coord1 1) (coerce j 'double-float))
+                 (multiple-value-bind (oldy oldx)
+                     (values (+ (* (aref inv-xfrm 0 0) (aref coord1 0))
+                                (* (aref inv-xfrm 0 1) (aref coord1 1))
+                                (aref inv-xfrm 0 2))
+                             (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
+                                (* (aref inv-xfrm 1 1) (aref coord1 1))
+                                (aref inv-xfrm 1 2)))
+                   (declare (type (double-float -1000000d0 1000000d0) oldy oldx))
+                   (let ((oldy-round (truncate (+ oldy +epsilon+)))
+                         (oldx-round (truncate (+ oldx +epsilon+))))
+                     (declare (type (signed-byte 64) oldy-round oldx-round))
+                     (when (and (< -1 oldy-round matrix-m-rows)
+                                (< -1 oldx-round matrix-m-columns))
+                       (setf (pixel matrix-n i j)
+                             (pixel matrix-m oldy-round oldx-round))))))))))))
+    
+    (16-bit-rgba-image
+     (locally
+         (declare (type 16-bit-rgba-image matrix-m matrix-n))
        (with-image-bounds (matrix-m-rows matrix-m-columns channels)
            matrix-m
          (with-image-bounds (matrix-n-rows matrix-n-columns)
@@ -489,10 +587,18 @@
                                      (matrix-multiply post-shift2 xfrm)))
               (if (and (or (and (typep matrix-m '8-bit-gray-image)
                                 (typep matrix-n '8-bit-gray-image))
+                           (and (typep matrix-m '16-bit-gray-image)
+                                (typep matrix-n '16-bit-gray-image))
+
                            (and (typep matrix-m '8-bit-rgb-image)
                                 (typep matrix-n '8-bit-rgb-image))
+                           (and (typep matrix-m '16-bit-rgb-image)
+                                (typep matrix-n '16-bit-rgb-image))
+                           
                            (and (typep matrix-m '8-bit-rgba-image)
-                                (typep matrix-n '8-bit-rgba-image)))
+                                (typep matrix-n '8-bit-rgba-image))
+                           (and (typep matrix-m '16-bit-rgba-image)
+                                (typep matrix-n '16-bit-rgba-image)))
                        (not background-supplied-p)
                        (not interpolate-supplied-p))
                   (%fast-transform-image matrix-m matrix-n xfrm-shift)
