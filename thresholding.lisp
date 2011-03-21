@@ -1,18 +1,25 @@
+;;; Originally written by Ivan Chernetsky in 2011.
 ;;; The below code is in the public domain.
 
 (in-package :opticl)
 
 (defun threshold-image (image threshold)
-  (declare (type gray-image image)
-           (type number threshold))
-  (with-image-bounds (height width) image
-    (let ((binary-image (make-1-bit-gray-image height width
-                                               :initial-element 0)))
-      (declare (type gray-image image))
-      (do-pixels (i j) image
-        (when (>= (pixel image i j) threshold)
-          (setf (pixel binary-image i j) 1)))
-      (the 1-bit-gray-image binary-image))))
+  "Performs simple thresholding of grayscale image and returns a
+binarized image of type 1-bit-gray-image. Before thresholding
+threshold is coerced to type of image's elements.
+
+An error of type type-error is signaled if image is not of
+gray-image type."
+  (etypecase image
+    (gray-image
+     (with-image-bounds (height width) image
+       (let ((binary-image (make-1-bit-gray-image height width :initial-element 0))
+             (threshold (coerce threshold (array-element-type image))))
+         (declare (type 1-bit-gray-image image))
+         (do-pixels (i j) image
+           (when (>= (pixel image i j) threshold)
+             (setf (pixel binary-image i j) 1)))
+         (the 1-bit-gray-image binary-image))))))
 
 (defconstant +8-bit-values-count+ 256)
 (defconstant +8-bit-max-value+ 255)
