@@ -15,7 +15,8 @@ gray-image type."
      (with-image-bounds (height width) image
        (let ((binary-image (make-1-bit-gray-image height width :initial-element 0))
              (threshold (coerce threshold (array-element-type image))))
-         (declare (type 1-bit-gray-image image))
+         (declare (type gray-image image)
+                  (type 1-bit-gray-image binary-image))
          (do-pixels (i j) image
            (when (>= (pixel image i j) threshold)
              (setf (pixel binary-image i j) 1)))
