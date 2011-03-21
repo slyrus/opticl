@@ -26,4 +26,5 @@
    (:file "pnm")
    (:file "gif")
    (:file "io")
-   (:file "cluster")))
+   (:file "cluster")
+   (:file "thresholding")))

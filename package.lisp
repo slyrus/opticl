@@ -136,6 +136,9 @@
    ;; k-means clustering
    #:k-means-cluster-image-pixels
 
+   ;; thresholding
+   #:threshold-image
+
    ;;
    ;; deprectated!!! do not use!!!
    #:convert-image-to-grayscale
