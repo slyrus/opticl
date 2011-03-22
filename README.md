@@ -22,8 +22,10 @@ in time-(and resource-)sensitive operations.
 
 # Installation
 
-NOTE: QUICKLISP DOESN'T WORK YET!!!  The easiest way (will be) to use
-Zachary Beane's fabulous quicklisp library: `(ql:quickload 'opticl)`
+The easiest way to install opticl is to use Zachary Beane's fabulous
+quicklisp library:
+
+    (ql:quickload 'opticl)
 
 # For the Impatient
 
@@ -248,16 +250,8 @@ less painful (for the quicklisp user anyway) than they used to be.
 * cl-jpeg
 * skippy
 
-To install the dependencies using quicklisp:
-
-   (ql:quickload '(alexandria com.gigamonkeys.binary-data ieee-floats zpng png-read cl-jpeg skippy))
-
-Retrospectiff must be installed by hand using a recent version from
-[github](https://github.com/slyrus/retrospectiff):
-
-    git://github.com/slyrus/retrospectiff.git
-
-Once opticl is on quicklisp, this step will be replaced by:
+opticl and all of its dependencies should be automatically installed
+by:
 
     (ql:quickload 'opticl)
 
