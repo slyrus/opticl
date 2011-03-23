@@ -26,6 +26,7 @@
 (declaim (ftype (function (fixnum fixnum fixnum fixnum fixnum fixnum) fixnum) l2-distance-3))
 
 (defun k-means-cluster-image-pixels (image k &key (max-iterations 20))
+  (declare (type fixnum k))
   (etypecase image
     (8-bit-gray-image
      (with-image-bounds (height width channels)
@@ -40,11 +41,13 @@
          (flet ((recompute-means ()
                   ;; clear out the old values
                   (declare (optimize (speed 3))
-                           (type 8-bit-gray-image image))
+                           (type 8-bit-gray-image image)
+                           (type fixnum k))
                   (dotimes (q k) 
-                   (setf (aref means q) 0)
+                    (declare (type fixnum q))
+                    (setf (aref means q) 0)
                     (setf (aref counts q) 0))
-                 
+                  
                   ;; use the means vector first as an accumulator to hold
                   ;; the sums for each channel, later we'll scale by (/
                   ;; num-pixels)
@@ -67,7 +70,8 @@
                           (let (min-val nearest-mean)
                             (loop for q below k
                                do (let ((dist (let ((d (- (pixel image i j) (aref means q))))
-                                                (the (unsigned-byte 32) (* d d)))))
+                                                (declare (type (signed-byte 16) d))
+                                                (the fixnum (* d d)))))
                                     (when (or (null min-val) (< dist min-val))
                                       (setf min-val dist
                                             nearest-mean q))))
@@ -140,7 +144,7 @@
                             for i below k
                             collect (list count (pixel* means i 0)))))
                     (loop for (count mean) in (sort new-means-list #'> :key #'first)
-                       for i below k
+                       for i fixnum below k
                        do (setf (pixel* means i 0) mean)
                          (setf (aref counts i) count))))
                 (assign-to-means ()

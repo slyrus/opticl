@@ -80,15 +80,26 @@
                  (setf (pixel new-image i-dest j-dest) (pixel img i-src j-src))))
         new-image))))
 
-(defun map-array (fn array)
-  (let* ((len (reduce #'* (array-dimensions array)))
-         (elt-type (array-element-type array))
-         (disp (make-array len
-                           :element-type elt-type
-                           :displaced-to array)))
-    (make-array (array-dimensions array)
-                :element-type elt-type
-                :displaced-to (map `(vector ,elt-type) fn disp))))
+(defun map-array (fn array &key 
+                  (element-type (array-element-type array))
+                  (adjustable (adjustable-array-p array))
+                  (force-simple t))
+  (let ((len (reduce #'* (array-dimensions array))))
+    (if force-simple
+        (let* ((disp (make-array len
+                                 :displaced-to array))
+               (vec (map `(vector ,element-type) fn disp))
+               (dest (make-array (array-dimensions array)
+                                 :adjustable adjustable
+                                 :element-type element-type)))
+          (loop for i below len 
+             do (setf (row-major-aref dest i)
+                      (elt vec i)))
+          dest)
+        (let* ((disp (make-array len :displaced-to array)))
+          (make-array (array-dimensions array)
+                      :element-type element-type
+                      :displaced-to (map `(vector ,element-type) fn disp))))))
 
 (defun trim-image (img y-pixels x-pixels)
   (with-image-bounds (height width)

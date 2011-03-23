@@ -53,20 +53,20 @@
       (16-bit-gray-image integer-image :element-type (unsigned-byte 16))
       (32-bit-gray-image integer-image :element-type (unsigned-byte 32))
       (fixnum-gray-image integer-image :element-type fixnum)
-      (single-float-gray-image single-float-image :element-type single-float)
-      (double-float-gray-image double-float-image :element-type double-float)
+      (single-float-gray-image single-float-image)
+      (double-float-gray-image double-float-image)
 
       (4-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 4))
       (8-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 8))
       (16-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 16))
-      (single-float-rgb-image single-float-image :channels 3 :element-type single-float)
-      (double-float-rgb-image double-float-image :channels 3 :element-type double-float)
+      (single-float-rgb-image single-float-image :channels 3)
+      (double-float-rgb-image double-float-image :channels 3)
 
       (4-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 4))
       (8-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 8))
       (16-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 16))
-      (single-float-rgba-image single-float-image :channels 4 :element-type single-float)
-      (double-float-rgba-image double-float-image :channels 4 :element-type double-float)
+      (single-float-rgba-image single-float-image :channels 4)
+      (double-float-rgba-image double-float-image :channels 4)
       )))
 
 (macrolet
