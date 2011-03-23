@@ -52,10 +52,12 @@
                                   (optimize (speed 3)))
                        (do-pixels (i j) z
                          (let ((acc-r 0d0) (acc-g 0d0) (acc-b 0d0))
-                           (declare (type double-float acc-r acc-g acc-b ))
-                           (loop for ui fixnum from (- i span) to (+ i span)
+                           (declare (type double-float acc-r acc-g acc-b))
+                           (loop for ui fixnum from (logand #xffffffff (- i span))
+                              to (logand #xffffffff (+ i span))
                               for vi fixnum downfrom (1- vr) downto 0
-                              do (loop for uj fixnum from (- j span) to (+ j span)
+                              do (loop for uj fixnum from (logand #xffffffff (- j span))
+                                    to (logand #xffffffff (+ j span))
                                     for vj fixnum downfrom (1- vc) downto 0
                                     do 
                                       (let ((ui* (constrain ui 0 (1- ur)))
@@ -111,7 +113,8 @@
 (defparameter *sharpen-kernel*
   (normalize-array #2A((-1 -4 -1)
                        (-4 26 -4)
-                       (-1 -4 -1))))
+                       (-1 -4 -1))
+                   :element-type 'double-float))
 
 (defun sharpen-image (img)
   (trim-image
