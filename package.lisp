@@ -161,5 +161,12 @@
 (defpackage :opticl-cltl2
   #+sbcl (:import-from :sb-cltl2 :variable-information)
   #+ccl (:import-from :ccl :variable-information)
-  #+(or sbcl ccl) (:export :variable-information))
+  #+(or sbcl ccl allegro) (:export :variable-information))
 
+#+allegro
+(defun opticl-cltl2:variable-information (symbol &optional env)
+  "A CLTL2-signature-compatible version of VARIABLE-INFORMATION on Allegro Common Lisp."
+  (multiple-value-bind (binding-type locative decl localp)
+      (sys:variable-information symbol env)
+    (declare (ignore locative))
+    (values binding-type localp decl)))

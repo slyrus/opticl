@@ -99,9 +99,11 @@
                                       `(:element-type ,element-type))))))))
   (frobber))
 
+;;; support functions/constants for the pixel setf-expander need to
+;;; exist at compile time
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun %get-image-dimensions (image-var env)
-    #+(or sbcl ccl)
+    #+(or sbcl ccl allegro)
     (when (symbolp image-var)
       (multiple-value-bind (binding-type localp declarations)
           (opticl-cltl2:variable-information image-var env)
@@ -110,9 +112,9 @@
           (and type-decl
                (listp type-decl)
                (= (length type-decl) 4)
-               (fourth type-decl)))))))
+               (fourth type-decl))))))
 
-(defconstant +max-image-channels+ 4)
+  (defconstant +max-image-channels+ 4))
 
 (define-setf-expander pixel (image-var y x &environment env)
   (multiple-value-bind (dummies vals newval setter getter)
