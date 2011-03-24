@@ -28,16 +28,8 @@
                           `(* * ,channels))
                       channels)))
 
-(deftype single-float-image (&key (channels 1))
-  `(simple-array single-float
-                 ,(if (numberp channels)
-                      (if (= channels 1)
-                          `(* *)
-                          `(* * ,channels))
-                      channels)))
-
-(deftype double-float-image (&key (channels 1))
-  `(simple-array double-float
+(deftype float-image (&key (channels 1) element-type)
+  `(simple-array ,element-type
                  ,(if (numberp channels)
                       (if (= channels 1)
                           `(* *)
@@ -53,20 +45,20 @@
       (16-bit-gray-image integer-image :element-type (unsigned-byte 16))
       (32-bit-gray-image integer-image :element-type (unsigned-byte 32))
       (fixnum-gray-image integer-image :element-type fixnum)
-      (single-float-gray-image single-float-image)
-      (double-float-gray-image double-float-image)
+      (single-float-gray-image float-image :element-type single-float)
+      (double-float-gray-image float-image :element-type double-float)
 
       (4-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 4))
       (8-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 8))
       (16-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 16))
-      (single-float-rgb-image single-float-image :channels 3)
-      (double-float-rgb-image double-float-image :channels 3)
+      (single-float-rgb-image float-image :channels 3 :element-type single-float)
+      (double-float-rgb-image float-image :channels 3 :element-type double-float)
 
       (4-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 4))
       (8-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 8))
       (16-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 16))
-      (single-float-rgba-image single-float-image :channels 4)
-      (double-float-rgba-image double-float-image :channels 4)
+      (single-float-rgba-image float-image :channels 4 :element-type single-float)
+      (double-float-rgba-image float-image :channels 4 :element-type double-float)
       )))
 
 (macrolet
