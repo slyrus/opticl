@@ -56,7 +56,10 @@
                       (declare (type fixnum m))
                       (setf (aref means m)
                             (+ (pixel image i j) (aref means m)))
-                      (incf (aref counts (aref z i j)))))
+                      (let* ((cluster (aref z i j))
+                             (cluster-count (aref counts cluster)))
+                        (setf (aref counts cluster) 
+                              (logand most-positive-fixnum (1+ cluster-count))))))
                   (dotimes (q k)
                     (when (plusp (aref counts q))
                       (setf (aref means q)
@@ -129,7 +132,10 @@
                                  (+ v1 m1)
                                  (+ v2 m2)
                                  (+ v3 m3)))))
-                      (incf (aref counts (aref z i j)))))
+                      (let* ((cluster (aref z i j))
+                             (cluster-count (aref counts cluster)))
+                        (setf (aref counts cluster) 
+                              (logand #xffffffff (1+ cluster-count))))))
                   (dotimes (q k)
                     (when (plusp (aref counts q))
                       (multiple-value-bind (m1 m2 m3)
@@ -143,10 +149,11 @@
                          (loop for count across counts
                             for i below k
                             collect (list count (pixel* means i 0)))))
-                    (loop for (count mean) in (sort new-means-list #'> :key #'first)
-                       for i fixnum below k
-                       do (setf (pixel* means i 0) mean)
-                       (setf (aref counts i) count))))
+                    (loop for i fixnum below k
+                       for (count mean) in (sort new-means-list #'> :key #'first)
+                       do
+                         (setf (pixel* means i 0) mean)
+                         (setf (aref counts i) count))))
                 (assign-to-means ()
                   (declare (type 8-bit-rgb-image image)
                            (optimize (speed 3)))
