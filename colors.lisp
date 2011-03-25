@@ -32,5 +32,6 @@
                              (let ((sym (read-from-string color)))
                                `(progn
                                   (defparameter ,sym (list ,r ,g ,b))
-                                  (export ',sym))))))))))
+                                  (eval-when (:compile-toplevel :load-toplevel :execute)
+                                    (export ',sym)))))))))))
   (frob-colors))
