@@ -77,8 +77,8 @@
                                      (initial-element nil initial-element-p)
                                      (initial-contents nil initial-contents-p))
                 (apply #'make-array (append (list height width)
-                                            (when (and ,channels
-                                                       (> ,channels 1))
+                                            (when ,(and channels
+                                                        (> channels 1))
                                               (list ,channels)))
                        :element-type ',element-type
                        (append
@@ -102,6 +102,22 @@
 ;;; support functions/constants for the pixel setf-expander need to
 ;;; exist at compile time
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun %get-array-dimensions-from-type-decl (type-decl)
+    "Extract the array dimension specifier from type declaration TYPE-DECL."
+    #+(or sbcl ccl)
+    (and type-decl
+	 ;; here we expect e.g. (TYPE SIMPLE-ARRAY (UNSIGNED-BYTE 8) (* * 3))
+	 (listp type-decl)
+	 (= (length type-decl) 4)
+	 (fourth type-decl))
+    #+allegro
+    (and type-decl
+	 ;; here we expect e.g. (TYPE (SIMPLE-ARRAY (INTEGER 0 255) (* * 3)))
+	 (listp type-decl)
+	 (= (length type-decl) 2)
+	 (= (length (second type-decl)) 3)
+	 (third (second type-decl))))
+  
   (defun %get-image-dimensions (image-var env)
     #+(or sbcl ccl allegro)
     (when (symbolp image-var)
@@ -109,10 +125,7 @@
           (opticl-cltl2:variable-information image-var env)
         (declare (ignore binding-type localp))
         (let ((type-decl (find 'type declarations :key #'car)))
-          (and type-decl
-               (listp type-decl)
-               (= (length type-decl) 4)
-               (fourth type-decl))))))
+          (%get-array-dimensions-from-type-decl type-decl)))))
 
   (defconstant +max-image-channels+ 4))
 
