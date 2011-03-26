@@ -72,11 +72,6 @@
             (setf (aref c i) v)))
         c))))
 
-(defun %transform-coord (coord xfrm)
-  "applies the affine transformation xfrm to the point {x,y} and
-  returns the position of the point after applying the transformation"
-  (matrix-multiply xfrm coord))
-
 (defun transform-coord (y x xfrm)
   "applies the affine transformation xfrm to the point {x,y} and
   returns the position of the point after applying the transformation"
@@ -140,7 +135,7 @@
                  (* b2 ,g22))))))
 
 
-(defun %fast-transform-image (matrix-m matrix-n xfrm)
+(defun %fast-affine-transform-image (matrix-m matrix-n xfrm)
   (declare (optimize (speed 3)))
   (typecase matrix-m
 
@@ -342,7 +337,7 @@
   matrix-n)
 
 
-(defun %transform-image (matrix-m matrix-n xfrm
+(defun %affine-transform-image (matrix-m matrix-n xfrm
                          &key
                          (interpolate :nearest-neighbor)
                          background)
@@ -376,8 +371,6 @@
               (setf (aref coord1 1) (coerce j 'double-float))
 
               (multiple-value-bind (oldy oldx)
-                  ;; faster way
-                  ;;
                   ;; since we don't need the full matrix multiply, based
                   ;; on what we know is in the affine transformation
                   ;; matrix, we can get away with fewer operations (Foley
@@ -388,10 +381,7 @@
                           (+ (* (aref inv-xfrm 1 0) (aref coord1 0))
                              (* (aref inv-xfrm 1 1) (aref coord1 1))
                              (aref inv-xfrm 1 2)))
-                  ;; slower way
-                  #+nil (transform-coord (aref coord1 0)
-                                         (aref coord1 1)
-                                         inv-xfrm)
+
                 (ecase interpolate
                   ((nil :nearest-neighbor)
                    (let ((oldy (floor (+ oldy +epsilon+)))
@@ -601,11 +591,13 @@
                                 (typep matrix-n '16-bit-rgba-image)))
                        (not background-supplied-p)
                        (not interpolate-supplied-p))
-                  (%fast-transform-image matrix-m matrix-n xfrm-shift)
-                  (apply #'%transform-image matrix-m matrix-n xfrm-shift
+                  (%fast-affine-transform-image matrix-m matrix-n xfrm-shift)
+                  (apply #'%affine-transform-image matrix-m matrix-n xfrm-shift
                          (append
-                          (when background-supplied-p (list :background background))
-                          (when interpolate-supplied-p (list :interpolate interpolate))))))))))))
+                          (when background-supplied-p
+                            (list :background background))
+                          (when interpolate-supplied-p
+                            (list :interpolate interpolate))))))))))))
 
 (defun split-around-zero (k &key integer)
   (let ((khalf (/ k 2.0d0)))
