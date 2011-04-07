@@ -20,62 +20,41 @@
 (deftype rgba-image (&key element-type)
   `(simple-array ,element-type (* * 4)))
 
-(deftype integer-image (&key (channels 1) element-type)
-  `(simple-array ,element-type
-                 ,(if (numberp channels)
-                      (if (= channels 1)
-                          `(* *)
-                          `(* * ,channels))
-                      channels)))
-
-(deftype single-float-image (&key (channels 1))
-  `(simple-array single-float
-                 ,(if (numberp channels)
-                      (if (= channels 1)
-                          `(* *)
-                          `(* * ,channels))
-                      channels)))
-
-(deftype double-float-image (&key (channels 1))
-  `(simple-array double-float
-                 ,(if (numberp channels)
-                      (if (= channels 1)
-                          `(* *)
-                          `(* * ,channels))
-                      channels)))
-
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *image-types*
-    '((1-bit-gray-image integer-image :element-type (unsigned-byte 1))
-      (2-bit-gray-image integer-image :element-type (unsigned-byte 2))
-      (4-bit-gray-image integer-image :element-type (unsigned-byte 4))
-      (8-bit-gray-image integer-image :element-type (unsigned-byte 8))
-      (16-bit-gray-image integer-image :element-type (unsigned-byte 16))
-      (32-bit-gray-image integer-image :element-type (unsigned-byte 32))
-      (fixnum-gray-image integer-image :element-type fixnum)
-      (single-float-gray-image single-float-image)
-      (double-float-gray-image double-float-image)
+    '((single-float-image :element-type single-float)
+      (double-float-image :element-type double-float)
+      
+      (1-bit-gray-image :channels 1 :element-type (unsigned-byte 1))
+      (2-bit-gray-image :channels 1 :element-type (unsigned-byte 2))
+      (4-bit-gray-image :channels 1 :element-type (unsigned-byte 4))
+      (8-bit-gray-image :channels 1 :element-type (unsigned-byte 8))
+      (16-bit-gray-image :channels 1 :element-type (unsigned-byte 16))
+      (32-bit-gray-image :channels 1 :element-type (unsigned-byte 32))
+      (fixnum-gray-image :channels 1 :element-type fixnum)
+      (single-float-gray-image :channels 1 :element-type single-float)
+      (double-float-gray-image :channels 1 :element-type double-float)
 
-      (4-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 4))
-      (8-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 8))
-      (16-bit-rgb-image integer-image :channels 3 :element-type (unsigned-byte 16))
-      (single-float-rgb-image single-float-image :channels 3)
-      (double-float-rgb-image double-float-image :channels 3)
+      (4-bit-rgb-image :channels 3 :element-type (unsigned-byte 4))
+      (8-bit-rgb-image :channels 3 :element-type (unsigned-byte 8))
+      (16-bit-rgb-image :channels 3 :element-type (unsigned-byte 16))
+      (single-float-rgb-image :channels 3 :element-type single-float)
+      (double-float-rgb-image :channels 3 :element-type double-float)
 
-      (4-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 4))
-      (8-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 8))
-      (16-bit-rgba-image integer-image :channels 4 :element-type (unsigned-byte 16))
-      (single-float-rgba-image single-float-image :channels 4)
-      (double-float-rgba-image double-float-image :channels 4)
+      (4-bit-rgba-image :channels 4 :element-type (unsigned-byte 4))
+      (8-bit-rgba-image :channels 4 :element-type (unsigned-byte 8))
+      (16-bit-rgba-image :channels 4 :element-type (unsigned-byte 16))
+      (single-float-rgba-image :channels 4 :element-type single-float)
+      (double-float-rgba-image :channels 4 :element-type double-float)
       )))
 
 (macrolet
-    ((frob-image (name image-type &key channels element-type)
+    ((frob-image (name &key channels element-type)
        (let ((type (read-from-string (format nil "~A" name))))
          (let ((ctor-function
                 (read-from-string (format nil "make-~A" type))))
            `(progn
-              (deftype ,type () ',(list* image-type
+              (deftype ,type () ',(list* 'image
                                          (append 
                                           (when channels
                                             `(:channels ,channels))
@@ -85,8 +64,8 @@
                                      (initial-element nil initial-element-p)
                                      (initial-contents nil initial-contents-p))
                 (apply #'make-array (append (list height width)
-                                            (when (and ,channels
-                                                       (> ,channels 1))
+                                            (when ,(and channels
+                                                        (> channels 1))
                                               (list ,channels)))
                        :element-type ',element-type
                        (append
@@ -98,29 +77,44 @@
        `(progn
           ,@(loop for image-spec in *image-types*
                collect 
-                 (destructuring-bind (name image-type &key channels element-type)
+                 (destructuring-bind (name &key channels element-type)
                      image-spec
-                   `(frob-image ,name ,image-type 
+                   `(frob-image ,name
                                 ,@(if channels
                                       `(:channels ,channels))
                                 ,@(if element-type
                                       `(:element-type ,element-type))))))))
   (frobber))
 
+;;; support functions/constants for the pixel setf-expander need to
+;;; exist at compile time
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defun %get-image-dimensions (image-var env)
+  (defun %get-array-dimensions-from-type-decl (type-decl)
+    "Extract the array dimension specifier from type declaration TYPE-DECL."
     #+(or sbcl ccl)
+    (and type-decl
+	 ;; here we expect e.g. (TYPE SIMPLE-ARRAY (UNSIGNED-BYTE 8) (* * 3))
+	 (listp type-decl)
+	 (= (length type-decl) 4)
+	 (fourth type-decl))
+    #+allegro
+    (and type-decl
+	 ;; here we expect e.g. (TYPE (SIMPLE-ARRAY (INTEGER 0 255) (* * 3)))
+	 (listp type-decl)
+	 (= (length type-decl) 2)
+	 (= (length (second type-decl)) 3)
+	 (third (second type-decl))))
+  
+  (defun %get-image-dimensions (image-var env)
+    #+(or sbcl ccl allegro)
     (when (symbolp image-var)
       (multiple-value-bind (binding-type localp declarations)
           (opticl-cltl2:variable-information image-var env)
         (declare (ignore binding-type localp))
         (let ((type-decl (find 'type declarations :key #'car)))
-          (and type-decl
-               (listp type-decl)
-               (= (length type-decl) 4)
-               (fourth type-decl)))))))
+          (%get-array-dimensions-from-type-decl type-decl)))))
 
-(defconstant +max-image-channels+ 4)
+  (defconstant +max-image-channels+ 4))
 
 (define-setf-expander pixel (image-var y x &environment env)
   (multiple-value-bind (dummies vals newval setter getter)

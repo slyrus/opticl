@@ -56,7 +56,10 @@
                       (declare (type fixnum m))
                       (setf (aref means m)
                             (+ (pixel image i j) (aref means m)))
-                      (incf (aref counts (aref z i j)))))
+                      (let* ((cluster (aref z i j))
+                             (cluster-count (aref counts cluster)))
+                        (setf (aref counts cluster) 
+                              (logand most-positive-fixnum (1+ cluster-count))))))
                   (dotimes (q k)
                     (when (plusp (aref counts q))
                       (setf (aref means q)
@@ -89,11 +92,11 @@
               with old-means
               until stop
               do
-                (assign-to-means)
-                (recompute-means)
-                (when (and old-means (equalp old-means means))
-                  (setf stop t))
-                (setf old-means (copy-array means)))
+              (assign-to-means)
+              (recompute-means)
+              (when (and old-means (equalp old-means means))
+                (setf stop t))
+              (setf old-means (copy-array means)))
            (values means z)))))
     (8-bit-rgb-image
      (with-image-bounds (height width channels)
@@ -129,7 +132,10 @@
                                  (+ v1 m1)
                                  (+ v2 m2)
                                  (+ v3 m3)))))
-                      (incf (aref counts (aref z i j)))))
+                      (let* ((cluster (aref z i j))
+                             (cluster-count (aref counts cluster)))
+                        (setf (aref counts cluster) 
+                              (logand #xffffffff (1+ cluster-count))))))
                   (dotimes (q k)
                     (when (plusp (aref counts q))
                       (multiple-value-bind (m1 m2 m3)
@@ -143,9 +149,10 @@
                          (loop for count across counts
                             for i below k
                             collect (list count (pixel* means i 0)))))
-                    (loop for (count mean) in (sort new-means-list #'> :key #'first)
-                       for i fixnum below k
-                       do (setf (pixel* means i 0) mean)
+                    (loop for i fixnum below k
+                       for (count mean) in (sort new-means-list #'> :key #'first)
+                       do
+                         (setf (pixel* means i 0) mean)
                          (setf (aref counts i) count))))
                 (assign-to-means ()
                   (declare (type 8-bit-rgb-image image)
@@ -180,87 +187,90 @@
                 (setf stop t))
               (setf oldz (copy-array z)))
            (values means z)))))
-    (t (with-image-bounds (height width channels)
-      image
-    (let ((means (make-array (append (list k 1) (if channels (list channels)))
-                             :element-type '(unsigned-byte 32)))
-          (counts (make-array k :element-type 'fixnum))
-          (z (make-array (list height width) :element-type '(unsigned-byte 32))))
-      (declare (type (simple-array (unsigned-byte 32) (* *))))
-      (flet ((recompute-means ()
-               ;; clear out the old values
-               (let ((zero (make-list (or channels 1) :initial-element 0)))
-                 (dotimes (q k)
-                   (setf (pixel* means q 0) zero)
-                   (setf (aref counts q) 0)))
+    (t
+     (with-image-bounds (height width channels)
+         image
+       (let ((means (make-array (append (list k 1) (if channels (list channels)))
+                                :element-type '(unsigned-byte 32)))
+             (counts (make-array k :element-type 'fixnum))
+             (z (make-array (list height width) :element-type '(unsigned-byte 32))))
+         (declare (type (simple-array (unsigned-byte 32) (* *))))
+         (flet ((recompute-means ()
+                  ;; clear out the old values
+                  (let ((zero (make-list (or channels 1) :initial-element 0)))
+                    (dotimes (q k)
+                      (setf (pixel* means q 0) zero)
+                      (setf (aref counts q) 0)))
                  
-               ;; use the means vector first as an accumulator to hold
-               ;; the sums for each channel, later we'll scale by (/
-               ;; num-pixels)
-               (do-pixels (i j) image
-                 (let ((m (aref z i j)))
-                   (setf (pixel* means m 0)
-                         (mapcar #'+ 
-                                 (multiple-value-list (pixel image i j))
-                                 (pixel* means m 0)))
-                   (incf (aref counts (aref z i j)))))
-               (dotimes (q k)
-                 (when (plusp (aref counts q))
-                   (setf (pixel* means q 0)
-                         (mapcar (lambda (x) (round (/ x (aref counts q)))) (pixel* means q 0) )))))
+                  ;; use the means vector first as an accumulator to hold
+                  ;; the sums for each channel, later we'll scale by (/
+                  ;; num-pixels)
+                  (do-pixels (i j) image
+                    (let ((m (aref z i j)))
+                      (setf (pixel* means m 0)
+                            (mapcar #'+ 
+                                    (multiple-value-list (pixel image i j))
+                                    (pixel* means m 0)))
+                      (incf (aref counts (aref z i j)))))
+                  (dotimes (q k)
+                    (when (plusp (aref counts q))
+                      (setf (pixel* means q 0)
+                            (mapcar (lambda (x) (round (/ x (aref counts q))))
+                                    (pixel* means q 0) )))))
              
-             (assign-to-means ()
-               (typecase image
-                 (gray-image
-                  (do-pixels (i j) image
-                    (setf (aref z i j)
-                          (let (min-val nearest-mean)
-                            (loop for q below k
-                               do (let ((dist (let ((d (- (pixel image i j) (pixel means q 0))))
-                                                (* d d))))
-                                    (when (or (null min-val) (< dist min-val))
-                                      (setf min-val dist
-                                            nearest-mean q))))
-                            nearest-mean))))
-                 (rgb-image
-                  (do-pixels (i j) image
-                    (setf (aref z i j)
-                          (let (min-val nearest-mean)
-                            (loop for q below k
-                               do (let ((dist (multiple-value-call #'l2-distance-3
-                                                (pixel image i j)
-                                                (pixel means q 0))))
-                                    (when (or (null min-val) (< dist min-val))
-                                      (setf min-val dist
-                                            nearest-mean q))))
-                            nearest-mean))))
-                 (t (do-pixels (i j) image
-                      (setf (aref z i j)
-                            (let (min-val nearest-mean)
-                              (loop for q below k
-                                 do (let ((dist (l2-distance (pixel* image i j)
-                                                             (pixel* means q 0))))
-                                      (when (or (null min-val) (< dist min-val))
-                                        (setf min-val dist
-                                              nearest-mean q))))
-                              nearest-mean)))))))
+                (assign-to-means ()
+                  (typecase image
+                    (gray-image
+                     (do-pixels (i j) image
+                       (setf (aref z i j)
+                             (let (min-val nearest-mean)
+                               (loop for q below k
+                                  do (let ((dist (let ((d (- (pixel image i j)
+                                                             (pixel means q 0))))
+                                                   (* d d))))
+                                       (when (or (null min-val) (< dist min-val))
+                                         (setf min-val dist
+                                               nearest-mean q))))
+                               nearest-mean))))
+                    (rgb-image
+                     (do-pixels (i j) image
+                       (setf (aref z i j)
+                             (let (min-val nearest-mean)
+                               (loop for q below k
+                                  do (let ((dist (multiple-value-call #'l2-distance-3
+                                                   (pixel image i j)
+                                                   (pixel means q 0))))
+                                       (when (or (null min-val) (< dist min-val))
+                                         (setf min-val dist
+                                               nearest-mean q))))
+                               nearest-mean))))
+                    (t (do-pixels (i j) image
+                         (setf (aref z i j)
+                               (let (min-val nearest-mean)
+                                 (loop for q below k
+                                    do (let ((dist (l2-distance (pixel* image i j)
+                                                                (pixel* means q 0))))
+                                         (when (or (null min-val) (< dist min-val))
+                                           (setf min-val dist
+                                                 nearest-mean q))))
+                                 nearest-mean)))))))
         
-        ;; randomly assign pixel values to the k means
-        (loop for i below k
-           for y = (random height)
-           for x = (random width)
-           do (setf (pixel means i 0)
-                    (pixel image y x)))
+           ;; randomly assign pixel values to the k means
+           (loop for i below k
+              for y = (random height)
+              for x = (random width)
+              do (setf (pixel means i 0)
+                       (pixel image y x)))
 
-        (loop for iter below max-iterations
-           with stop = nil
-           with oldz
-           until stop
-           do
-             (assign-to-means)
-             (recompute-means)
-             (when (and oldz (equalp oldz z))
-               (setf stop t))
-             (setf oldz (copy-array z)))
-        (values means z)))))))
+           (loop for iter below max-iterations
+              with stop = nil
+              with oldz
+              until stop
+              do
+              (assign-to-means)
+              (recompute-means)
+              (when (and oldz (equalp oldz z))
+                (setf stop t))
+              (setf oldz (copy-array z)))
+           (values means z)))))))
 

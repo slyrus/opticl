@@ -42,63 +42,197 @@
             (let ((z (make-array (apply #'list zr zc
                                         (when channels (list channels)))
                                  :element-type (array-element-type u))))
+
               ;; let's speed this up for some common cases:
-              (cond ((and (typep u '8-bit-rgb-image)
-                          (typep v 'double-float-gray-image))
-                     (locally
-                         (declare (type 8-bit-rgb-image u z)
-                                  (type double-float-gray-image v)
-                                  (type fixnum span)
-                                  (optimize (speed 3)))
-                       (do-pixels (i j) z
-                         (let ((acc-r 0d0) (acc-g 0d0) (acc-b 0d0))
-                           (declare (type double-float acc-r acc-g acc-b))
-                           (loop for ui fixnum from (logand #xffffffff (- i span))
-                              to (logand #xffffffff (+ i span))
-                              for vi fixnum downfrom (1- vr) downto 0
-                              do (loop for uj fixnum from (logand #xffffffff (- j span))
-                                    to (logand #xffffffff (+ j span))
-                                    for vj fixnum downfrom (1- vc) downto 0
-                                    do 
-                                      (let ((ui* (constrain ui 0 (1- ur)))
-                                            (uj* (constrain uj 0 (1- uc)))
-                                            (v-val (aref v vi vj)))
-                                        (declare (type double-float v-val))
-                                        (multiple-value-bind (r g b) (pixel u ui* uj*)
-                                          (declare (type (unsigned-byte 8) r g b))
-                                          (setf acc-r (+ acc-r (* r v-val)))
-                                          (setf acc-g (+ acc-g (* g v-val)))
-                                          (setf acc-b (+ acc-b (* b v-val)))))))
-                           (setf (pixel z i j) (values 
-                                                (cond ((<= acc-r 0d0) 0)
-                                                      ((>= acc-r 255d0) 255)
-                                                      (t (round acc-r)))
-                                                (cond ((<= acc-g 0d0) 0)
-                                                      ((>= acc-g 255d0) 255)
-                                                      (t (round acc-g)))
-                                                (cond ((<= acc-b 0d0) 0)
-                                                      ((>= acc-b 255d0) 255)
-                                                      (t (round acc-b)))))))))
-                    (t
-                     (do-pixels (i j) z
-                       (let ((acc (if channels
-                                      (make-list channels :initial-element 0)
-                                      0)))
-                         (loop for ui fixnum from (- i span) to (+ i span)
-                            for vi fixnum downfrom (1- vr) downto 0
-                            do (loop for uj fixnum from (- j span) to (+ j span)
-                                  for vj fixnum downfrom (1- vc) downto 0
-                                  do 
-                                  (let ((ui* (constrain ui 0 (1- ur)))
-                                        (uj* (constrain uj 0 (1- uc))))
-                                    (if channels
-                                        (setf acc (mapcar (lambda (a q) (+ a (* q (aref v vi vj))))
-                                                          acc
-                                                          (multiple-value-list (pixel u ui* uj*))))
-                                        (incf acc (* (pixel u ui* uj*) (aref v vi vj)))))))
-                         (if channels
-                             (setf (pixel z i j) (values-list (mapcar fit-function acc)))
-                             (setf (pixel z i j) (funcall fit-function acc)))))))
+              (cond 
+                ((and (typep u '8-bit-gray-image)
+                      (typep v 'double-float-gray-image))
+                 (locally
+                     (declare (type 8-bit-gray-image u z)
+                              (type double-float-gray-image v)
+                              (type fixnum span)
+                              (optimize (speed 3)))
+                   (do-pixels (i j) z
+                     (let ((acc-k 0d0))
+                       (declare (type double-float acc-k))
+                       (loop for ui fixnum from (logand #xffffffff (- i span))
+                          to (logand #xffffffff (+ i span))
+                          for vi fixnum downfrom (1- vr) downto 0
+                          do (loop for uj fixnum from (logand #xffffffff (- j span))
+                                to (logand #xffffffff (+ j span))
+                                for vj fixnum downfrom (1- vc) downto 0
+                                do 
+                                (let ((ui* (constrain ui 0 (1- ur)))
+                                      (uj* (constrain uj 0 (1- uc))))
+                                  (incf acc-k (* (aref v vi vj) (pixel u ui* uj*))))))
+                       (setf (pixel z i j) (cond ((<= acc-k 0d0) 0)
+                                                 ((>= acc-k 255d0) 255)
+                                                 (t (round acc-k))))))))
+
+                ((and (typep u '16-bit-gray-image)
+                      (typep v 'double-float-gray-image))
+                 (locally
+                     (declare (type 16-bit-gray-image u z)
+                              (type double-float-gray-image v)
+                              (type fixnum span)
+                              (optimize (speed 3)))
+                   (do-pixels (i j) z
+                     (let ((acc-k 0d0))
+                       (declare (type double-float acc-k))
+                       (loop for ui fixnum from (logand #xffffffff (- i span))
+                          to (logand #xffffffff (+ i span))
+                          for vi fixnum downfrom (1- vr) downto 0
+                          do (loop for uj fixnum from (logand #xffffffff (- j span))
+                                to (logand #xffffffff (+ j span))
+                                for vj fixnum downfrom (1- vc) downto 0
+                                do 
+                                (let ((ui* (constrain ui 0 (1- ur)))
+                                      (uj* (constrain uj 0 (1- uc))))
+                                  (incf acc-k (* (aref v vi vj) (pixel u ui* uj*))))))
+                       (setf (pixel z i j) (cond ((<= acc-k 0d0) 0)
+                                                 ((>= acc-k #xffff) #xffff)
+                                                 (t (round acc-k))))))))
+                
+                ((and (typep u '8-bit-rgb-image)
+                      (typep v 'double-float-gray-image))
+                 (locally
+                     (declare (type 8-bit-rgb-image u z)
+                              (type double-float-gray-image v)
+                              (type fixnum span)
+                              (optimize (speed 3)))
+                   (do-pixels (i j) z
+                     (let ((acc-r 0d0) (acc-g 0d0) (acc-b 0d0))
+                       (declare (type double-float acc-r acc-g acc-b))
+                       (loop for ui fixnum from (logand #xffffffff (- i span))
+                          to (logand #xffffffff (+ i span))
+                          for vi fixnum downfrom (1- vr) downto 0
+                          do (loop for uj fixnum from (logand #xffffffff (- j span))
+                                to (logand #xffffffff (+ j span))
+                                for vj fixnum downfrom (1- vc) downto 0
+                                do 
+                                (let ((ui* (constrain ui 0 (1- ur)))
+                                      (uj* (constrain uj 0 (1- uc)))
+                                      (v-val (aref v vi vj)))
+                                  (declare (type double-float v-val))
+                                  (multiple-value-bind (r g b) (pixel u ui* uj*)
+                                    (declare (type (unsigned-byte 8) r g b))
+                                    (setf acc-r (+ acc-r (* r v-val)))
+                                    (setf acc-g (+ acc-g (* g v-val)))
+                                    (setf acc-b (+ acc-b (* b v-val)))))))
+                       (setf (pixel z i j) (values 
+                                            (cond ((<= acc-r 0d0) 0)
+                                                  ((>= acc-r 255d0) 255)
+                                                  (t (round acc-r)))
+                                            (cond ((<= acc-g 0d0) 0)
+                                                  ((>= acc-g 255d0) 255)
+                                                  (t (round acc-g)))
+                                            (cond ((<= acc-b 0d0) 0)
+                                                  ((>= acc-b 255d0) 255)
+                                                  (t (round acc-b)))))))))
+
+                ((and (typep u '16-bit-rgb-image)
+                      (typep v 'double-float-gray-image))
+                 (locally
+                     (declare (type 16-bit-rgb-image u z)
+                              (type double-float-gray-image v)
+                              (type fixnum span)
+                              (optimize (speed 3)))
+                   (do-pixels (i j) z
+                     (let ((acc-r 0d0) (acc-g 0d0) (acc-b 0d0))
+                       (declare (type double-float acc-r acc-g acc-b))
+                       (loop for ui fixnum from (logand #xffffffff (- i span))
+                          to (logand #xffffffff (+ i span))
+                          for vi fixnum downfrom (1- vr) downto 0
+                          do (loop for uj fixnum from (logand #xffffffff (- j span))
+                                to (logand #xffffffff (+ j span))
+                                for vj fixnum downfrom (1- vc) downto 0
+                                do 
+                                (let ((ui* (constrain ui 0 (1- ur)))
+                                      (uj* (constrain uj 0 (1- uc)))
+                                      (v-val (aref v vi vj)))
+                                  (declare (type double-float v-val))
+                                  (multiple-value-bind (r g b) (pixel u ui* uj*)
+                                    (declare (type (unsigned-byte 16) r g b))
+                                    (setf acc-r (+ acc-r (* r v-val)))
+                                    (setf acc-g (+ acc-g (* g v-val)))
+                                    (setf acc-b (+ acc-b (* b v-val)))))))
+                       (setf (pixel z i j) (values 
+                                            (cond ((<= acc-r 0d0) 0)
+                                                  ((>= acc-r #xffff) #xffff)
+                                                  (t (round acc-r)))
+                                            (cond ((<= acc-g 0d0) 0)
+                                                  ((>= acc-g #xffff) #xffff)
+                                                  (t (round acc-g)))
+                                            (cond ((<= acc-b 0d0) 0)
+                                                  ((>= acc-b #xffff) #xffff)
+                                                  (t (round acc-b)))))))))
+
+                ((and (typep u '8-bit-rgba-image)
+                      (typep v 'double-float-gray-image))
+                 (locally
+                     (declare (type 8-bit-rgba-image u z)
+                              (type double-float-gray-image v)
+                              (type fixnum span)
+                              (optimize (speed 3)))
+                   (do-pixels (i j) z
+                     (let ((acc-r 0d0) (acc-g 0d0) (acc-b 0d0)
+                           (acc-k 
+                            (nth-value 3 (pixel u
+                                                (constrain i 0 (1- ur))
+                                                (constrain j 0 (1- uc))))))
+                       (declare (type double-float acc-r acc-g acc-b)
+                                (type (unsigned-byte 8) acc-k))
+                       (loop for ui fixnum from (logand #xffffffff (- i span))
+                          to (logand #xffffffff (+ i span))
+                          for vi fixnum downfrom (1- vr) downto 0
+                          do
+                            (let ((ui* (constrain ui 0 (1- ur))))
+                              (loop for uj fixnum from (logand #xffffffff (- j span))
+                                 to (logand #xffffffff (+ j span))
+                                 for vj fixnum downfrom (1- vc) downto 0
+                                 do 
+                                   (let ((uj* (constrain uj 0 (1- uc)))
+                                         (v-val (aref v vi vj)))
+                                     (declare (type double-float v-val))
+                                     (multiple-value-bind (r g b) (pixel u ui* uj*)
+                                       (declare (type (unsigned-byte 8) r g b))
+                                       (setf acc-r (+ acc-r (* r v-val)))
+                                       (setf acc-g (+ acc-g (* g v-val)))
+                                       (setf acc-b (+ acc-b (* b v-val))))))))
+                       (setf (pixel z i j) 
+                             (values 
+                              (cond ((<= acc-r 0d0) 0)
+                                    ((>= acc-r 255d0) 255)
+                                    (t (round acc-r)))
+                              (cond ((<= acc-g 0d0) 0)
+                                    ((>= acc-g 255d0) 255)
+                                    (t (round acc-g)))
+                              (cond ((<= acc-b 0d0) 0)
+                                    ((>= acc-b 255d0) 255)
+                                    (t (round acc-b)))
+                              ;; keep the alpha value constant?!?
+                              acc-k))))))
+
+                (t
+                 (do-pixels (i j) z
+                   (let ((acc (if channels
+                                  (make-list channels :initial-element 0)
+                                  0)))
+                     (loop for ui fixnum from (- i span) to (+ i span)
+                        for vi fixnum downfrom (1- vr) downto 0
+                        do (loop for uj fixnum from (- j span) to (+ j span)
+                              for vj fixnum downfrom (1- vc) downto 0
+                              do 
+                              (let ((ui* (constrain ui 0 (1- ur)))
+                                    (uj* (constrain uj 0 (1- uc))))
+                                (if channels
+                                    (setf acc (mapcar (lambda (a q) (+ a (* q (aref v vi vj))))
+                                                      acc
+                                                      (multiple-value-list (pixel u ui* uj*))))
+                                    (incf acc (* (pixel u ui* uj*) (aref v vi vj)))))))
+                     (if channels
+                         (setf (pixel z i j) (values-list (mapcar fit-function acc)))
+                         (setf (pixel z i j) (funcall fit-function acc)))))))
               z)))))))
 
 (defparameter *gaussian-kernel*
