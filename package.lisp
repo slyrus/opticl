@@ -138,6 +138,7 @@
 
    ;; thresholding
    #:threshold-image
+   #:min-error-threshold-image
 
    ;;
    ;; deprectated!!! do not use!!!
