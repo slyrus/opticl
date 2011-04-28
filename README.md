@@ -268,3 +268,7 @@ expository example code into
 Some examples of using opticl code can be found here:
 
 [http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml](http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml)
+
+# Contributors
+
+Thanks to Ivan Chernetsky for contributing code thresholding grayscale images

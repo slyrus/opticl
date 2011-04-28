@@ -1,5 +1,7 @@
-;;; Originally written by Ivan Chernetsky in 2011.
-;;; The below code is in the public domain.
+
+;;;
+;;; Thresholding code contributed buy Ivan Chernetsky in 2011.
+;;; See COPYRIGHT file for details.
 
 (in-package :opticl)
 
