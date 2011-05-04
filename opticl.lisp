@@ -117,6 +117,11 @@
   (defconstant +max-image-channels+ 4))
 
 (define-setf-expander pixel (image-var y x &environment env)
+  "Sets the (possibly multiple) image intensity value(s) at position
+y, x to the provided value(s). For example, to set pixel [0,0] in an
+rgb-image to R20, G40, B60, one would do (setf (pixel img 0 0) (values
+20 40 60)). With proper type declarations for images, use of this
+macro should yield non-consing setting of image intensity data. "
   (multiple-value-bind (dummies vals newval setter getter)
       (get-setf-expansion image-var env)
     (declare (ignore newval setter))
@@ -203,6 +208,9 @@
                          (2 (aref ,getter ,temp-y ,temp-x))))))))))
 
 (defmacro pixel (image-var y x &environment env)
+  "Returns the (possibly multiple) image intensity value(s) at
+position y, x. With proper type declarations for images, use of this
+macro should yield non-consing access to image intensity data. "
   (let ((image-dimensions (%get-image-dimensions image-var env)))
     (if image-dimensions
         (progn
