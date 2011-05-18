@@ -272,33 +272,33 @@ function does that.")
 (defmacro do-pixels ((i-var j-var) image &body body)
   (alexandria:with-gensyms (height width)
     `(with-image-bounds (,height ,width)
-       ,image
+         ,image
        (loop for ,i-var fixnum below ,height
              do (loop for ,j-var fixnum below ,width
                       do ,@body)))))
 
 (defmacro set-pixels ((i-var j-var) image &body body)
   (alexandria:with-gensyms (height width)
-    `(with-image-bounds (,height ,width) ,image
+    `(with-image-bounds (,height ,width)
+         ,image
        (loop for ,i-var fixnum below ,height
-          do (loop for ,j-var fixnum below ,width
-                do (setf (pixel ,image ,i-var ,j-var)
-                         (progn
-                           ,@body)))))))
+             do (loop for ,j-var fixnum below ,width
+                      do (setf (pixel ,image ,i-var ,j-var)
+                               (progn ,@body)))))))
 
 (defmacro do-region-pixels ((i-var j-var y1 x1 y2 x2) image &body body)
   (declare (ignorable image))
   `(loop for ,i-var fixnum from ,y1 below ,y2
-      do (loop for ,j-var fixnum from ,x1 below ,x2
-            do ,@body)))
+         do (loop for ,j-var fixnum from ,x1 below ,x2
+                  do ,@body)))
 
 (defmacro set-region-pixels ((i-var j-var y1 x1 y2 x2) image &body body)
   (declare (ignorable image))
   `(loop for ,i-var fixnum from ,y1 below ,y2
-      do (loop for ,j-var fixnum from ,x1 below ,x2
-               do (setf (pixel ,image ,i-var ,j-var)
-                        (progn
-                          ,@body)))))
+         do (loop for ,j-var fixnum from ,x1 below ,x2
+                  do (setf (pixel ,image ,i-var ,j-var)
+                           (progn
+                             ,@body)))))
 
 (defun clear-image (image)
   (with-image-bounds (height width channels)
