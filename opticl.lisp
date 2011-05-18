@@ -61,8 +61,8 @@
                                           (when element-type
                                             `(:element-type ,element-type)))))
               (defun ,ctor-function (height width &key
-                                     (initial-element nil initial-element-p)
-                                     (initial-contents nil initial-contents-p))
+                                                    (initial-element nil initial-element-p)
+                                                    (initial-contents nil initial-contents-p))
                 (apply #'make-array (append (list height width)
                                             (when ,(and channels
                                                         (> channels 1))
@@ -76,14 +76,14 @@
      (frobber ()
        `(progn
           ,@(loop for image-spec in *image-types*
-               collect 
-                 (destructuring-bind (name &key channels element-type)
-                     image-spec
-                   `(frob-image ,name
-                                ,@(if channels
-                                      `(:channels ,channels))
-                                ,@(if element-type
-                                      `(:element-type ,element-type))))))))
+                  collect 
+                  (destructuring-bind (name &key channels element-type)
+                      image-spec
+                    `(frob-image ,name
+                                 ,@(if channels
+                                       `(:channels ,channels))
+                                 ,@(if element-type
+                                       `(:element-type ,element-type))))))))
   (frobber))
 
 ;;; support functions/constants for the pixel setf-expander need to
@@ -144,12 +144,12 @@ macro should yield non-consing setting of image intensity data. "
                           `(,@vals ,y ,x)
                           stores
                           `(progn (setf ,@(loop for i from 0
-                                             for store in stores
-                                             collect `(aref ,getter ,temp-y ,temp-x ,i)
-                                             collect store))
+                                                for store in stores
+                                                collect `(aref ,getter ,temp-y ,temp-x ,i)
+                                                collect store))
                                   (values ,@stores))
                           `(values ,@(loop for i from 0 below (length stores)
-                                        collect `(aref ,getter ,temp-y ,temp-x ,i)))))))
+                                           collect `(aref ,getter ,temp-y ,temp-x ,i)))))))
           (let ((syms (map-into (make-list +max-image-channels+) #'gensym)))
             (let ((temp-y (gensym))
                   (temp-x (gensym)))
@@ -178,7 +178,7 @@ macro should yield non-consing setting of image intensity data. "
                                   (setf (aref ,getter ,temp-y ,temp-x 2) ,(elt syms 2))
                                   (setf (aref ,getter ,temp-y ,temp-x 3) ,(elt syms 3))))
                                 (t (loop for i below d
-                                      collect (setf (aref ,getter ,temp-y ,temp-x i) (elt (list ,@syms) i)))))))
+                                         collect (setf (aref ,getter ,temp-y ,temp-x i) (elt (list ,@syms) i)))))))
                          (2 (setf (aref ,getter ,temp-y ,temp-x) ,(elt syms 0))))
                       `(ecase (array-rank ,getter)
                          (3
@@ -204,7 +204,7 @@ macro should yield non-consing setting of image intensity data. "
                                 (aref ,getter ,temp-y ,temp-x 3)))
                               (t (values-list
                                   (loop for i below d
-                                     collect (aref ,getter ,temp-y ,temp-x i)))))))
+                                        collect (aref ,getter ,temp-y ,temp-x i)))))))
                          (2 (aref ,getter ,temp-y ,temp-x))))))))))
 
 (defmacro pixel (image-var y x &environment env)
@@ -217,7 +217,7 @@ macro should yield non-consing access to image intensity data. "
           (ecase (length image-dimensions)
             (2 `(aref ,image-var ,y ,x))
             (3 `(values ,@(loop for i below (third image-dimensions)
-                             collect `(aref ,image-var ,y ,x ,i))))))
+                                collect `(aref ,image-var ,y ,x ,i))))))
         `(ecase (array-rank ,image-var)
            (2 (aref ,image-var ,y ,x))
            (3 (ecase (array-dimension ,image-var 2)
@@ -262,8 +262,8 @@ function does that.")
            (,xmax-var (array-dimension ,img 1))
            (,channels ,(when (or (not image-dimensions)
                                  (> (length image-dimensions) 2))
-                             `(when (= (array-rank ,img) 3)
-                                (array-dimension ,img 2)))))
+                         `(when (= (array-rank ,img) 3)
+                            (array-dimension ,img 2)))))
        (declare (ignorable ,channels)
                 (type fixnum ,ymax-var)
                 (type fixnum ,xmax-var))
@@ -271,10 +271,11 @@ function does that.")
 
 (defmacro do-pixels ((i-var j-var) image &body body)
   (alexandria:with-gensyms (height width)
-    `(with-image-bounds (,height ,width) ,image
+    `(with-image-bounds (,height ,width)
+       ,image
        (loop for ,i-var fixnum below ,height
-          do (loop for ,j-var fixnum below ,width
-                do ,@body)))))
+             do (loop for ,j-var fixnum below ,width
+                      do ,@body)))))
 
 (defmacro set-pixels ((i-var j-var) image &body body)
   (alexandria:with-gensyms (height width)
@@ -295,9 +296,9 @@ function does that.")
   (declare (ignorable image))
   `(loop for ,i-var fixnum from ,y1 below ,y2
       do (loop for ,j-var fixnum from ,x1 below ,x2
-            do (setf (pixel ,image ,i-var ,j-var)
-                     (progn
-                       ,@body)))))
+               do (setf (pixel ,image ,i-var ,j-var)
+                        (progn
+                          ,@body)))))
 
 (defun clear-image (image)
   (with-image-bounds (height width channels)
@@ -305,20 +306,16 @@ function does that.")
     (declare (ignore height width))
     (if channels
         (ecase channels
-          (2 (set-pixels (i j) image
-               (values 0 0)))
-          (3 (set-pixels (i j) image
-               (values 0 0 0)))
-          (4 (set-pixels (i j) image
-               (values 0 0 0 0))))
+          (2 (set-pixels (i j) image (values 0 0)))
+          (3 (set-pixels (i j) image (values 0 0 0)))
+          (4 (set-pixels (i j) image (values 0 0 0 0))))
         (set-pixels (i j) image 0)))
   image)
 
-(defun copy-array (src &key
-                   (element-type (array-element-type src))
-                   (fill-pointer (and (array-has-fill-pointer-p src)
-                                      (fill-pointer src)))
-                   (adjustable (adjustable-array-p src)))
+(defun copy-array (src &key (element-type (array-element-type src))
+                            (fill-pointer (and (array-has-fill-pointer-p src)
+                                               (fill-pointer src)))
+                            (adjustable (adjustable-array-p src)))
   "Returns an undisplaced copy of ARRAY, with same fill-pointer and
 adjustability (if any) as the original, unless overridden by the keyword
 arguments."
