@@ -1,6 +1,6 @@
 
 ;;;
-;;; Thresholding code contributed buy Ivan Chernetsky in 2011.
+;;; Thresholding code contributed by Ivan Chernetsky in 2011.
 ;;; See COPYRIGHT file for details.
 
 (in-package :opticl)
