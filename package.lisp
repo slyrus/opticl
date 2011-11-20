@@ -156,7 +156,8 @@
     (:use :cl)))
 
 #+sbcl
-(require :sb-cltl2)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require :sb-cltl2))
 
 (defpackage :opticl-cltl2
   #+sbcl (:import-from :sb-cltl2 :variable-information)
