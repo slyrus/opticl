@@ -111,7 +111,7 @@
          (flet ((recompute-means ()
                   (declare (type 8-bit-rgb-image image)
                            (type (simple-array fixnum (* *)) z)
-                           (type (simple-array fixnum *) counts)
+                           (type (simple-array fixnum (*)) counts)
                            (optimize (speed 3)))
                   ;; clear out the old values
                   (dotimes (q k)

@@ -1,6 +1,7 @@
 
 (asdf:defsystem :opticl
   :name "opticl"
+  :description "A library for representing and processing images"
   :author "Cyrus Harmon <ch-lisp@bobobeach.com>"
   :licence "BSD"
   :serial t
@@ -26,4 +27,5 @@
    (:file "pnm")
    (:file "gif")
    (:file "io")
-   (:file "cluster")))
+   (:file "cluster")
+   (:file "thresholding")))
