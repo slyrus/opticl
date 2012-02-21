@@ -52,7 +52,7 @@
     ((frob-image (name &key channels element-type)
        (let ((type (read-from-string (format nil "~A" name))))
          (let ((ctor-function
-                (read-from-string (format nil "make-~A" type))))
+                 (read-from-string (format nil "make-~A" type))))
            `(progn
               (deftype ,type () ',(list* 'image
                                          (append 
@@ -60,9 +60,9 @@
                                             `(:channels ,channels))
                                           (when element-type
                                             `(:element-type ,element-type)))))
-              (defun ,ctor-function (height width &key
-                                                    (initial-element nil initial-element-p)
-                                                    (initial-contents nil initial-contents-p))
+              (defun ,ctor-function
+                  (height width &key (initial-element nil initial-element-p)
+                                     (initial-contents nil initial-contents-p))
                 (apply #'make-array (append (list height width)
                                             (when ,(and channels
                                                         (> channels 1))
@@ -322,12 +322,14 @@ arguments."
   (let ((dims (array-dimensions src)))
     ;; Dictionary entry for ADJUST-ARRAY requires adjusting a
     ;; displaced array to a non-displaced one to make a copy.
-    (let* ((src-displaced (make-array (reduce #'* dims) :displaced-to src
+    (let* ((src-displaced (make-array (reduce #'* dims)
+                                      :displaced-to src
                                       :element-type element-type))
            (dest (make-array dims :element-type element-type
-                             :fill-pointer fill-pointer
-                             :adjustable adjustable))
-           (dest-displaced (make-array (reduce #'* dims) :displaced-to dest
+                                  :fill-pointer fill-pointer
+                                  :adjustable adjustable))
+           (dest-displaced (make-array (reduce #'* dims)
+                                       :displaced-to dest
                                        :element-type element-type)))
       (replace dest-displaced src-displaced)
       dest)))
