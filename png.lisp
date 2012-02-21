@@ -4,74 +4,78 @@
 (in-package :opticl)
 
 (defun read-png-stream (stream)
-  (let ((png (png-read:read-png-datastream stream)))
-    (with-accessors
-          ((colour-type png-read:colour-type)
-           (bit-depth png-read:bit-depth)
-           (width png-read:width)
-           (height png-read:height)
-           (image-data png-read:image-data))
-        png
-      (cond ((and (eq colour-type :truecolor)
-                  (eql bit-depth 8))
-             (let ((img (make-8-bit-rgb-image height width)))
-               (declare (type 8-bit-rgb-image img))
-               (loop for i below height
-                  do 
-                    (loop for j below width
-                       do 
-                         (setf (pixel img i j)
-                               (values (aref image-data j i 0)
-                                       (aref image-data j i 1)
-                                       (aref image-data j i 2)))))
-               img))
-            
-            ((and (eq colour-type :truecolor-alpha)
-                  (eql bit-depth 8))
-             (let ((img (make-8-bit-rgba-image height width)))
-               (declare (type 8-bit-rgba-image img))
-               (loop for i below height
-                  do 
-                    (loop for j below width
-                       do 
-                         (setf (pixel img i j)
-                               (values (aref image-data j i 0)
-                                       (aref image-data j i 1)
-                                       (aref image-data j i 2)
-                                       (aref image-data j i 3)))))
-               img))
-
-            ;;; the README says the colors are indexed -- but then on
-            ;;; the next line says they're decoded. looks like decoded
-            ;;; wins.
-            ((and (eq colour-type :indexed-colour)
-                  (eql bit-depth 8))
-             (let ((img (make-8-bit-rgb-image height width)))
-               (declare (type 8-bit-rgb-image img))
-               (loop for i below height
-                  do 
-                    (loop for j below width
-                       do 
-                         (setf (pixel img i j)
-                               (values (aref image-data j i 0)
-                                       (aref image-data j i 1)
-                                       (aref image-data j i 2)))))
-               img))
-
-            ((and (eq colour-type :greyscale)
-                  (eql bit-depth 8))
-             (let ((img (make-8-bit-gray-image height width)))
-               (declare (type 8-bit-gray-image img))
-               (loop for i below height
-                  do 
-                    (loop for j below width
-                       do 
-                         (setf (pixel img i j)
-                               (aref image-data j i))))
-               img))
-
-            (t
-             (error "unable to read PNG image -- fix read-png-stream!"))))))
+  (let* ((png (png-read:read-png-datastream stream))
+	 (colour-type (png-read:colour-type png))
+	 (bit-depth (png-read:bit-depth png))
+	 (width (png-read:width png))
+	 (height (png-read:height png))
+	 (image-data (png-read:image-data png))
+	 (transparency (png-read::transparency png)))
+    ;; Temporary provision for buggy png-read where an internal
+    ;; representation of transparency chunk were not turned into a
+    ;; proper transparency map during postprocessing (see
+    ;; <https://github.com/Ramarren/png-read/pull/3>.)
+    (unless (typep transparency '(array * 2))
+      (setf transparency nil))
+    (flet ((get-pixel-grey (i j)
+	     (aref image-data j i))
+	   (get-pixel-grey-alpha (i j)
+	     (let ((brightness (aref image-data j i 0)))
+	       (values brightness
+		       brightness
+		       brightness
+		       (aref image-data j i 1))))
+	   (get-pixel-grey-tmap (i j)
+	     (let ((brightness (aref image-data j i)))
+	       (values brightness
+		       brightness
+		       brightness
+		       (aref transparency j i))))
+	   (get-pixel-rgba (i j)
+	     (values (aref image-data j i 0)
+		     (aref image-data j i 1)
+		     (aref image-data j i 2)
+		     (aref image-data j i 3)))
+	   (get-pixel-rgb-tmap (i j)
+	     (values (aref image-data j i 0)
+		     (aref image-data j i 1)
+		     (aref image-data j i 2)
+		     (aref transparency j i)))
+	   (get-pixel-rgb (i j)
+	     (values (aref image-data j i 0)
+		     (aref image-data j i 1)
+		     (aref image-data j i 2))))
+      (multiple-value-bind (constructor get-pixel-fn)
+	  (case bit-depth
+	    (8 (case transparency
+		 ((nil)
+		  (case colour-type
+		    ((:truecolor :indexed-colour)
+		     (values #'make-8-bit-rgb-image
+			     #'get-pixel-rgb))
+		    (:truecolor-alpha
+		     (values #'make-8-bit-rgba-image
+			     #'get-pixel-rgba))
+		    (:greyscale-alpha
+		     (values #'make-8-bit-rgba-image
+			     #'get-pixel-grey-alpha))
+		    (:greyscale
+		     (values #'make-8-bit-gray-image
+			     #'get-pixel-grey))))
+		 (t
+		  (values #'make-8-bit-rgba-image
+			  (case colour-type
+			    ((:truecolor :indexed-colour)
+			     #'get-pixel-rgb-tmap)
+			    (:greyscale
+			     #'get-pixel-grey-tmap)))))))
+	(unless get-pixel-fn
+	  (error "unable to read PNG image -- fix read-png-stream!"))
+	(let ((img (funcall constructor height width)))
+	  (dotimes (i height img)
+	    (dotimes (j width)
+	      (setf (pixel img i j)
+		    (funcall get-pixel-fn i j)))))))))
 
 (defun read-png-file (pathname)
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
