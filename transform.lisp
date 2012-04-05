@@ -36,11 +36,11 @@
                              (* sin-theta y-scale)))
     (setf (aref xfrm 1 1) (- (* cos-theta x-scale)
                              (* sin-theta y-scale y-shear)))
-
+    
     (setf (aref xfrm 0 2) (coerce y-shift 'double-float))
     (setf (aref xfrm 1 2) (coerce x-shift 'double-float))
     (setf (aref xfrm 2 2) 1d0)
-
+    
     xfrm))
 
 (defun matrix-multiply (matrix-a matrix-b)
@@ -115,7 +115,7 @@
 
 (defmacro quadratic-interpolate
     (g00 g01 g02
-     g10 g11 g12
+     g10 g11 g12 
      g20 g21 g22 a b
      &optional (type 'double-float))
   `(let ((a0 (quadratic-kernel (- -1 ,a) ,type))
@@ -235,7 +235,7 @@
                                 (< -1 oldx-round matrix-m-columns))
                        (setf (pixel matrix-n i j)
                              (pixel matrix-m oldy-round oldx-round))))))))))))
-
+    
     (16-bit-rgb-image
      (locally
          (declare (type 16-bit-rgb-image matrix-m matrix-n))
@@ -268,7 +268,7 @@
                                 (< -1 oldx-round matrix-m-columns))
                        (setf (pixel matrix-n i j)
                              (pixel matrix-m oldy-round oldx-round))))))))))))
-
+    
     (8-bit-rgba-image
      (locally
          (declare (type 8-bit-rgba-image matrix-m matrix-n))
@@ -301,7 +301,7 @@
                                 (< -1 oldx-round matrix-m-columns))
                        (setf (pixel matrix-n i j)
                              (pixel matrix-m oldy-round oldx-round))))))))))))
-
+    
     (16-bit-rgba-image
      (locally
          (declare (type 16-bit-rgba-image matrix-m matrix-n))
@@ -408,13 +408,13 @@
                                     (k2 (min (1+ k) (1- matrix-m-columns))))
                                 (if channels
                                     (loop for channel below channels
-                                       do
+                                       do 
                                        (setf (aref matrix-n i j channel)
                                              (max
-                                              (min
+                                              (min 
                                                (round
                                                 (quadratic-interpolate
-
+                                                 
                                                  (aref matrix-m l0 k0 channel)
                                                  (aref matrix-m l0 k channel)
                                                  (aref matrix-m l0 k2 channel)
@@ -459,7 +459,7 @@
                              (k1 (1+ k)))
                          (if channels
                              (loop for channel below channels
-                                do
+                                do 
                                 (setf (aref matrix-n i j channel)
                                       (funcall fit-function
                                        (bilinear-interpolate
@@ -570,7 +570,7 @@
             (let ((post-shift (make-affine-transformation
                                :y-shift (- (car y)) :x-shift (- (car x))))
                   (post-shift2 (make-affine-transformation
-                                :y-scale (/ matrix-n-rows (- (cdr y) (car y)))
+                                :y-scale (/ matrix-n-rows (- (cdr y) (car y))) 
                                 :x-scale (/ matrix-n-columns (- (cdr x) (car x))))))
               (setf xfrm-shift
                     (matrix-multiply post-shift
@@ -584,7 +584,7 @@
                                 (typep matrix-n '8-bit-rgb-image))
                            (and (typep matrix-m '16-bit-rgb-image)
                                 (typep matrix-n '16-bit-rgb-image))
-
+                           
                            (and (typep matrix-m '8-bit-rgba-image)
                                 (typep matrix-n '8-bit-rgba-image))
                            (and (typep matrix-m '16-bit-rgba-image)
@@ -617,11 +617,11 @@
   (if (or y-max x-max)
       (with-image-bounds (oldy oldx channels)
           img
-        (let ((scale (apply #'min
+        (let ((scale (apply #'min 
                             (append (when y-max (list (/ y-max oldy)))
                                     (when x-max (list (/ x-max oldx)))))))
           (let ((xfrm (make-affine-transformation :y-scale scale :x-scale scale)))
-            (if pad
+            (if pad 
                 (let ((y (* scale oldy)) (x (* scale oldx)))
                   (let ((maxdim (max y x)))
                     (let ((ypad (- maxdim y))
@@ -629,7 +629,7 @@
                       (let ((halfypad (/ ypad 2))
                             (halfxpad (/ xpad 2)))
                         (apply #'transform-image img xfrm
-                               (when pad
+                               (when pad 
                                  (list :y (cons (floor (- halfypad))
                                                 (floor (- y-max halfypad)))
                                        :x (cons (floor (- halfxpad))
@@ -652,73 +652,3 @@
              (reduce #'matrix-multiply (reverse (list pre-shift rotate post-shift)))))
         (transform-image img composed :transform-bounds transform-bounds)))))
 
-(defun get-locality-3x3 (img y x &key (spiral-order t))
-  (with-image-bounds
-   (height width) img
-   (let ((height (- height 1))
-         (width (- width 1)))
-     (if spiral-order
-         (list (pixel img y x)
-               (if (= y 0) 0 (pixel img (- y 1) x))
-               (if (or (= y 0) (= x width)) 0 (pixel img (- y 1) (+ x 1)))
-               (if (= x width) 0 (pixel img y (+ x 1)))
-               (if (or (= y height) (= x width)) 0 (pixel img (+ y 1) (+ x 1)))
-               (if (= y height) 0 (pixel img (+ y 1) x))
-               (if (or (= y height) (= x 0)) 0 (pixel img (+ y 1) (- x 1)))
-               (if (= x 0) 0 (pixel img y (- x 1)))
-               (if (or (= y 0) (= x 0)) 0 (pixel img (- y 1) (- x 1))))
-       (list (if (or (= y 0) (= x 0)) 0
-               (pixel img (- y 1) (- x 1)))
-             (if (= y 0) 0
-               (pixel img (- y 1) x))
-             (if (or (= y 0) (= x width)) 0
-               (pixel img (- y 1) (+ x 1)))
-             (if (= x width) 0
-               (pixel img y (+ x 1)))
-             (if (or (= y height) (= x width)) 0
-               (pixel img (+ y 1) (+ x 1)))
-             (if (= y height) 0
-               (pixel img (+ y 1) x))
-             (if (or (= y height) (= x 0)) 0
-               (pixel img (+ y 1) (- x 1)))
-             (if (= x 0) 0
-               (pixel img y (- x 1))))))))
-
-(defun number-of-neighbors (img y x)
-  (apply '+ (get-locality-3x3 img y x)))
-
-(defun number-of-transitions (img y x)
-  (let* ((locality (get-locality-3x3 img y x))
-         (locality-pairs (make-pairs locality))
-         (count-1-0 (count '(0 1) locality-pairs :test #'equalp))
-         (count-0-1 (count '(1 0) locality-pairs :test #'equalp)))
-    (max count-1-0 count-0-1)))
-
-(defun thin-image-iteration (img)
-  (with-image-bounds
-   (height width) img
-   (let ((result-img (make-1-bit-gray-image height width)))
-     (loop for y from 1 below (1- height)
-           do (loop for x from 1 below (1- width)
-                    do (let* ((locality (get-locality-3x3 img y x :spiral-order nil))
-                              (N (number-of-neighbors img y x))
-                              (S (number-of-transitions img y x))
-                              (condition1 (and (= (first locality) 1) (and (<= 2 N) (<= N 6)) (= S 1)
-                                               (= (* (second locality) (fourth locality) (sixth locality)) 0)
-                                               (= (* (eighth locality) (fourth locality) (sixth locality)) 0)))
-                              (condition2 (and (= (first locality) 1) (and (<= 3 N) (<= N 6)) (= S 1)
-                                               (= (* (second locality) (fourth locality) (sixth locality)) 0)
-                                               (= (* (eighth locality) (fourth locality) (sixth locality)) 0))))
-                         (setf (pixel result-img y x) (if condition1 0 (pixel img y x)))
-                         (setf (pixel result-img y x) (if condition2 0 (pixel img y x))))))
-     result-img)))
-
-(defun thin-image (img)
-  (let ((result-img (thin-image-iteration img))
-        (prev-img nil))
-    (loop for i from 1
-          while (not (equalp prev-img result-img))
-          do (progn
-               (setf prev-img result-img)
-               (setf result-img (thin-image-iteration result-img))))
-    result-img))
