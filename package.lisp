@@ -48,6 +48,7 @@
    #:fit-image-into
    #:transform-image
    #:make-affine-transformation
+   #:thin-image
 
    ;; convolution and friends
    #:discrete-convolve
