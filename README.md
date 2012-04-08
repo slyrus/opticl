@@ -110,11 +110,11 @@ efficient code for accessing image data.
 
 ## Multi-dimensional Arrays
 
-Common Lisp's multidimensional provide some attractive qualities for
-representing images. At the core, it is desirable to have a
-representation that lends itself to efficient operations -- many
-languages offer high performance one-dimensional array access, and
-some offer efficient access to multidimensional arrays. However,
+Common Lisp's multidimensional arrays provide some attractive
+qualities for representing images. At the core, it is desirable to
+have a representation that lends itself to efficient operations --
+many languages offer high performance one-dimensional array access,
+and some offer efficient access to multidimensional arrays. However,
 merely the bytes that comprise the underlying array may not be
 sufficient for one to intelligently use the array. But the bytes that
 make up the image are only part of the story, the other critical
