@@ -291,7 +291,7 @@
         (height (parse-integer (read-number stream)))
         (maxval (parse-integer (read-number stream))))
     (if (< maxval 256)
-        (let ((img (make-8-bit-gray-image height width)))    
+        (let ((img (make-8-bit-rgb-image height width)))    
           (loop for i below height
              do 
              (loop for j below width
