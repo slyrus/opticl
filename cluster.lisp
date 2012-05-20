@@ -27,7 +27,7 @@
 
 (defun k-means-cluster-image-pixels (image k &key (max-iterations 20))
   (declare (type fixnum k))
-  (etypecase image
+  (typecase image
     (8-bit-gray-image
      (with-image-bounds (height width channels)
          image
