@@ -227,6 +227,15 @@ efficient performance of these reader and writer functions that offer
 the hope that opticl can serve as a general purpose image processing
 library suitable for use by a wide variety of CL programs.
 
+# Supported File Formats
+
+* PNG
+* JPEG
+* TIFF
+* PBM
+* PNM
+* GIF
+
 # Dependencies
 
 While opticl is designed to have minimal dependencies, I have decided
