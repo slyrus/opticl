@@ -55,11 +55,11 @@
                    (do-pixels (i j) z
                      (let ((acc-k 0d0))
                        (declare (type double-float acc-k))
-                       (loop for ui fixnum from (logand #xffffffff (- i span))
-                          to (logand #xffffffff (+ i span))
+                       (loop for ui fixnum from (logand most-positive-fixnum (- i span))
+                          to (logand most-positive-fixnum (+ i span))
                           for vi fixnum downfrom (1- vr) downto 0
-                          do (loop for uj fixnum from (logand #xffffffff (- j span))
-                                to (logand #xffffffff (+ j span))
+                          do (loop for uj fixnum from (logand most-positive-fixnum (- j span))
+                                to (logand most-positive-fixnum (+ j span))
                                 for vj fixnum downfrom (1- vc) downto 0
                                 do 
                                 (let ((ui* (constrain ui 0 (1- ur)))
@@ -79,11 +79,11 @@
                    (do-pixels (i j) z
                      (let ((acc-k 0d0))
                        (declare (type double-float acc-k))
-                       (loop for ui fixnum from (logand #xffffffff (- i span))
-                          to (logand #xffffffff (+ i span))
+                       (loop for ui fixnum from (logand most-positive-fixnum (- i span))
+                          to (logand most-positive-fixnum (+ i span))
                           for vi fixnum downfrom (1- vr) downto 0
-                          do (loop for uj fixnum from (logand #xffffffff (- j span))
-                                to (logand #xffffffff (+ j span))
+                          do (loop for uj fixnum from (logand most-positive-fixnum (- j span))
+                                to (logand most-positive-fixnum (+ j span))
                                 for vj fixnum downfrom (1- vc) downto 0
                                 do 
                                 (let ((ui* (constrain ui 0 (1- ur)))
@@ -103,11 +103,11 @@
                    (do-pixels (i j) z
                      (let ((acc-r 0d0) (acc-g 0d0) (acc-b 0d0))
                        (declare (type double-float acc-r acc-g acc-b))
-                       (loop for ui fixnum from (logand #xffffffff (- i span))
-                          to (logand #xffffffff (+ i span))
+                       (loop for ui fixnum from (logand most-positive-fixnum (- i span))
+                          to (logand most-positive-fixnum (+ i span))
                           for vi fixnum downfrom (1- vr) downto 0
-                          do (loop for uj fixnum from (logand #xffffffff (- j span))
-                                to (logand #xffffffff (+ j span))
+                          do (loop for uj fixnum from (logand most-positive-fixnum (- j span))
+                                to (logand most-positive-fixnum (+ j span))
                                 for vj fixnum downfrom (1- vc) downto 0
                                 do 
                                 (let ((ui* (constrain ui 0 (1- ur)))
@@ -140,11 +140,11 @@
                    (do-pixels (i j) z
                      (let ((acc-r 0d0) (acc-g 0d0) (acc-b 0d0))
                        (declare (type double-float acc-r acc-g acc-b))
-                       (loop for ui fixnum from (logand #xffffffff (- i span))
-                          to (logand #xffffffff (+ i span))
+                       (loop for ui fixnum from (logand most-positive-fixnum (- i span))
+                          to (logand most-positive-fixnum (+ i span))
                           for vi fixnum downfrom (1- vr) downto 0
-                          do (loop for uj fixnum from (logand #xffffffff (- j span))
-                                to (logand #xffffffff (+ j span))
+                          do (loop for uj fixnum from (logand most-positive-fixnum (- j span))
+                                to (logand most-positive-fixnum (+ j span))
                                 for vj fixnum downfrom (1- vc) downto 0
                                 do 
                                 (let ((ui* (constrain ui 0 (1- ur)))
@@ -182,13 +182,13 @@
                                                 (constrain j 0 (1- uc))))))
                        (declare (type double-float acc-r acc-g acc-b)
                                 (type (unsigned-byte 8) acc-k))
-                       (loop for ui fixnum from (logand #xffffffff (- i span))
-                          to (logand #xffffffff (+ i span))
+                       (loop for ui fixnum from (logand most-positive-fixnum (- i span))
+                          to (logand most-positive-fixnum (+ i span))
                           for vi fixnum downfrom (1- vr) downto 0
                           do
                             (let ((ui* (constrain ui 0 (1- ur))))
-                              (loop for uj fixnum from (logand #xffffffff (- j span))
-                                 to (logand #xffffffff (+ j span))
+                              (loop for uj fixnum from (logand most-positive-fixnum (- j span))
+                                 to (logand most-positive-fixnum (+ j span))
                                  for vj fixnum downfrom (1- vc) downto 0
                                  do 
                                    (let ((uj* (constrain uj 0 (1- uc)))
