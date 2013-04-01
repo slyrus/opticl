@@ -530,74 +530,144 @@
                   (max q1 q2 q3 q4) ;; x2'
                   ))))))
 
-(defun transform-image (matrix-m xfrm
-                        &key u v y x
-                        (transform-bounds t)
-                        (interpolate :nearest-neighbor interpolate-supplied-p)
-                        (background nil background-supplied-p))
-  "applies the affine transform xfrm to the contents of matrix m and
-   places the contents in n. The supported classes of interpolate
-   are :bilinear and :nearest-neighbor. If interpolate parameter is
-   not supplied, the default is :nearest-neighbor."
-  (with-image-bounds (matrix-m-rows matrix-m-columns channels)
-      matrix-m
-    (let ((xfrm-shift (copy-transform xfrm)))
-      (unless v (setf v (cons 0 matrix-m-rows)))
-      (unless u (setf u (cons 0 matrix-m-columns)))
-      (if transform-bounds
-          (multiple-value-bind (y1 x1 y2 x2)
-              (compute-bounds (car v) (car u) (cdr v) (cdr u) xfrm)
-            (unless y (setf y (cons (floor (+ y1 +epsilon+))
-                                    (ceiling (- y2 +epsilon+)))))
-            (unless x (setf x (cons (floor (+ x1 +epsilon+))
-                                    (ceiling (- x2 +epsilon+))))))
-          (progn
-            (unless y (setf y v))
-            (unless x (setf x u))))
-      (let ((matrix-n-rows (ceiling (- (cdr y) (car y))))
-            (matrix-n-columns (ceiling (- (cdr x) (car x)))))
-        (let ((matrix-n
-               (make-array
-                (list* matrix-n-rows matrix-n-columns (when channels (list channels)))
-                :element-type (array-element-type matrix-m))))
-          (let ((pre-shift1 (make-affine-transformation
-                             :y-shift (car v) :x-shift (car u)))
-                (pre-shift2 (make-affine-transformation
-                             :y-scale (/ (- (cdr v) (car v)) matrix-m-rows)
-                             :x-scale (/ (- (cdr u) (car u)) matrix-m-columns))))
-            (setf xfrm-shift (matrix-multiply xfrm-shift
-                                              (matrix-multiply pre-shift1 pre-shift2)))
-            (let ((post-shift (make-affine-transformation
-                               :y-shift (- (car y)) :x-shift (- (car x))))
-                  (post-shift2 (make-affine-transformation
-                                :y-scale (/ matrix-n-rows (- (cdr y) (car y))) 
-                                :x-scale (/ matrix-n-columns (- (cdr x) (car x))))))
-              (setf xfrm-shift
-                    (matrix-multiply post-shift
-                                     (matrix-multiply post-shift2 xfrm)))
-              (if (and (or (and (typep matrix-m '8-bit-gray-image)
-                                (typep matrix-n '8-bit-gray-image))
-                           (and (typep matrix-m '16-bit-gray-image)
-                                (typep matrix-n '16-bit-gray-image))
+(defun adjust-transform (transform
+                         source-dimensions
+                         target-dimensions
+                         pre-x-bounds
+                         pre-y-bounds
+                         post-x-bounds
+                         post-y-bounds)
+  (let* ((pre-adjust-shift (make-affine-transformation
+                            :y-shift (car pre-y-bounds)
+                            :x-shift (car pre-x-bounds)))
+         (pre-adjust-scale (make-affine-transformation
+                            :y-scale (/ (- (cdr pre-y-bounds)
+                                           (car pre-y-bounds))
+                                        (car source-dimensions))
+                            :x-scale (/ (- (cdr pre-x-bounds)
+                                           (car pre-x-bounds))
+                                        (cdr source-dimensions))))
+         (pre-adjusted (matrix-multiply transform
+                                         (matrix-multiply pre-adjust-shift
+                                                          pre-adjust-scale)))
+         (post-adjust-shift (make-affine-transformation
+                             :y-shift (- (car post-y-bounds))
+                             :x-shift (- (car post-x-bounds))))
+         (post-adjust-scale (make-affine-transformation
+                             :y-scale (/ (car target-dimensions)
+                                         (- (cdr post-y-bounds)
+                                            (car post-y-bounds)))
+                             :x-scale (/ (cdr target-dimensions)
+                                         (- (cdr post-x-bounds)
+                                            (car post-x-bounds))))))
+    (matrix-multiply post-adjust-shift (matrix-multiply post-adjust-scale
+                                                        pre-adjusted))))
 
-                           (and (typep matrix-m '8-bit-rgb-image)
-                                (typep matrix-n '8-bit-rgb-image))
-                           (and (typep matrix-m '16-bit-rgb-image)
-                                (typep matrix-n '16-bit-rgb-image))
-                           
-                           (and (typep matrix-m '8-bit-rgba-image)
-                                (typep matrix-n '8-bit-rgba-image))
-                           (and (typep matrix-m '16-bit-rgba-image)
-                                (typep matrix-n '16-bit-rgba-image)))
-                       (not background-supplied-p)
-                       (not interpolate-supplied-p))
-                  (%fast-affine-transform-image matrix-m matrix-n xfrm-shift)
-                  (apply #'%affine-transform-image matrix-m matrix-n xfrm-shift
-                         (append
-                          (when background-supplied-p
-                            (list :background background))
-                          (when interpolate-supplied-p
-                            (list :interpolate interpolate))))))))))))
+(defun fast-affine-applicable (image target)
+  (or (and (typep image '8-bit-gray-image)
+           (typep target '8-bit-gray-image))
+      (and (typep image '16-bit-gray-image)
+           (typep target '16-bit-gray-image))
+      (and (typep image '8-bit-rgb-image)
+           (typep target '8-bit-rgb-image))
+      (and (typep image '16-bit-rgb-image)
+           (typep target '16-bit-rgb-image))
+      (and (typep image '8-bit-rgba-image)
+           (typep target '8-bit-rgba-image))
+      (and (typep image '16-bit-rgba-image)
+           (typep target '16-bit-rgba-image))))
+
+(defun transform-image (image
+                        transform
+                        &key
+                          pre-x-bounds
+                          pre-y-bounds
+                          post-x-bounds
+                          post-y-bounds
+                          (transform-bounds t)
+                          (interpolate :nearest-neighbor
+                                       interpolate-supplied-p)
+                          (background nil background-supplied-p))
+  "Returns a new image holding transform applied to image.
+
+If pre-x-bounds is supplied image is assumed to extend from the car of
+pre-x-bounds to the cdr of pre-x-bounds along the x-axis.
+
+Similarly if pre-y-bounds is supplied then image is transformed as if
+it extended from the car of pre-y-bounds to the cdr of pre-y-bounds
+along the y-axis.
+
+If post-x-bounds is supplied the transformed image is clipped from the
+car of post-x-bounds to the cdr of post-x-bounds along the x-axis.
+
+Otherwise if transformed-bounds is true the transformed image is not
+clipped along the x-axis.
+
+Otherwise the transformed image is clipped by the assumed extents of
+image along the x-axis.
+
+Similarly if post-y-bounds is supplied the transformed image is
+clipped from the car of post-y-bounds to the cdr of post-y-bounds
+along the y-axis.
+
+Otherwise if transformed-bounds is true the transformed image is not
+clipped along the y-axis.
+
+Otherwise the transformed image is clipped by the assumed extents of
+image along the y-axis.
+
+interpolate must be either :nearest-neighbor or :bilinear.
+
+When background is supplied any pixels in the return image which
+were not mapped by the transform from image are instead filled with
+the corresponding pixel from background."
+  (with-image-bounds (rows columns channels) image
+    (unless pre-x-bounds (setf pre-x-bounds (cons 0 columns)))
+    (unless pre-y-bounds (setf pre-y-bounds (cons 0 rows)))
+    (if transform-bounds
+        (multiple-value-bind (y-lower x-lower y-upper x-upper)
+            (compute-bounds (car pre-y-bounds)
+                            (car pre-x-bounds)
+                            (cdr pre-y-bounds)
+                            (cdr pre-x-bounds)
+                            transform)
+          (unless post-x-bounds
+            (setf post-x-bounds (cons (floor (+ x-lower +epsilon+))
+                                      (ceiling (- x-upper +epsilon+)))))
+          (unless post-y-bounds
+            (setf post-y-bounds (cons (floor (+ y-lower +epsilon+))
+                                      (ceiling (- y-upper +epsilon+))))))
+        (progn
+          (unless post-x-bounds (setf post-x-bounds pre-x-bounds))
+          (unless post-y-bounds (setf post-y-bounds pre-y-bounds))))
+    (let* ((target-rows (ceiling (- (cdr post-y-bounds)
+                                   (car post-y-bounds))))
+           (target-columns (ceiling (- (cdr post-x-bounds)
+                                       (car post-x-bounds))))
+           (target (make-array (list* target-rows
+                                      target-columns
+                                      (when channels (list channels)))
+                               :element-type (array-element-type image)))
+           (adjusted-transform (adjust-transform transform
+                                                 (cons rows columns)
+                                                 (cons target-rows
+                                                       target-columns)
+                                                 pre-x-bounds
+                                                 pre-y-bounds
+                                                 post-x-bounds
+                                                 post-y-bounds)))
+      (if (and (not background-supplied-p)
+               (not interpolate-supplied-p)
+               (fast-affine-applicable image target))
+          (%fast-affine-transform-image image target adjusted-transform)
+          (apply #'%affine-transform-image
+                 image
+                 target
+                 adjusted-transform
+                 (append (when background-supplied-p
+                           (list :background background))
+                         (when interpolate-supplied-p
+                           (list :interpolate interpolate))))))))
 
 (defun split-around-zero (k &key integer)
   (let ((khalf (/ k 2.0d0)))
