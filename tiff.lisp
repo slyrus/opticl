@@ -286,5 +286,6 @@ image or an 8-bit grayscale image"
 (defun write-tiff-file (pathname image &key byte-order)
   (let ((tiff-image (make-tiff-image image)))
     (apply #'tiff:write-tiff-file pathname tiff-image
+           :if-exists :supersede
            (when byte-order `(:byte-order ,byte-order)))))
 
