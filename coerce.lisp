@@ -8,10 +8,8 @@
   (:documentation "attempts to coerce a given image into the specified type."))
 
 (defmethod coerce-image (image (type (eql '8-bit-gray-image)) &rest args)
-  ;; work around ABCL etypecase bug
   (declare (ignore args))
 
-  #-abcl
   (etypecase image
     (8-bit-gray-image image)
     (1-bit-gray-image 
@@ -37,49 +35,6 @@
          gray-image)))
     ((or rgb-image rgba-image)
      (with-image-bounds (y x channels) image
-       (let* ((type (array-element-type image))
-              (gray-image (make-8-bit-gray-image y x)))
-         (if (subtypep type 'integer)
-             (do-pixels (i j)
-                 image
-               (multiple-value-bind (r g b)
-                   (pixel image i j)
-                 (setf (pixel gray-image i j)
-                       (round (mean r g b)))))
-             (do-pixels (i j)
-                 image
-               (multiple-value-bind (r g b)
-                   (pixel image i j)
-                 (setf (pixel gray-image i j)
-                       (coerce (round (mean r g b)) type)))))
-         gray-image))))
-
-  ;; work around ABCL etypecase bug  
-  #+abcl
-  (cond
-    ((typep image '8-bit-gray-image) image)
-    
-    ((typep image '1-bit-gray-image) 
-     (with-image-bounds (y x)
-         image
-       (let* ((gray-image (make-8-bit-gray-image y x)))
-         (do-pixels (i j) image
-           (setf (pixel gray-image i j)
-                 (if (plusp (pixel image i j)) 255 0)))
-         gray-image)))
-
-    ((typep image '32-bit-gray-image)
-     (with-image-bounds (y x) image
-       (let ((gray-image (make-8-bit-gray-image y x)))
-         (do-pixels (i j)
-             image
-           (setf (pixel gray-image i j) (pixel image i j)))
-         gray-image)))
-
-    ((or (typep image 'rgb-image)
-         (typep image 'rgba-image))
-     (with-image-bounds (y x channels)
-         image
        (let* ((type (array-element-type image))
               (gray-image (make-8-bit-gray-image y x)))
          (if (subtypep type 'integer)
