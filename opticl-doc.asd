@@ -29,6 +29,7 @@
 
 (asdf:defsystem :opticl-doc
   :name "opticl-doc"
+  :description "Documentation for opticl"
   :author "Cyrus Harmon <ch-lisp@bobobeach.com>"
   :licence "BSD"
   :default-component-class markdown-file
