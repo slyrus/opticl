@@ -7,9 +7,9 @@
 (defconstant +ncomp-rgb+ 3)
 
 (defparameter *rgb-sampling* '((1 1)(1 1)(1 1)))
-(defparameter *rgb-q-tabs* (vector jpeg::*q-luminance-hi*
-                                   jpeg::*q-chrominance-hi*))
-(defparameter *gray-q-tabs* (vector jpeg::*q-luminance*))
+(defparameter *rgb-q-tabs* (vector jpeg::+q-luminance-hi+
+                                   jpeg::+q-chrominance-hi+))
+(defparameter *gray-q-tabs* (vector jpeg::+q-luminance+))
 
 ;;;
 ;;; Reading JPEG files
