@@ -68,7 +68,7 @@
      (destructuring-bind (height width channels)
          (array-dimensions image)
        (declare (ignore channels))
-       (let ((jpeg-array (make-array (* height width +ncomp-rgb+))))
+       (let ((jpeg-array (make-array (* height width +ncomp-rgb+) :element-type '(unsigned-byte 8)))) 
          (loop for i below height
             do 
             (loop for j below width
