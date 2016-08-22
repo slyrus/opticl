@@ -254,20 +254,30 @@ efficient way to do this, but if one wants to pass a set of values as
 a list instead of as multiple-values (for named colors perhaps), this
 function does that.")
 
-(defmacro with-image-bounds ((ymax-var xmax-var &optional (channels (gensym))) img
+;; Note: CLH 2016-08-21
+;;
+;; We used to gensym a channels variable that could be used without
+;; passsing it into with-image-bounds. That was a bad idea and by not
+;; setting channels, we don't try to take the array-dimension that the
+;; compiler might know does not exist. Also, channels should really be
+;; named sosmething like num-channels.
+;;
+(defmacro with-image-bounds ((ymax-var xmax-var &optional channels) img
                              &body body
                              &environment env)
   (let ((image-dimensions (%get-image-dimensions img env)))
     `(let ((,ymax-var (array-dimension ,img 0))
            (,xmax-var (array-dimension ,img 1))
-           (,channels ,(when (or (not image-dimensions)
-                                 (> (length image-dimensions) 2))
-                         `(when (= (array-rank ,img) 3)
-                            (array-dimension ,img 2)))))
-       (declare (ignorable ,channels)
-                (type fixnum ,ymax-var)
-                (type fixnum ,xmax-var))
-       ,@body)))
+           ,@(when channels
+               `((,channels ,(when (or (not image-dimensions)
+                                       (> (length image-dimensions) 2))
+                               `(when (= (array-rank ,img) 3)
+                                 (array-dimension ,img 2)))))))
+      (declare ,@(when channels
+                   `((ignorable ,channels)))
+       (type fixnum ,ymax-var)
+       (type fixnum ,xmax-var))
+      ,@body)))
 
 (defmacro do-pixels ((i-var j-var) image &body body)
   (alexandria:with-gensyms (height width)
