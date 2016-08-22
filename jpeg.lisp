@@ -52,7 +52,7 @@
     (8-bit-gray-image
      (destructuring-bind (height width)
          (array-dimensions image)
-       (let ((jpeg-array (make-array (* height width)))
+       (let ((jpeg-array (make-array (* height width) :element-type '(unsigned-byte 8)))
              (pixoff 0))
          (loop for i below height
             do 
@@ -68,7 +68,7 @@
      (destructuring-bind (height width channels)
          (array-dimensions image)
        (declare (ignore channels))
-       (let ((jpeg-array (make-array (* height width +ncomp-rgb+))))
+       (let ((jpeg-array (make-array (* height width +ncomp-rgb+) :element-type '(unsigned-byte 8))))
          (loop for i below height
             do 
             (loop for j below width
@@ -91,7 +91,7 @@
      (destructuring-bind (height width channels)
          (array-dimensions image)
        (declare (ignore channels))
-       (let ((jpeg-array (make-array (* height width +ncomp-rgb+))))
+       (let ((jpeg-array (make-array (* height width +ncomp-rgb+) :element-type '(unsigned-byte 8))))
          (loop for i below height
             do 
               (loop for j below width
