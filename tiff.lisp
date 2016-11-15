@@ -49,6 +49,29 @@ image or an 8-bit grayscale image"
            image))
 
         ((and (= samples-per-pixel 1)
+              (equalp bits-per-sample 4)) ;; 4-bit Grayscale
+         (let ((image (make-4-bit-gray-image image-length image-width)))
+           (declare (type 4-bit-gray-image image))
+           (loop for i below image-length
+              do
+                (loop for j below image-width
+                   with nibble = 0
+                   with byte-offset = (ceiling  (* i image-width) 2)
+                   do
+                     (setf (pixel image i j)
+                           (if (zerop nibble)
+                               (prog1
+                                   (ldb (byte 4 4)
+                                        (aref image-data byte-offset))
+                                 (incf nibble))
+                               (prog1
+                                   (ldb (byte 4 0)
+                                        (aref image-data byte-offset))
+                                 (setf nibble 0)
+                                 (incf byte-offset))))))
+           image))
+
+        ((and (= samples-per-pixel 1)
               (equalp bits-per-sample 8)) ;; 8-bit Grayscale
          (let ((image (make-8-bit-gray-image image-length image-width)))
            (declare (type 8-bit-gray-image image))
