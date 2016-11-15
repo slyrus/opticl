@@ -141,6 +141,71 @@ image or an 8-bit grayscale image"
 ;;; Writing TIFF files
 (defun make-tiff-image (image)
   (typecase image
+
+    (1-bit-gray-image
+     (destructuring-bind (height width)
+         (array-dimensions image)
+       (let ((tiff-image (make-instance 'tiff:tiff-image
+                                        :width width
+                                        :length height
+                                        :bits-per-sample 1
+                                        :samples-per-pixel 1
+                                        :data (make-array (* width height)
+                                                          :initial-element 1))))
+         (with-accessors ((image-data tiff:tiff-image-data))
+             tiff-image
+           (let ((byte-offset 0)
+                 (bit-offset 0))
+             (loop for i below height
+                do
+                  (loop for j below width
+                     do
+                       (if (< bit-offset 7)
+                           (progn
+                             (setf (ldb (byte 1 (- 7 bit-offset))
+                                        (aref image-data byte-offset))
+                                   (pixel image i j))
+                             (incf bit-offset))
+                           (progn
+                             (setf (ldb (byte 1 0)
+                                        (aref image-data byte-offset))
+                                   (pixel image i j))
+                             (setf bit-offset 0)
+                             (incf byte-offset)))))))
+         tiff-image)))
+
+    (4-bit-gray-image
+     (destructuring-bind (height width)
+         (array-dimensions image)
+       (let ((tiff-image (make-instance 'tiff:tiff-image
+                                        :width width
+                                        :length height
+                                        :bits-per-sample 4
+                                        :samples-per-pixel 1
+                                        :data (make-array (* width height)
+                                                          :initial-element 15))))
+         (with-accessors ((image-data tiff:tiff-image-data))
+             tiff-image
+           (let ((byte-offset 0)
+                 (nibble 0))
+             (loop for i below height
+                do
+                  (loop for j below width
+                     do
+                       (if (zerop nibble)
+                           (progn
+                             (setf (ldb (byte 4 4)
+                                        (aref image-data byte-offset))
+                                   (pixel image i j))
+                             (incf nibble))
+                           (progn
+                             (setf (ldb (byte 4 0)
+                                        (aref image-data byte-offset))
+                                   (pixel image i j))
+                             (setf nibble 0)
+                             (incf byte-offset)))))))
+         tiff-image)))
+
     (8-bit-gray-image
      (destructuring-bind (height width)
          (array-dimensions image)
