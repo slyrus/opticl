@@ -34,6 +34,9 @@
 
 ;;
 ;; Grayscale JPEG Images
+
+;; no support for 1-bit JPEGs, AFAICT
+#+nil
 (test jpeg-bitmap-write-and-read
   (let ((img (make-1-bit-gray-image 32 32)))
     (fill-image img 1)
@@ -43,6 +46,8 @@
       (let ((input-img (read-jpeg-file out)))
         (is (equalp img input-img))))))
 
+;; no support for 4-bit JPEGs, AFAICT
+#+nil
 (test jpeg-4-bit-gray-write-and-read
   (let ((img (make-4-bit-gray-image 32 32)))
     (fill-image img 5)

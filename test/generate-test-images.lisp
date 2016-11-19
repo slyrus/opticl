@@ -31,6 +31,9 @@
 
 ;;
 ;; JPEG grayscale images
+
+;; no support for 1-bit JPEGs, AFAICT
+#+nil
 (test jpeg-write-bitmap-circle
   (let ((img (make-1-bit-gray-image 32 32)))
     (fill-image img 1)
@@ -39,6 +42,8 @@
       (is (equal out
                  (write-jpeg-file out img))))))
 
+;; no support for 4-bit JPEGs, AFAICT
+#+nil
 (test jpeg-write-4-bit-gray-circle
   (let ((img (make-4-bit-gray-image 32 32)))
     (fill-image img 13)
