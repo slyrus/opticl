@@ -28,4 +28,21 @@
    (:file "gif")
    (:file "io")
    (:file "cluster")
-   (:file "thresholding")))
+   (:file "thresholding"))
+  :in-order-to ((test-op (test-op :opticl/tests))))
+
+
+(asdf:defsystem :opticl/tests
+  :depends-on (:opticl :fiveam)
+  :serial t
+  :default-component-class cl-source-file
+  :components
+  ((:module :test
+            :components ((:file "package")
+                         (:file "opticl-test")
+                         (:file "generate-test-images")
+                         (:file "read-test-images"))))
+  :perform (test-op (o c)
+                    (uiop:symbol-call :fiveam '#:run! :opticl)))
+
+
