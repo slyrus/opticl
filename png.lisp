@@ -11,12 +11,6 @@
 	 (height (png-read:height png))
 	 (image-data (png-read:image-data png))
 	 (transparency (png-read::transparency png)))
-    ;; Temporary provision for buggy png-read where an internal
-    ;; representation of transparency chunk were not turned into a
-    ;; proper transparency map during postprocessing (see
-    ;; <https://github.com/Ramarren/png-read/pull/3>.)
-    (unless (typep transparency '(array * 2))
-      (setf transparency nil))
     (flet ((get-pixel-grey (i j)
 	     (aref image-data j i))
 	   (get-pixel-grey-alpha (i j)
