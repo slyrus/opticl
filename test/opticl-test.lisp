@@ -24,45 +24,56 @@
       (is (equal out
                  (write-jpeg-file out img))))))
 
-(test tiff-read-8-bit-rbg-no-compression-jpeg-out
+(test tiff-read-8-bit-rgb-no-compression
   (let* ((file (test-image "truck-rgb-none.tiff"))
          (img (read-tiff-file file)))
-    (let ((out (output-image "truck-rgb.jpeg")))
+    (let ((out (output-image "truck-rgb-from-none.tiff")))
       (is (equal out
-                 (write-jpeg-file out img))))))
+                 (write-tiff-file out img))))))
+
+(test tiff-read-8-bit-rgb-jpeg-compression
+  (let* ((file (test-image "truck-rgb-jpeg.tiff"))
+         (img (read-tiff-file file)))
+    (let ((out (output-image "truck-rgb-from-jpeg.tiff")))
+      (is (equal out
+                 (write-tiff-file out img))))))
 
 (test tiff-read-8-bit-gray-no-compression
   (let* ((file (test-image "truck-gray-none.tiff"))
          (img (read-tiff-file file)))
     (let ((out (output-image "truck-gray-from-none.tiff")))
       (is (equal out
-                 (write-jpeg-file out img))))))
+                 (write-tiff-file out img))))))
 
 (test tiff-read-8-bit-gray-lzw-compression
   (let* ((file (test-image "truck-gray-lzw.tiff"))
          (img (read-tiff-file file)))
     (let ((out (output-image "truck-gray-from-lzw.tiff")))
       (is (equal out
-                 (write-jpeg-file out img))))))
+                 (write-tiff-file out img))))))
 
 (test tiff-read-8-bit-gray-packbits-compression
   (let* ((file (test-image "truck-gray-packbits.tiff"))
          (img (read-tiff-file file)))
     (let ((out (output-image "truck-gray-from-packbits.tiff")))
       (is (equal out
-                 (write-jpeg-file out img))))))
+                 (write-tiff-file out img))))))
 
 (test tiff-read-8-bit-gray-deflate-compression
   (let* ((file (test-image "truck-gray-deflate.tiff"))
          (img (read-tiff-file file)))
     (let ((out (output-image "truck-gray-from-deflate.tiff")))
       (is (equal out
-                 (write-jpeg-file out img))))))
+                 (write-tiff-file out img))))))
 
 (test tiff-read-8-bit-gray-jpeg-compression
   (let* ((file (test-image "truck-gray-jpeg.tiff"))
          (img (read-tiff-file file)))
     (let ((out (output-image "truck-gray-from-jpeg.tiff")))
       (is (equal out
-                 (write-jpeg-file out img))))))
+                 (write-tiff-file out img))))))
 
+(test jpeg-read-8-bit-gray
+  (let* ((file (test-image "truck-gray.jpeg"))
+         (img (read-jpeg-file file)))
+    img))
