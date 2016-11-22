@@ -41,7 +41,9 @@
             :components ((:file "package")
                          (:file "opticl-test")
                          (:file "generate-test-images")
-                         (:file "read-test-images"))))
+                         (:file "tiff-test")
+                         (:file "jpeg-test")
+                         (:file "png-test"))))
   :perform (test-op (o c)
                     (uiop:symbol-call :fiveam '#:run! :opticl)))
 

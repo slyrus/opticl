@@ -17,63 +17,17 @@
 
 (ensure-directories-exist (output-image ""))
 
-(test tiff-read-8-bit-gray-no-compression-jpeg-out
-  (let* ((file (test-image "truck-gray-none.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-gray.jpeg")))
-      (is (equal out
-                 (write-jpeg-file out img))))))
+(defun flatten-array (arr)
+  (make-array (reduce #'* (array-dimensions arr))
+              :displaced-to arr
+              :element-type (array-element-type arr)))
 
-(test tiff-read-8-bit-rgb-no-compression
-  (let* ((file (test-image "truck-rgb-none.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-rgb-from-none.tiff")))
-      (is (equal out
-                 (write-tiff-file out img))))))
+(defun array- (arr1 arr2)
+  (let ((flat-arr1 (flatten-array arr1))
+        (flat-arr2 (flatten-array arr2)))
+    (map 'vector #'- flat-arr1 flat-arr2)))
 
-(test tiff-read-8-bit-rgb-jpeg-compression
-  (let* ((file (test-image "truck-rgb-jpeg.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-rgb-from-jpeg.tiff")))
-      (is (equal out
-                 (write-tiff-file out img))))))
+(defun sum-of-element-wise-differences (arr1 arr2)
+  (reduce #'+ (array- arr1 arr2)))
 
-(test tiff-read-8-bit-gray-no-compression
-  (let* ((file (test-image "truck-gray-none.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-gray-from-none.tiff")))
-      (is (equal out
-                 (write-tiff-file out img))))))
 
-(test tiff-read-8-bit-gray-lzw-compression
-  (let* ((file (test-image "truck-gray-lzw.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-gray-from-lzw.tiff")))
-      (is (equal out
-                 (write-tiff-file out img))))))
-
-(test tiff-read-8-bit-gray-packbits-compression
-  (let* ((file (test-image "truck-gray-packbits.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-gray-from-packbits.tiff")))
-      (is (equal out
-                 (write-tiff-file out img))))))
-
-(test tiff-read-8-bit-gray-deflate-compression
-  (let* ((file (test-image "truck-gray-deflate.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-gray-from-deflate.tiff")))
-      (is (equal out
-                 (write-tiff-file out img))))))
-
-(test tiff-read-8-bit-gray-jpeg-compression
-  (let* ((file (test-image "truck-gray-jpeg.tiff"))
-         (img (read-tiff-file file)))
-    (let ((out (output-image "truck-gray-from-jpeg.tiff")))
-      (is (equal out
-                 (write-tiff-file out img))))))
-
-(test jpeg-read-8-bit-gray
-  (let* ((file (test-image "truck-gray.jpeg"))
-         (img (read-jpeg-file file)))
-    img))
