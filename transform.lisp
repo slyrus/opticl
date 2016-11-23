@@ -698,12 +698,15 @@ the corresponding pixel from background."
                           (xpad (- maxdim x)))
                       (let ((halfypad (/ ypad 2))
                             (halfxpad (/ xpad 2)))
-                        (apply #'transform-image img xfrm
-                               (when pad 
-                                 (list :y (cons (floor (- halfypad))
-                                                (floor (- y-max halfypad)))
-                                       :x (cons (floor (- halfxpad))
-                                                (floor (- x-max halfxpad))))))))))
+                        ;; FIXME add test for fit-image-into (and
+                        ;; other transform-related stuff).
+                        (transform-image img xfrm
+                                         :post-y-bounds
+                                         (cons (floor (- halfypad))
+                                               (floor (- y-max halfypad)))
+                                         :post-x-bounds
+                                         (cons (floor (- halfxpad))
+                                               (floor (- x-max halfxpad))))))))
                 (transform-image img xfrm)))))
       img))
 
