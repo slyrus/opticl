@@ -15,6 +15,8 @@
     (1-bit-gray-image 
      (with-image-bounds (y x) image
        (let* ((gray-image (make-8-bit-gray-image y x)))
+         (declare (type 8-bit-gray-image gray-image)
+                  (type 1-bit-gray-image image))
          (do-pixels (i j) image
            (setf (pixel gray-image i j)
                  (if (plusp (pixel image i j)) 255 0)))
@@ -22,6 +24,8 @@
     (32-bit-gray-image
      (with-image-bounds (y x) image
        (let ((gray-image (make-8-bit-gray-image y x)))
+         (declare (type 8-bit-gray-image gray-image)
+                  (type 32-bit-gray-image image))
          (do-pixels (i j)
              image
            (setf (pixel gray-image i j) (pixel image i j)))
@@ -29,14 +33,38 @@
     (fixnum-gray-image
      (with-image-bounds (y x) image
        (let ((gray-image (make-8-bit-gray-image y x)))
+         (declare (type 8-bit-gray-image gray-image)
+                  (type fixnum-gray-image image))
          (do-pixels (i j)
              image
            (setf (pixel gray-image i j) (pixel image i j)))
          gray-image)))
-    ((or rgb-image rgba-image)
+    (rgb-image
      (with-image-bounds (y x channels) image
        (let* ((type (array-element-type image))
               (gray-image (make-8-bit-gray-image y x)))
+         (declare (type 8-bit-gray-image gray-image)
+                  (type rgb-image image))
+         (if (subtypep type 'integer)
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (round (mean r g b)))))
+             (do-pixels (i j)
+                 image
+               (multiple-value-bind (r g b)
+                   (pixel image i j)
+                 (setf (pixel gray-image i j)
+                       (coerce (round (mean r g b)) type)))))
+         gray-image)))
+    (rgba-image
+     (with-image-bounds (y x channels) image
+       (let* ((type (array-element-type image))
+              (gray-image (make-8-bit-gray-image y x)))
+         (declare (type 8-bit-gray-image gray-image)
+                  (type rgba-image image))
          (if (subtypep type 'integer)
              (do-pixels (i j)
                  image
@@ -55,12 +83,57 @@
 (defmethod coerce-image (image (type (eql 'gray-image)) &key preserve-luminance &allow-other-keys)
   (etypecase image
     (gray-image image)
-    ((or rgb-image rgba-image)
+    (rgb-image
      (with-image-bounds (y x)
          image
        (let* ((type (array-element-type image))
               (gray-image (make-array (list y x) :element-type type)))
-         (declare (type gray-image gray-image))
+         (declare (type gray-image gray-image)
+                  (type rgb-image image))
+         (if preserve-luminance
+
+             (if (subtypep type 'integer)
+                 (do-pixels (i j)
+                     image
+                   (multiple-value-bind (r g b)
+                       (pixel image i j)
+                     (setf (pixel gray-image i j)
+                           (round 
+                            (+ (* r 0.2989)
+                               (* g 0.5870)
+                               (* b 0.1140))))))
+                 (do-pixels (i j)
+                     image
+                   (multiple-value-bind (r g b)
+                       (pixel image i j)
+                     (setf (pixel gray-image i j)
+                           (coerce (round 
+                                    (+ (* r 0.2989)
+                                       (* g 0.5870)
+                                       (* b 0.1140))) type)))))
+             (if (subtypep type 'integer)
+                 (do-pixels (i j)
+                     image
+                   (multiple-value-bind (r g b)
+                       (pixel image i j)
+                     (setf (pixel gray-image i j)
+                           (round (mean r g b)))))
+                 (do-pixels (i j)
+                     image
+                   (multiple-value-bind (r g b)
+                       (pixel image i j)
+                     (setf (pixel gray-image i j)
+                           (coerce (round (mean r g b)) type))))))
+         gray-image)))
+    (rgba-image
+     ;; FIXME! I should do something with the alpha channel instead of
+     ;; silently ignoring it!
+     (with-image-bounds (y x)
+         image
+       (let* ((type (array-element-type image))
+              (gray-image (make-array (list y x) :element-type type)))
+         (declare (type gray-image gray-image)
+                  (type rgba-image image))
          (if preserve-luminance
 
              (if (subtypep type 'integer)
