@@ -50,63 +50,69 @@
 (defun write-jpeg-stream (stream image)
   (typecase image
     (8-bit-gray-image
-     (destructuring-bind (height width)
-         (array-dimensions image)
-       (let ((jpeg-array (make-array (* height width) :element-type '(unsigned-byte 8)))
-             (pixoff 0))
-         (loop for i below height
-            do 
-              (loop for j below width
-               do 
-                 (setf (aref jpeg-array pixoff) 
-                       (pixel image i j))
-                 (incf pixoff)))
-         (jpeg::encode-image-stream stream jpeg-array +ncomp-gray+ height width
-                                    :q-tabs *gray-q-tabs*))))
-    
+     (locally
+         (declare (type 8-bit-gray-image image))
+       (destructuring-bind (height width)
+           (array-dimensions image)
+         (let ((jpeg-array (make-array (* height width) :element-type '(unsigned-byte 8)))
+               (pixoff 0))
+           (loop for i below height
+              do
+                (loop for j below width
+                   do
+                     (setf (aref jpeg-array pixoff)
+                           (pixel image i j))
+                     (incf pixoff)))
+           (jpeg::encode-image-stream stream jpeg-array +ncomp-gray+ height width
+                                      :q-tabs *gray-q-tabs*)))))
+
     (8-bit-rgb-image
-     (destructuring-bind (height width channels)
-         (array-dimensions image)
-       (declare (ignore channels))
-       (let ((jpeg-array (make-array (* height width +ncomp-rgb+) :element-type '(unsigned-byte 8))))
-         (loop for i below height
-            do 
-            (loop for j below width
-               do 
-               (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
-                 (multiple-value-bind
-                       (r g b)
-                     (pixel image i j)
-                   (setf (aref jpeg-array pixoff) b
-                         (aref jpeg-array (incf pixoff)) g
-                         (aref jpeg-array (incf pixoff)) r)))))
-         (jpeg::encode-image-stream stream jpeg-array +ncomp-rgb+ height width
-                                    :sampling *rgb-sampling*
-                                    :q-tabs *rgb-q-tabs*))))
-    
+     (locally
+         (declare (type 8-bit-rgb-image image))
+       (destructuring-bind (height width channels)
+           (array-dimensions image)
+         (declare (ignore channels))
+         (let ((jpeg-array (make-array (* height width +ncomp-rgb+) :element-type '(unsigned-byte 8))))
+           (loop for i below height
+              do
+                (loop for j below width
+                   do
+                     (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
+                       (multiple-value-bind
+                             (r g b)
+                           (pixel image i j)
+                         (setf (aref jpeg-array pixoff) b
+                               (aref jpeg-array (incf pixoff)) g
+                               (aref jpeg-array (incf pixoff)) r)))))
+           (jpeg::encode-image-stream stream jpeg-array +ncomp-rgb+ height width
+                                      :sampling *rgb-sampling*
+                                      :q-tabs *rgb-q-tabs*)))))
+
     ;; NB: The JPEG format doesn't, AAICT, have a well-specified way
     ;; of writing an RGBA image. So, for now at least, we'll punt and
     ;; write it as an RGB image.
     (8-bit-rgba-image
-     (destructuring-bind (height width channels)
-         (array-dimensions image)
-       (declare (ignore channels))
-       (let ((jpeg-array (make-array (* height width +ncomp-rgb+) :element-type '(unsigned-byte 8))))
-         (loop for i below height
-            do 
-              (loop for j below width
-                 do 
-                   (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
-                     (multiple-value-bind
-                           (r g b a)
-                         (pixel image i j)
-                       (declare (ignore a))
-                       (setf (aref jpeg-array pixoff) b
-                             (aref jpeg-array (incf pixoff)) g
-                             (aref jpeg-array (incf pixoff)) r)))))
-         (jpeg::encode-image-stream stream jpeg-array +ncomp-rgb+ height width
-                                    :sampling *rgb-sampling*
-                                    :q-tabs *rgb-q-tabs*))))
+     (locally
+         (declare (type 8-bit-rgba-image image))
+       (destructuring-bind (height width channels)
+           (array-dimensions image)
+         (declare (ignore channels))
+         (let ((jpeg-array (make-array (* height width +ncomp-rgb+) :element-type '(unsigned-byte 8))))
+           (loop for i below height
+              do
+                (loop for j below width
+                   do
+                     (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
+                       (multiple-value-bind
+                             (r g b a)
+                           (pixel image i j)
+                         (declare (ignore a))
+                         (setf (aref jpeg-array pixoff) b
+                               (aref jpeg-array (incf pixoff)) g
+                               (aref jpeg-array (incf pixoff)) r)))))
+           (jpeg::encode-image-stream stream jpeg-array +ncomp-rgb+ height width
+                                      :sampling *rgb-sampling*
+                                      :q-tabs *rgb-q-tabs*)))))
 
     (t (error "Cannot write a JPEG image from ~A" (type-of image)))))
 
