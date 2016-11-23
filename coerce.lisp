@@ -56,10 +56,11 @@
   (etypecase image
     (gray-image image)
     ((or rgb-image rgba-image)
-     (with-image-bounds (y x channels)
+     (with-image-bounds (y x)
          image
        (let* ((type (array-element-type image))
               (gray-image (make-array (list y x) :element-type type)))
+         (declare (type gray-image gray-image))
          (if preserve-luminance
 
              (if (subtypep type 'integer)
@@ -100,10 +101,11 @@
   (declare (ignore args))
   (etypecase image
     (gray-image
-     (with-image-bounds (y x channels)
+     (with-image-bounds (y x)
          image
        (let* ((type (array-element-type image))
               (rgb-image (make-array (list y x 3) :element-type type)))
+         (declare (type rgb-image rgb-image))
          (do-pixels (i j)
              image
            (let ((val (pixel image i j)))
@@ -126,10 +128,11 @@
   (declare (ignore args))
   (etypecase image
     (gray-image
-     (with-image-bounds (y x channels)
+     (with-image-bounds (y x)
          image
        (let* ((type (array-element-type image))
               (rgba-image (make-array (list y x 4) :element-type type)))
+         (declare (type rgba-image rgba-image))
          (do-pixels (i j)
              image
            (let ((val (pixel image i j)))
@@ -141,6 +144,7 @@
          image
        (let* ((type (array-element-type image))
               (rgba-image (make-array (list y x 4) :element-type type)))
+         (declare (type rgba-image rgba-image))
          (do-pixels (i j)
              image
            (setf (pixel* rgba-image i j) 
