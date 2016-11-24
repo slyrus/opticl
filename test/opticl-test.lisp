@@ -108,7 +108,7 @@
 (test 4-bit-rgb-image-typed-pixel
   (let ((img (make-4-bit-rgb-image 32 32 :initial-element 15)))
     (declare (type 4-bit-rgb-image img))
-    (is (equalp (pixel img 31 31) 15))))
+    (is (equalp (pixel img 31 31) (values 15 15 15)))))
 
 ;; 8-bit RGB
 (test 8-bit-rgb-image-pixel
@@ -139,3 +139,47 @@
   (let ((img (make-32-bit-rgb-image 32 32 :initial-element #xffffffff)))
     (declare (type 32-bit-rgb-image img))
     (is (equalp (pixel img 31 31) (values #xffffffff #xffffffff #xffffffff)))))
+
+
+;;
+;; RGBA images
+
+;; 4-bit RGBA
+(test 4-bit-rgba-image-pixel
+  (let ((img (make-4-bit-rgba-image 32 32 :initial-element 15)))
+    (is (equalp (pixel img 31 31) (values 15 15 15 15)))))
+
+(test 4-bit-rgba-image-typed-pixel
+  (let ((img (make-4-bit-rgba-image 32 32 :initial-element 15)))
+    (declare (type 4-bit-rgba-image img))
+    (is (equalp (pixel img 31 31) (values 15 15 15 15)))))
+
+;; 8-bit RGBA
+(test 8-bit-rgba-image-pixel
+  (let ((img (make-8-bit-rgba-image 32 32 :initial-element 255)))
+    (is (equalp (pixel img 31 31) (values 255 255 255 255)))))
+
+(test 8-bit-rgba-image-typed-pixel
+  (let ((img (make-8-bit-rgba-image 32 32 :initial-element 255)))
+    (declare (type 8-bit-rgba-image img))
+    (is (equalp (pixel img 31 31) (values 255 255 255 255)))))
+
+;; 16-bit RGBA
+(test 16-bit-rgba-image-pixel
+  (let ((img (make-16-bit-rgba-image 32 32 :initial-element #xffff)))
+    (is (equalp (pixel img 31 31) (values #xffff #xffff #xffff #xffff)))))
+
+(test 16-bit-rgba-image-typed-pixel
+  (let ((img (make-16-bit-rgba-image 32 32 :initial-element #xffff)))
+    (declare (type 16-bit-rgba-image img))
+    (is (equalp (pixel img 31 31) (values #xffff #xffff #xffff #xffff)))))
+
+;; 32-bit RGBA
+(test 32-bit-rgba-image-pixel
+  (let ((img (make-32-bit-rgba-image 32 32 :initial-element #xffffffff)))
+    (is (equalp (pixel img 31 31) (values #xffffffff #xffffffff #xffffffff #xffffffff)))))
+
+(test 32-bit-rgba-image-typed-pixel
+  (let ((img (make-32-bit-rgba-image 32 32 :initial-element #xffffffff)))
+    (declare (type 32-bit-rgba-image img))
+    (is (equalp (pixel img 31 31) (values #xffffffff #xffffffff #xffffffff #xffffffff)))))
