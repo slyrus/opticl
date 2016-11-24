@@ -27,11 +27,13 @@
    #:4-bit-rgb-image #:make-4-bit-rgb-image
    #:8-bit-rgb-image #:make-8-bit-rgb-image
    #:16-bit-rgb-image #:make-16-bit-rgb-image
+   #:32-bit-rgb-image #:make-32-bit-rgb-image
 
    #:rgba-image
    #:4-bit-rgba-image #:make-4-bit-rgba-image
    #:8-bit-rgba-image #:make-8-bit-rgba-image
    #:16-bit-rgba-image #:make-16-bit-rgba-image
+   #:32-bit-rgba-image #:make-32-bit-rgba-image
 
    ;;
    #:constrain
