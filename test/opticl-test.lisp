@@ -51,92 +51,110 @@
 ;; 2-bit grayscale
 (test 2-bit-gray-image-pixel
   (let ((img (make-2-bit-gray-image 32 32 :initial-element 3)))
-    (is (= (pixel img 31 31) 3))))
+    (is (= (pixel img 31 31) 3))
+    (is (equalp (pixel* img 31 31) (list 3)))))
 
 (test 2-bit-gray-image-typed-pixel
   (let ((img (make-2-bit-gray-image 32 32 :initial-element 3)))
     (declare (type 2-bit-gray-image img))
-    (is (= (pixel img 31 31) 3))))
+    (is (= (pixel img 31 31) 3))
+    (is (equalp (pixel* img 31 31) (list 3)))))
 
 ;; 4-bit grayscale
 (test 4-bit-gray-image-pixel
   (let ((img (make-4-bit-gray-image 32 32 :initial-element 15)))
-    (is (= (pixel img 31 31) 15))))
+    (is (= (pixel img 31 31) 15))
+    (is (equalp (pixel* img 31 31) (list 15)))))
 
 (test 4-bit-gray-image-typed-pixel
   (let ((img (make-4-bit-gray-image 32 32 :initial-element 15)))
     (declare (type 4-bit-gray-image img))
-    (is (= (pixel img 31 31) 15))))
+    (is (= (pixel img 31 31) 15))
+    (is (equalp (pixel* img 31 31) (list 15)))))
 
 ;; 8-bit grayscale
 (test 8-bit-gray-image-pixel
   (let ((img (make-8-bit-gray-image 32 32 :initial-element 255)))
-    (is (= (pixel img 31 31) 255))))
+    (is (= (pixel img 31 31) 255))
+    (is (equalp (pixel* img 31 31) (list 255)))))
 
 (test 8-bit-gray-image-typed-pixel
   (let ((img (make-8-bit-gray-image 32 32 :initial-element 255)))
     (declare (type 8-bit-gray-image img))
-    (is (= (pixel img 31 31) 255))))
+    (is (= (pixel img 31 31) 255))
+    (is (equalp (pixel* img 31 31) (list 255)))))
 
 ;; 16-bit grayscale
 (test 16-bit-gray-image-pixel
   (let ((img (make-16-bit-gray-image 32 32 :initial-element #xffff)))
-    (is (= (pixel img 31 31) #xffff))))
+    (is (= (pixel img 31 31) #xffff))
+    (is (equalp (pixel* img 31 31) (list #xffff)))))
 
 (test 16-bit-gray-image-typed-pixel
   (let ((img (make-16-bit-gray-image 32 32 :initial-element #xffff)))
     (declare (type 16-bit-gray-image img))
-    (is (= (pixel img 31 31) #xffff))))
+    (is (= (pixel img 31 31) #xffff))
+    (is (equalp (pixel* img 31 31) (list #xffff)))))
 
 ;; 32-bit grayscale
 (test 32-bit-gray-image-pixel
   (let ((img (make-32-bit-gray-image 32 32 :initial-element #xffffffff)))
-    (is (= (pixel img 31 31) #xffffffff))))
+    (is (= (pixel img 31 31) #xffffffff))
+    (is (equalp (pixel* img 31 31) (list #xffffffff)))))
 
 (test 32-bit-gray-image-typed-pixel
   (let ((img (make-32-bit-gray-image 32 32 :initial-element #xffffffff)))
     (declare (type 32-bit-gray-image img))
-    (is (= (pixel img 31 31) #xffffffff))))
+    (is (= (pixel img 31 31) #xffffffff))
+    (is (equalp (pixel* img 31 31) (list #xffffffff)))))
 
 ;; fixnum grayscale
 (test fixnum-gray-image-pixel
   (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
-    (is (= (pixel img 31 31) #xfffffff))))
+    (is (= (pixel img 31 31) #xfffffff))
+    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
 
 (test fixnum-gray-image-typed-pixel
   (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
     (declare (type fixnum-gray-image img))
-    (is (= (pixel img 31 31) #xfffffff))))
+    (is (= (pixel img 31 31) #xfffffff))
+    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
 
 ;; fixnum grayscale
 (test fixnum-gray-image-pixel
   (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
-    (is (= (pixel img 31 31) #xfffffff))))
+    (is (= (pixel img 31 31) #xfffffff))
+    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
 
 (test fixnum-gray-image-typed-pixel
   (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
     (declare (type fixnum-gray-image img))
-    (is (= (pixel img 31 31) #xfffffff))))
+    (is (= (pixel img 31 31) #xfffffff))
+    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
 
 ;; single-float grayscale
 (test single-float-gray-image-pixel
   (let ((img (make-single-float-gray-image 32 32 :initial-element 1s0)))
-    (is (= (pixel img 31 31) 1s0))))
+    (is (= (pixel img 31 31) 1s0))
+    (is (equalp (pixel* img 31 31) (list  1s0)))))
 
 (test single-float-gray-image-typed-pixel
   (let ((img (make-single-float-gray-image 32 32 :initial-element 1s0)))
     (declare (type single-float-gray-image img))
-    (is (= (pixel img 31 31) 1s0))))
+    (is (= (pixel img 31 31) 1s0))
+    (is (equalp (pixel* img 31 31) (list 1s0)))))
 
 ;; double-float grayscale
 (test double-float-gray-image-pixel
   (let ((img (make-double-float-gray-image 32 32 :initial-element 1d0)))
-    (is (= (pixel img 31 31) 1d0))))
+    (is (= (pixel img 31 31) 1d0))
+    (is (equalp (pixel* img 31 31) (list 1d0)))))
 
 (test double-float-gray-image-typed-pixel
   (let ((img (make-double-float-gray-image 32 32 :initial-element 1d0)))
     (declare (type double-float-gray-image img))
-    (is (= (pixel img 31 31) 1d0))))
+    (is (= (pixel img 31 31) 1d0))
+    (is (equalp (pixel* img 31 31) (list 1d0)))))
 
 
 ;;
