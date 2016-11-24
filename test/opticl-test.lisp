@@ -39,12 +39,14 @@
 ;; 1-bit grayscale
 (test 1-bit-gray-image-pixel
   (let ((img (make-1-bit-gray-image 32 32 :initial-element 1)))
-    (is (= (pixel img 31 31)) 1)))
+    (is (= (pixel img 31 31) 1))
+    (is (equalp (pixel* img 31 31) (list 1)))))
 
 (test 1-bit-gray-image-typed-pixel
   (let ((img (make-1-bit-gray-image 32 32 :initial-element 1)))
     (declare (type 1-bit-gray-image img))
-    (is (= (pixel img 31 31)) 1)))
+    (is (= (pixel img 31 31) 1))
+    (is (equalp (pixel* img 31 31) (list 1)))))
 
 ;; 2-bit grayscale
 (test 2-bit-gray-image-pixel
@@ -95,6 +97,46 @@
   (let ((img (make-32-bit-gray-image 32 32 :initial-element #xffffffff)))
     (declare (type 32-bit-gray-image img))
     (is (= (pixel img 31 31) #xffffffff))))
+
+;; fixnum grayscale
+(test fixnum-gray-image-pixel
+  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
+    (is (= (pixel img 31 31) #xfffffff))))
+
+(test fixnum-gray-image-typed-pixel
+  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
+    (declare (type fixnum-gray-image img))
+    (is (= (pixel img 31 31) #xfffffff))))
+
+;; fixnum grayscale
+(test fixnum-gray-image-pixel
+  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
+    (is (= (pixel img 31 31) #xfffffff))))
+
+(test fixnum-gray-image-typed-pixel
+  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
+    (declare (type fixnum-gray-image img))
+    (is (= (pixel img 31 31) #xfffffff))))
+
+;; single-float grayscale
+(test single-float-gray-image-pixel
+  (let ((img (make-single-float-gray-image 32 32 :initial-element 1s0)))
+    (is (= (pixel img 31 31) 1s0))))
+
+(test single-float-gray-image-typed-pixel
+  (let ((img (make-single-float-gray-image 32 32 :initial-element 1s0)))
+    (declare (type single-float-gray-image img))
+    (is (= (pixel img 31 31) 1s0))))
+
+;; double-float grayscale
+(test double-float-gray-image-pixel
+  (let ((img (make-double-float-gray-image 32 32 :initial-element 1d0)))
+    (is (= (pixel img 31 31) 1d0))))
+
+(test double-float-gray-image-typed-pixel
+  (let ((img (make-double-float-gray-image 32 32 :initial-element 1d0)))
+    (declare (type double-float-gray-image img))
+    (is (= (pixel img 31 31) 1d0))))
 
 
 ;;
