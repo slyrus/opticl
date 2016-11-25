@@ -31,215 +31,78 @@
   (reduce #'+ (array- arr1 arr2)))
 
 
-;;; pixel accessor tests
+;;;;
+;;; pixel constructor and accessor tests
+(defmacro image-pixel-test (image-constructor
+                            &key (height 32)
+                                 (width 32)
+                                 (initial-element 1))
+  `(let ((img (,image-constructor ,height ,width :initial-element ,initial-element))
+         (pixel-y (1- ,height))
+         (pixel-x (1- ,width)))
+    (is (equalp (pixel img pixel-y pixel-x) ,initial-element))
+    (is (equalp (pixel* img  pixel-y pixel-x) (multiple-value-list ,initial-element)))))
 
-;;
-;; grayscale images
+(defmacro typed-image-pixel-test (image-constructor
+                                  image-type
+                                  &key (height 32)
+                                       (width 32)
+                                       (initial-element 1))
+  `(let ((img (,image-constructor ,height ,width :initial-element ,initial-element))
+         (pixel-y (1- ,height))
+         (pixel-x (1- ,width)))
+    (declare (type ,image-type img))
+    (is (equalp (pixel img pixel-y pixel-x) ,initial-element))
+    (is (equalp (pixel* img  pixel-y pixel-x) (multiple-value-list ,initial-element)))))
 
-;; 1-bit grayscale
-(test 1-bit-gray-image-pixel
-  (let ((img (make-1-bit-gray-image 32 32 :initial-element 1)))
-    (is (= (pixel img 31 31) 1))
-    (is (equalp (pixel* img 31 31) (list 1)))))
+(defmacro %def-image-test (image-constructor image-type &rest args &key initial-element)
+  (declare (ignorable initial-element))
+  `(progn
+    (test ,(intern (concatenate 'string (symbol-name image-type) "-PIXEL*"))
+      (image-pixel-test ,image-constructor ,@args))
+    (test ,(intern (concatenate 'string (symbol-name image-type) "-TYPED-PIXEL*"))
+      (typed-image-pixel-test ,image-constructor ,image-type ,@args))))
 
-(test 1-bit-gray-image-typed-pixel
-  (let ((img (make-1-bit-gray-image 32 32 :initial-element 1)))
-    (declare (type 1-bit-gray-image img))
-    (is (= (pixel img 31 31) 1))
-    (is (equalp (pixel* img 31 31) (list 1)))))
+(defmacro def-image-tests (image-test-spec-list)
+  `(progn
+    ,@(loop for args in image-test-spec-list
+         collect
+           (destructuring-bind (test-name image-constructor &rest rest-args &key initial-element)
+               args
+             (declare (ignorable initial-element))
+             `(%def-image-test ,test-name ,image-constructor ,@rest-args)))))
 
-;; 2-bit grayscale
-(test 2-bit-gray-image-pixel
-  (let ((img (make-2-bit-gray-image 32 32 :initial-element 3)))
-    (is (= (pixel img 31 31) 3))
-    (is (equalp (pixel* img 31 31) (list 3)))))
+(def-image-tests
+    ((make-1-bit-gray-image 1-bit-gray-image :initial-element 1)
+     (make-2-bit-gray-image 2-bit-gray-image :initial-element 3)
+     (make-4-bit-gray-image 4-bit-gray-image :initial-element 15)
+     (make-8-bit-gray-image 8-bit-gray-image :initial-element 255)
+     (make-16-bit-gray-image 16-bit-gray-image :initial-element #xffff)
+     (make-32-bit-gray-image 32-bit-gray-image :initial-element #xffffffff)
+     (make-fixnum-gray-image fixnum-gray-image :initial-element 42)
+     (make-single-float-gray-image single-float-gray-image :initial-element 1.0s0)
+     (make-double-float-gray-image double-float-gray-image :initial-element 1.0d0)))
 
-(test 2-bit-gray-image-typed-pixel
-  (let ((img (make-2-bit-gray-image 32 32 :initial-element 3)))
-    (declare (type 2-bit-gray-image img))
-    (is (= (pixel img 31 31) 3))
-    (is (equalp (pixel* img 31 31) (list 3)))))
+(def-image-tests
+    ((make-4-bit-rgb-image 4-bit-rgb-image :initial-element (values 15 15 15))
+     (make-8-bit-rgb-image 8-bit-rgb-image :initial-element (values 255 255 255))
+     (make-16-bit-rgb-image 16-bit-rgb-image :initial-element (values #xffff #xffff #xffff))
+     (make-32-bit-rgb-image 32-bit-rgb-image :initial-element (values #xffffffff #xffffffff #xffffffff))
+     (make-fixnum-rgb-image fixnum-rgb-image :initial-element (values most-positive-fixnum
+                                                                      most-positive-fixnum
+                                                                      most-positive-fixnum))
+     (make-single-float-rgb-image single-float-rgb-image :initial-element (values 1.0s0 1.0s0 1.0s0))
+     (make-double-float-rgb-image double-float-rgb-image :initial-element (values 1.0d0 1.0d0 1.0d0))))
 
-;; 4-bit grayscale
-(test 4-bit-gray-image-pixel
-  (let ((img (make-4-bit-gray-image 32 32 :initial-element 15)))
-    (is (= (pixel img 31 31) 15))
-    (is (equalp (pixel* img 31 31) (list 15)))))
+(def-image-tests
+    ((make-4-bit-rgba-image 4-bit-rgba-image :initial-element (values 15 15 15 15))
+     (make-8-bit-rgba-image 8-bit-rgba-image :initial-element (values 255 255 255 255))
+     (make-16-bit-rgba-image 16-bit-rgba-image :initial-element (values #xffff #xffff #xffff #xffff))
+     (make-32-bit-rgba-image 32-bit-rgba-image :initial-element (values #xffffffff #xffffffff #xffffffff #xffffffff))
+     (make-fixnum-rgba-image fixnum-rgba-image :initial-element (values most-positive-fixnum
+                                                                        most-positive-fixnum
+                                                                        most-positive-fixnum
+                                                                        most-positive-fixnum))
+     (make-single-float-rgba-image single-float-rgba-image :initial-element (values 1.0s0 1.0s0 1.0s0 1.0s0))
+     (make-double-float-rgba-image double-float-rgba-image :initial-element (values 1.0d0 1.0d0 1.0d0 1.0d0))))
 
-(test 4-bit-gray-image-typed-pixel
-  (let ((img (make-4-bit-gray-image 32 32 :initial-element 15)))
-    (declare (type 4-bit-gray-image img))
-    (is (= (pixel img 31 31) 15))
-    (is (equalp (pixel* img 31 31) (list 15)))))
-
-;; 8-bit grayscale
-(test 8-bit-gray-image-pixel
-  (let ((img (make-8-bit-gray-image 32 32 :initial-element 255)))
-    (is (= (pixel img 31 31) 255))
-    (is (equalp (pixel* img 31 31) (list 255)))))
-
-(test 8-bit-gray-image-typed-pixel
-  (let ((img (make-8-bit-gray-image 32 32 :initial-element 255)))
-    (declare (type 8-bit-gray-image img))
-    (is (= (pixel img 31 31) 255))
-    (is (equalp (pixel* img 31 31) (list 255)))))
-
-;; 16-bit grayscale
-(test 16-bit-gray-image-pixel
-  (let ((img (make-16-bit-gray-image 32 32 :initial-element #xffff)))
-    (is (= (pixel img 31 31) #xffff))
-    (is (equalp (pixel* img 31 31) (list #xffff)))))
-
-(test 16-bit-gray-image-typed-pixel
-  (let ((img (make-16-bit-gray-image 32 32 :initial-element #xffff)))
-    (declare (type 16-bit-gray-image img))
-    (is (= (pixel img 31 31) #xffff))
-    (is (equalp (pixel* img 31 31) (list #xffff)))))
-
-;; 32-bit grayscale
-(test 32-bit-gray-image-pixel
-  (let ((img (make-32-bit-gray-image 32 32 :initial-element #xffffffff)))
-    (is (= (pixel img 31 31) #xffffffff))
-    (is (equalp (pixel* img 31 31) (list #xffffffff)))))
-
-(test 32-bit-gray-image-typed-pixel
-  (let ((img (make-32-bit-gray-image 32 32 :initial-element #xffffffff)))
-    (declare (type 32-bit-gray-image img))
-    (is (= (pixel img 31 31) #xffffffff))
-    (is (equalp (pixel* img 31 31) (list #xffffffff)))))
-
-;; fixnum grayscale
-(test fixnum-gray-image-pixel
-  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
-    (is (= (pixel img 31 31) #xfffffff))
-    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
-
-(test fixnum-gray-image-typed-pixel
-  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
-    (declare (type fixnum-gray-image img))
-    (is (= (pixel img 31 31) #xfffffff))
-    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
-
-;; fixnum grayscale
-(test fixnum-gray-image-pixel
-  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
-    (is (= (pixel img 31 31) #xfffffff))
-    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
-
-(test fixnum-gray-image-typed-pixel
-  (let ((img (make-fixnum-gray-image 32 32 :initial-element #xfffffff)))
-    (declare (type fixnum-gray-image img))
-    (is (= (pixel img 31 31) #xfffffff))
-    (is (equalp (pixel* img 31 31) (list #xfffffff)))))
-
-;; single-float grayscale
-(test single-float-gray-image-pixel
-  (let ((img (make-single-float-gray-image 32 32 :initial-element 1s0)))
-    (is (= (pixel img 31 31) 1s0))
-    (is (equalp (pixel* img 31 31) (list  1s0)))))
-
-(test single-float-gray-image-typed-pixel
-  (let ((img (make-single-float-gray-image 32 32 :initial-element 1s0)))
-    (declare (type single-float-gray-image img))
-    (is (= (pixel img 31 31) 1s0))
-    (is (equalp (pixel* img 31 31) (list 1s0)))))
-
-;; double-float grayscale
-(test double-float-gray-image-pixel
-  (let ((img (make-double-float-gray-image 32 32 :initial-element 1d0)))
-    (is (= (pixel img 31 31) 1d0))
-    (is (equalp (pixel* img 31 31) (list 1d0)))))
-
-(test double-float-gray-image-typed-pixel
-  (let ((img (make-double-float-gray-image 32 32 :initial-element 1d0)))
-    (declare (type double-float-gray-image img))
-    (is (= (pixel img 31 31) 1d0))
-    (is (equalp (pixel* img 31 31) (list 1d0)))))
-
-
-;;
-;; RGB images
-
-;; 4-bit RGB
-(test 4-bit-rgb-image-pixel
-  (let ((img (make-4-bit-rgb-image 32 32 :initial-element 15)))
-    (is (equalp (pixel img 31 31) (values 15 15 15)))))
-
-(test 4-bit-rgb-image-typed-pixel
-  (let ((img (make-4-bit-rgb-image 32 32 :initial-element 15)))
-    (declare (type 4-bit-rgb-image img))
-    (is (equalp (pixel img 31 31) (values 15 15 15)))))
-
-;; 8-bit RGB
-(test 8-bit-rgb-image-pixel
-  (let ((img (make-8-bit-rgb-image 32 32 :initial-element 255)))
-    (is (equalp (pixel img 31 31) (values 255 255 255)))))
-
-(test 8-bit-rgb-image-typed-pixel
-  (let ((img (make-8-bit-rgb-image 32 32 :initial-element 255)))
-    (declare (type 8-bit-rgb-image img))
-    (is (equalp (pixel img 31 31) (values 255 255 255)))))
-
-;; 16-bit RGB
-(test 16-bit-rgb-image-pixel
-  (let ((img (make-16-bit-rgb-image 32 32 :initial-element #xffff)))
-    (is (equalp (pixel img 31 31) (values #xffff #xffff #xffff)))))
-
-(test 16-bit-rgb-image-typed-pixel
-  (let ((img (make-16-bit-rgb-image 32 32 :initial-element #xffff)))
-    (declare (type 16-bit-rgb-image img))
-    (is (equalp (pixel img 31 31) (values #xffff #xffff #xffff)))))
-
-;; 32-bit RGB
-(test 32-bit-rgb-image-pixel
-  (let ((img (make-32-bit-rgb-image 32 32 :initial-element #xffffffff)))
-    (is (equalp (pixel img 31 31) (values #xffffffff #xffffffff #xffffffff)))))
-
-(test 32-bit-rgb-image-typed-pixel
-  (let ((img (make-32-bit-rgb-image 32 32 :initial-element #xffffffff)))
-    (declare (type 32-bit-rgb-image img))
-    (is (equalp (pixel img 31 31) (values #xffffffff #xffffffff #xffffffff)))))
-
-
-;;
-;; RGBA images
-
-;; 4-bit RGBA
-(test 4-bit-rgba-image-pixel
-  (let ((img (make-4-bit-rgba-image 32 32 :initial-element 15)))
-    (is (equalp (pixel img 31 31) (values 15 15 15 15)))))
-
-(test 4-bit-rgba-image-typed-pixel
-  (let ((img (make-4-bit-rgba-image 32 32 :initial-element 15)))
-    (declare (type 4-bit-rgba-image img))
-    (is (equalp (pixel img 31 31) (values 15 15 15 15)))))
-
-;; 8-bit RGBA
-(test 8-bit-rgba-image-pixel
-  (let ((img (make-8-bit-rgba-image 32 32 :initial-element 255)))
-    (is (equalp (pixel img 31 31) (values 255 255 255 255)))))
-
-(test 8-bit-rgba-image-typed-pixel
-  (let ((img (make-8-bit-rgba-image 32 32 :initial-element 255)))
-    (declare (type 8-bit-rgba-image img))
-    (is (equalp (pixel img 31 31) (values 255 255 255 255)))))
-
-;; 16-bit RGBA
-(test 16-bit-rgba-image-pixel
-  (let ((img (make-16-bit-rgba-image 32 32 :initial-element #xffff)))
-    (is (equalp (pixel img 31 31) (values #xffff #xffff #xffff #xffff)))))
-
-(test 16-bit-rgba-image-typed-pixel
-  (let ((img (make-16-bit-rgba-image 32 32 :initial-element #xffff)))
-    (declare (type 16-bit-rgba-image img))
-    (is (equalp (pixel img 31 31) (values #xffff #xffff #xffff #xffff)))))
-
-;; 32-bit RGBA
-(test 32-bit-rgba-image-pixel
-  (let ((img (make-32-bit-rgba-image 32 32 :initial-element #xffffffff)))
-    (is (equalp (pixel img 31 31) (values #xffffffff #xffffffff #xffffffff #xffffffff)))))
-
-(test 32-bit-rgba-image-typed-pixel
-  (let ((img (make-32-bit-rgba-image 32 32 :initial-element #xffffffff)))
-    (declare (type 32-bit-rgba-image img))
-    (is (equalp (pixel img 31 31) (values #xffffffff #xffffffff #xffffffff #xffffffff)))))
