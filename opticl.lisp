@@ -39,6 +39,7 @@
       (8-bit-rgb-image :channels 3 :element-type (unsigned-byte 8))
       (16-bit-rgb-image :channels 3 :element-type (unsigned-byte 16))
       (32-bit-rgb-image :channels 3 :element-type (unsigned-byte 32))
+      (fixnum-rgb-image :channels 3 :element-type fixnum)
       (single-float-rgb-image :channels 3 :element-type single-float)
       (double-float-rgb-image :channels 3 :element-type double-float)
 
@@ -46,6 +47,7 @@
       (8-bit-rgba-image :channels 4 :element-type (unsigned-byte 8))
       (16-bit-rgba-image :channels 4 :element-type (unsigned-byte 16))
       (32-bit-rgba-image :channels 4 :element-type (unsigned-byte 32))
+      (fixnum-rgba-image :channels 4 :element-type fixnum)
       (single-float-rgba-image :channels 4 :element-type single-float)
       (double-float-rgba-image :channels 4 :element-type double-float)
       )))

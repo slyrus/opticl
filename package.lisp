@@ -31,12 +31,18 @@
    #:8-bit-rgb-image #:make-8-bit-rgb-image
    #:16-bit-rgb-image #:make-16-bit-rgb-image
    #:32-bit-rgb-image #:make-32-bit-rgb-image
+   #:fixnum-rgb-image #:make-fixnum-rgb-image
+   #:single-float-rgb-image #:make-single-float-rgb-image
+   #:double-float-rgb-image #:make-double-float-rgb-image
 
    #:rgba-image
    #:4-bit-rgba-image #:make-4-bit-rgba-image
    #:8-bit-rgba-image #:make-8-bit-rgba-image
    #:16-bit-rgba-image #:make-16-bit-rgba-image
    #:32-bit-rgba-image #:make-32-bit-rgba-image
+   #:fixnum-rgba-image #:make-fixnum-rgba-image
+   #:single-float-rgba-image #:make-single-float-rgba-image
+   #:double-float-rgba-image #:make-double-float-rgba-image
 
    ;;
    #:constrain
