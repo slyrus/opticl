@@ -29,10 +29,10 @@
    (:file "io")
    (:file "cluster")
    (:file "thresholding"))
-  :in-order-to ((test-op (test-op :opticl/tests))))
+  :in-order-to ((test-op (test-op :opticl/test))))
 
 
-(asdf:defsystem :opticl/tests
+(asdf:defsystem :opticl/test
   :depends-on (:opticl :fiveam)
   :serial t
   :default-component-class cl-source-file
