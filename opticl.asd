@@ -6,12 +6,11 @@
   :licence "BSD"
   :serial t
   :default-component-class cl-source-file
-  :depends-on (alexandria retrospectiff zpng png-read cl-jpeg skippy)
+  :depends-on (alexandria retrospectiff zpng png-read cl-jpeg skippy opticl-core)
   :components
   ((:static-file "README.md")
    (:static-file "COPYRIGHT")
    (:file "package")
-   (:file "opticl")
    (:file "coerce")
    (:file "colors")
    (:file "imageops")

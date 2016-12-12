@@ -3,6 +3,11 @@
 By Cyrus Harmon <ch-lisp@bobobeach.com>, February 2011. See COPYRIGHT
 file for license details.
 
+# opticl-core
+
+NOTE: If you are using this version (or later) of opticl, you now
+also need [opticl-core](https://github.com/slyrus/opticl-core)..
+
 # Overview
 
 opticl is designed to be a high-performance, but relatively
