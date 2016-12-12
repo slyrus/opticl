@@ -8,7 +8,7 @@
 (defun read-tiff-stream (stream)
   "reads a TIFF image from a stream and returns either a 32-bit ARGB
 image or an 8-bit grayscale image"
-  (let ((tiff-image (tiff:read-tiff-stream stream)))
+  (let ((tiff-image (tiff2:read-tiff-stream stream)))
     (with-accessors ((image-length tiff:tiff-image-length)
                      (image-width tiff:tiff-image-width)
                      (samples-per-pixel tiff:tiff-image-samples-per-pixel) 
@@ -20,138 +20,49 @@ image or an 8-bit grayscale image"
       (cond
 
         (color-map  ;; indexed RGB
+         ;; FIXME! This should probably be moved to retrospectiff
          (let ((image (make-8-bit-rgb-image image-length image-width)))
            (declare (type 8-bit-rgb-image image))
            (loop for i below image-length
               do 
                 (loop for j below image-width
                    do 
-                     (let ((pixoff (+ (* i image-width) j)))
-                       (setf (pixel* image i j)
-                             (mapcar (lambda (x) (ash x -8))
-                                     (aref color-map
-                                           (aref image-data pixoff)))))))
+                     (setf (pixel* image i j)
+                           (mapcar (lambda (x) (ash x -8))
+                                   (aref color-map
+                                         (pixel image-data i j))))))
            image))
 
         ((and (= samples-per-pixel 1)
               (equalp bits-per-sample 1)) ;; black and white
-         (let ((image (make-1-bit-gray-image image-length image-width)))
-           (declare (type 1-bit-gray-image image))
-           (loop for i below image-length
-              do 
-                (loop for j below image-width
-                   do (setf (pixel image i j)
-                            (if min-is-white
-                                (ldb (byte 1 (- 7 (mod (+ (* i image-width) j) 8)))
-                                     (lognot (aref image-data (ash (+ (* i image-width) j) -3))))
-                                (ldb (byte 1 (- 7 (mod (+ (* i image-width) j) 8)))
-                                     (aref image-data (ash (+ (* i image-width) j) -3)))))))
-           image))
+         image-data)
 
         ((and (= samples-per-pixel 1)
               (equalp bits-per-sample 4)) ;; 4-bit Grayscale
-         (let ((image (make-4-bit-gray-image image-length image-width)))
-           (declare (type 4-bit-gray-image image))
-           (loop for i below image-length
-              do
-                (loop for j below image-width
-                   with nibble = 0
-                   with byte-offset = (ceiling  (* i image-width) 2)
-                   do
-                     (setf (pixel image i j)
-                           (if (zerop nibble)
-                               (prog1
-                                   (ldb (byte 4 4)
-                                        (aref image-data byte-offset))
-                                 (incf nibble))
-                               (prog1
-                                   (ldb (byte 4 0)
-                                        (aref image-data byte-offset))
-                                 (setf nibble 0)
-                                 (incf byte-offset))))))
-           image))
+         image-data)
 
         ((and (= samples-per-pixel 1)
               (equalp bits-per-sample 8)) ;; 8-bit Grayscale
-         (let ((image (make-8-bit-gray-image image-length image-width)))
-           (declare (type 8-bit-gray-image image))
-           (loop for i below image-length
-              do 
-              (loop for j below image-width
-                 do 
-                 (let ((pixoff (+ (* i image-width) j)))
-                   (setf (pixel image i j)
-                         (aref image-data pixoff)))))
-           image))
+         image-data)
 
         ((and (= samples-per-pixel 3)
               (equalp bits-per-sample #(8 8 8))) ;; 8-bit RGB
-         (let ((image (make-8-bit-rgb-image image-length image-width)))
-           (declare (type 8-bit-rgb-image image))
-           (loop for i below image-length
-              do 
-              (loop for j below image-width
-                 do 
-                 (let ((pixoff (* 3 (+ (* i image-width) j))))
-                   (setf (pixel image i j)
-                         (values (aref image-data pixoff)
-                                 (aref image-data (incf pixoff))
-                                 (aref image-data (incf pixoff)))))))
-           image))
+         image-data)
 
         ((and (= samples-per-pixel 4)
               (equalp bits-per-sample #(8 8 8 8))) ;; 8-bit RGBA
-         (let ((image (make-8-bit-rgba-image image-length image-width)))
-           (declare (type 8-bit-rgba-image image))
-           (loop for i below image-length
-              do 
-              (loop for j below image-width
-                 do 
-                 (let ((pixoff (* 4 (+ (* i image-width) j))))
-                   (setf (pixel image i j)
-                         (values (aref image-data pixoff)
-                                 (aref image-data (incf pixoff))
-                                 (aref image-data (incf pixoff))
-                                 (aref image-data (incf pixoff)))))))
-           image))
+         ;; FIXME! We're just faking the alpha channel here
+         (coerce-image image-data '8-bit-rgba-image))
 
 
         ((and (= samples-per-pixel 3)
               (equalp bits-per-sample #(16 16 16))) ;; 16-bit RGB
-         (let ((image (make-16-bit-rgb-image image-length image-width)))
-           (declare (type 16-bit-rgb-image image))
-           (loop for i below image-length
-              do 
-              (loop for j below image-width
-                 do 
-                 (let ((pixoff (* 6 (+ (* i image-width) j))))
-                   (setf (pixel image i j)
-                         (values (+ (ash (aref image-data pixoff) 8)
-                                    (aref image-data (incf pixoff)))
-                                 (+ (ash (aref image-data (incf pixoff)) 8)
-                                    (aref image-data (incf pixoff)))
-                                 (+ (ash (aref image-data (incf pixoff)) 8)
-                                    (aref image-data (incf pixoff))))))))
-           image))
+         image-data)
             
         ((and (= samples-per-pixel 4)
               (equalp bits-per-sample #(16 16 16 16))) ;; 16-bit RGBA
-         (let ((image (make-16-bit-rgba-image image-length image-width)))
-           (declare (type 16-bit-rgba-image image))
-           (loop for i below image-length
-              do 
-              (loop for j below image-width
-                 do 
-                 (let ((pixoff (* 8 (+ (* i image-width) j))))
-                   (setf (pixel image i j)
-                         (values (+ (ash (aref image-data pixoff) 8)
-                                    (aref image-data (incf pixoff)))
-                                 (+ (ash (aref image-data (incf pixoff)) 8)
-                                    (aref image-data (incf pixoff)))
-                                 (+ (ash (aref image-data (incf pixoff)) 8)
-                                    (aref image-data (incf pixoff)))
-                                 (+ (ash (aref image-data (incf pixoff)) 8)
-                                    (aref image-data (incf pixoff))))))))))
+         ;; FIXME! Test this, I'm not sure it really works.
+         image-data)
         (t 
          (error "TIFF decoding error"))))))
 
