@@ -2,7 +2,7 @@
 ;;; See COPYRIGHT file for details.
 
 (cl:defpackage :opticl
-  (:use #:cl)
+  (:use #:cl #:opticl-core)
   (:export
 
    #:image

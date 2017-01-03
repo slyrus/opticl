@@ -120,3 +120,23 @@
       (is (equal out (write-tiff-file out img)))
       (let ((input-img (read-image-file out)))
         (is (equalp img input-img))))))
+
+;; 16-bit RGB
+
+(test tiff-read-16-bit-rgb
+  (let* ((file (test-image "horse-16-bit.tiff"))
+         (img (read-tiff-file file)))
+    (let ((out (output-image "horse-16-bit.tiff")))
+      (is (equal out (write-tiff-file out img)))
+      (let ((input-img (read-image-file out)))
+        (is (equalp img input-img))))))
+
+;; Indexed RGB TIFF image
+
+(test tiff-read-indexed-rgb
+  (let* ((file (test-image "camel-indexed.tiff"))
+         (img (read-tiff-file file)))
+    (let ((out (output-image "camel-indexed.tiff")))
+      (is (equal out (write-tiff-file out img)))
+      (let ((input-img (read-image-file out)))
+        (is (equalp img input-img))))))
