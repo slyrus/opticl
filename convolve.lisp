@@ -33,7 +33,7 @@
     (with-image-bounds (vr vc) v
       (unless (and (= vr vc)
                    (oddp vr))
-        (error "convolution matrix bust be square and of odd dimensions"))
+        (error "convolution matrix must be square and of odd dimensions"))
       (let ((span (ash vr -1)))
         (declare (type fixnum span))
         (with-image-bounds (ur uc channels) u
