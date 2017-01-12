@@ -254,3 +254,13 @@
   (trim-image
    (discrete-convolve img *sharpen-kernel*) 1 1))
 
+(defparameter *edge-detect-kernel*
+  (normalize-array #2A((0 1 0)
+                       (1 -4 1)
+                       (0 1 0))
+                   :element-type 'double-float))
+
+(defun edge-detect-image (img)
+  (trim-image
+   (discrete-convolve img *edge-detect-kernel*) 1 1))
+
