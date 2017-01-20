@@ -64,6 +64,7 @@
    #:discrete-convolve
    #:sharpen-image
    #:blur-image
+   #:edge-detect-image
 
    ;; morphological operations
    #:morphological-op
@@ -100,6 +101,8 @@
    ;; I/O
    #:read-jpeg-file
    #:read-jpeg-stream
+   #:read-jpeg-file-component
+   #:read-jpeg-stream-component
    #:write-jpeg-file
    #:write-jpeg-stream
 
