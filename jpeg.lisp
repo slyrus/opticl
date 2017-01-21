@@ -13,9 +13,9 @@
 
 ;;;
 ;;; Reading JPEG files
-(defun read-jpeg-stream (stream &key buffer colorspace-conversion)
+(defun read-jpeg-stream (stream &key decoding-buffer (colorspace-conversion t))
   (multiple-value-bind (buffer height width ncomp)
-      (jpeg:decode-stream stream :buffer buffer :colorspace-conversion colorspace-conversion)
+      (jpeg:decode-stream stream :buffer decoding-buffer :colorspace-conversion colorspace-conversion)
     (cond
       ((= ncomp +ncomp-rgb+)
        (let ((image (make-8-bit-rgb-image height width)))
@@ -43,9 +43,41 @@
                    (incf pixoff)))
          image)))))
 
-(defun read-jpeg-file (pathname &key buffer (colorspace-conversion t))
+(defun read-jpeg-file (pathname &key decoding-buffer (colorspace-conversion t))
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
-    (read-jpeg-stream stream :buffer buffer :colorspace-conversion colorspace-conversion)))
+    (read-jpeg-stream stream :decoding-buffer decoding-buffer :colorspace-conversion colorspace-conversion)))
+
+(defun read-jpeg-stream-component (stream cnum &key decoding-buffer)
+  (multiple-value-bind (buffer height width ncomp)
+      (jpeg:decode-stream stream :buffer decoding-buffer :colorspace-conversion nil)
+    (cond
+      ((= ncomp +ncomp-rgb+)
+       (let ((image (make-8-bit-gray-image height width)))
+         (declare (type 8-bit-gray-image image))
+         (loop for i below height
+            do 
+              (loop for j below width
+                 do 
+                   (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
+                     (setf (pixel image i j)
+                           (values (aref buffer (+ cnum pixoff)))))))
+         image))
+      ((= ncomp 1)
+       (let ((image (make-8-bit-gray-image height width))
+             (pixoff 0))
+         (declare (type 8-bit-gray-image image))
+         (loop for i below height
+            do 
+              (loop for j below width
+                 do 
+                   (setf (pixel image i j)
+                         (aref buffer pixoff))
+                   (incf pixoff)))
+         image)))))
+
+(defun read-jpeg-file-component (pathname cnum &key decoding-buffer)
+  (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
+    (read-jpeg-stream-component stream cnum :decoding-buffer decoding-buffer)))
 
 (defun write-jpeg-stream (stream image)
   (typecase image
