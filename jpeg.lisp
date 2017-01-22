@@ -50,30 +50,16 @@
 (defun read-jpeg-stream-component (stream cnum &key decoding-buffer)
   (multiple-value-bind (buffer height width ncomp)
       (jpeg:decode-stream stream :buffer decoding-buffer :colorspace-conversion nil)
-    (cond
-      ((= ncomp +ncomp-rgb+)
-       (let ((image (make-8-bit-gray-image height width)))
+    (let ((image (make-8-bit-gray-image height width)))
          (declare (type 8-bit-gray-image image))
          (loop for i below height
             do 
               (loop for j below width
                  do 
-                   (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
+                   (let ((pixoff (* ncomp (+ (* i width) j))))
                      (setf (pixel image i j)
                            (values (aref buffer (+ cnum pixoff)))))))
-         image))
-      ((= ncomp 1)
-       (let ((image (make-8-bit-gray-image height width))
-             (pixoff 0))
-         (declare (type 8-bit-gray-image image))
-         (loop for i below height
-            do 
-              (loop for j below width
-                 do 
-                   (setf (pixel image i j)
-                         (aref buffer pixoff))
-                   (incf pixoff)))
-         image)))))
+         image)))
 
 (defun read-jpeg-file-component (pathname cnum &key decoding-buffer)
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
