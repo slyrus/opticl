@@ -101,8 +101,6 @@
    ;; I/O
    #:read-jpeg-file
    #:read-jpeg-stream
-   #:read-jpeg-file-component
-   #:read-jpeg-stream-component
    #:write-jpeg-file
    #:write-jpeg-stream
 
