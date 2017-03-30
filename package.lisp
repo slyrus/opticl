@@ -64,6 +64,7 @@
    #:discrete-convolve
    #:sharpen-image
    #:blur-image
+   #:edge-detect-image
 
    ;; morphological operations
    #:morphological-op

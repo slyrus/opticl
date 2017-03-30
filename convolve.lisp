@@ -33,7 +33,7 @@
     (with-image-bounds (vr vc) v
       (unless (and (= vr vc)
                    (oddp vr))
-        (error "convolution matrix bust be square and of odd dimensions"))
+        (error "convolution matrix must be square and of odd dimensions"))
       (let ((span (ash vr -1)))
         (declare (type fixnum span))
         (with-image-bounds (ur uc channels) u
@@ -253,4 +253,14 @@
 (defun sharpen-image (img)
   (trim-image
    (discrete-convolve img *sharpen-kernel*) 1 1))
+
+(defparameter *edge-detect-kernel*
+  (normalize-array #2A((0 1 0)
+                       (1 -4 1)
+                       (0 1 0))
+                   :element-type 'double-float))
+
+(defun edge-detect-image (img)
+  (trim-image
+   (discrete-convolve img *edge-detect-kernel*) 1 1))
 

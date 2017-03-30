@@ -13,9 +13,9 @@
 
 ;;;
 ;;; Reading JPEG files
-(defun read-jpeg-stream (stream)
+(defun read-jpeg-stream (stream  &key (colorspace-conversion t))
   (multiple-value-bind (buffer height width ncomp)
-      (jpeg:decode-stream stream)
+      (jpeg:decode-stream stream :colorspace-conversion colorspace-conversion)
     (cond
       ((= ncomp +ncomp-rgb+)
        (let ((image (make-8-bit-rgb-image height width)))
@@ -43,9 +43,9 @@
                    (incf pixoff)))
          image)))))
 
-(defun read-jpeg-file (pathname)
+(defun read-jpeg-file (pathname &key (colorspace-conversion t))
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
-    (read-jpeg-stream stream)))
+    (read-jpeg-stream stream :colorspace-conversion colorspace-conversion)))
 
 (defun write-jpeg-stream (stream image)
   (typecase image
