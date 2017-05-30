@@ -40,29 +40,28 @@
 		     (aref image-data j i 1)
 		     (aref image-data j i 2))))
       (multiple-value-bind (constructor get-pixel-fn)
-	  (case bit-depth
-	    (8 (case transparency
-		 ((nil)
-		  (case colour-type
-		    ((:truecolor :indexed-colour)
-		     (values #'make-8-bit-rgb-image
-			     #'get-pixel-rgb))
-		    (:truecolor-alpha
-		     (values #'make-8-bit-rgba-image
-			     #'get-pixel-rgba))
-		    (:greyscale-alpha
-		     (values #'make-8-bit-rgba-image
-			     #'get-pixel-grey-alpha))
-		    (:greyscale
-		     (values #'make-8-bit-gray-image
-			     #'get-pixel-grey))))
-		 (t
-		  (values #'make-8-bit-rgba-image
-			  (case colour-type
-			    ((:truecolor :indexed-colour)
-			     #'get-pixel-rgb-tmap)
-			    (:greyscale
-			     #'get-pixel-grey-tmap)))))))
+	  (case transparency
+	    ((nil)
+	     (case colour-type
+	       ((:truecolor :indexed-colour)
+		(values #'make-8-bit-rgb-image
+			#'get-pixel-rgb))
+	       (:truecolor-alpha
+		(values #'make-8-bit-rgba-image
+			#'get-pixel-rgba))
+	       (:greyscale-alpha
+		(values #'make-8-bit-rgba-image
+			#'get-pixel-grey-alpha))
+	       (:greyscale
+		(values #'make-8-bit-gray-image
+			#'get-pixel-grey))))
+	    (t
+	     (values #'make-8-bit-rgba-image
+		     (case colour-type
+		       ((:truecolor :indexed-colour)
+			#'get-pixel-rgb-tmap)
+		       (:greyscale
+			#'get-pixel-grey-tmap)))))
 	(unless get-pixel-fn
 	  (error "unable to read PNG image -- fix read-png-stream!"))
 	(let ((img (funcall constructor height width)))
