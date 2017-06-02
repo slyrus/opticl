@@ -27,7 +27,8 @@
        (:pbm read-pbm-file)
        (:pgm read-pgm-file)
        (:ppm read-ppm-file)
-       (:gif read-gif-file)))
+       (:gif read-gif-file)
+       (:tga read-tga-file)))
 
 (defparameter *image-file-writer-hash-table* (make-hash-table))
 (map nil (lambda (z)
