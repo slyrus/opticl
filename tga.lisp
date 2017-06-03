@@ -15,9 +15,9 @@
              (let ((image (make-8-bit-rgb-image height width)))
                (declare (type 8-bit-rgb-image image))
                (loop for i below height
-                  do 
+                  do
                     (loop for j below width
-                       do 
+                       do
                          (let ((pixoff (* 3 (+ (* i width) j))))
                            (setf (pixel image (- height i 1) j)
                                  (values (aref data (+ 2 pixoff))
@@ -29,9 +29,9 @@
              (let ((image (make-8-bit-rgba-image height width)))
                (declare (type 8-bit-rgb-image image))
                (loop for i below height
-                  do 
+                  do
                     (loop for j below width
-                       do 
+                       do
                          (let ((pixoff (* 4 (+ (* i width) j))))
                            (setf (pixel image (- height i 1) j)
                                  (values (aref data (+ 2 pixoff))
