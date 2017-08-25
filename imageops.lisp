@@ -42,14 +42,118 @@
            ,@body))))
 
 (defun transpose-image (img)
+  (typecase img
+    (8-bit-gray-image
+     (locally
+         (declare (type 8-bit-gray-image img))
+       (with-image-bounds (ymax xmax)
+           img
+         (let ((zimg (make-array (list xmax ymax)
+                                 :element-type (array-element-type img))))
+           (locally
+               (declare (type 8-bit-gray-image zimg))
+             (loop for i below ymax
+                do (loop for j below xmax
+                      do (setf (pixel zimg j i) (pixel img i j)))))
+           zimg))))
+    (16-bit-gray-image
+     (locally
+         (declare (type 16-bit-gray-image img))
+       (with-image-bounds (ymax xmax)
+           img
+         (let ((zimg (make-array (list xmax ymax)
+                                 :element-type (array-element-type img))))
+           (locally
+               (declare (type 16-bit-gray-image zimg))
+             (loop for i below ymax
+                do (loop for j below xmax
+                      do (setf (pixel zimg j i) (pixel img i j)))))
+           zimg))))
+    (8-bit-rgb-image
+     (locally
+         (declare (type 8-bit-rgb-image img))
+       (with-image-bounds (ymax xmax)
+           img
+         (let ((zimg (make-array (list xmax ymax 3)
+                                 :element-type (array-element-type img))))
+           (locally
+               (declare (type 8-bit-rgb-image zimg))
+             (loop for i below ymax
+                do (loop for j below xmax
+                      do (setf (pixel zimg j i) (pixel img i j)))))
+           zimg))))
+    (16-bit-rgb-image
+     (locally
+         (declare (type 16-bit-rgb-image img))
+       (with-image-bounds (ymax xmax)
+           img
+         (let ((zimg (make-array (list xmax ymax 3)
+                                 :element-type (array-element-type img))))
+           (locally
+               (declare (type 16-bit-rgb-image zimg))
+             (loop for i below ymax
+                do (loop for j below xmax
+                      do (setf (pixel zimg j i) (pixel img i j)))))
+           zimg))))
+    (8-bit-rgba-image
+     (locally
+         (declare (type 8-bit-rgba-image img))
+       (with-image-bounds (ymax xmax)
+           img
+         (let ((zimg (make-array (list xmax ymax 4)
+                                 :element-type (array-element-type img))))
+           (locally
+               (declare (type 8-bit-rgba-image zimg))
+             (loop for i below ymax
+                do (loop for j below xmax
+                      do (setf (pixel zimg j i) (pixel img i j)))))
+           zimg))))
+    (16-bit-rgba-image
+     (locally
+         (declare (type 16-bit-rgba-image img))
+       (with-image-bounds (ymax xmax)
+           img
+         (let ((zimg (make-array (list xmax ymax 4)
+                                 :element-type (array-element-type img))))
+           (locally
+               (declare (type 16-bit-rgba-image zimg))
+             (loop for i below ymax
+                do (loop for j below xmax
+                      do (setf (pixel zimg j i) (pixel img i j)))))
+           zimg))))
+    (t
+     (with-image-bounds (ymax xmax channels)
+         img
+       (let ((zimg (make-array
+                    (cons xmax (cons ymax (when channels (list channels))))
+                    :element-type (array-element-type img))))
+         (loop for i below ymax
+            do (loop for j below xmax
+                  do (setf (pixel zimg j i) (pixel img i j))))
+         zimg)))))
+
+(defun horizontal-flip-image (img)
   (with-image-bounds (ymax xmax channels)
       img
     (let ((zimg (make-array
-                 (cons xmax (cons ymax (when channels (list channels))))
+                 (cons ymax (cons xmax (when channels (list channels))))
                  :element-type (array-element-type img))))
       (loop for i below ymax
-           do (loop for j below xmax
-                 do (setf (pixel zimg j i) (pixel img i j))))
+         do (loop for j below xmax
+               for jprime from (1- xmax) downto 0
+               do (setf (pixel zimg i j) (pixel img i jprime))))
+      zimg)))
+
+(defun vertical-flip-image (img)
+  (with-image-bounds (ymax xmax channels)
+      img
+    (let ((zimg (make-array
+                 (cons ymax (cons xmax (when channels (list channels))))
+                 :element-type (array-element-type img))))
+      (loop for i below ymax
+         for iprime from (1- ymax) downto 0
+         do (loop for j below xmax
+               do (setf (pixel zimg iprime j) (pixel img i j))))
       zimg)))
 
 (defun copy-image (img)

@@ -49,6 +49,10 @@
    #:with-image-bounds
    #:pixel-in-bounds
 
+   #:transpose-image
+   #:horizontal-flip-image
+   #:vertical-flip-image
+
    #:copy-image
    #:crop-image
    #:trim-image
