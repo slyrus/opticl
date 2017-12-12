@@ -101,7 +101,7 @@
                (write-byte (char-code (digit-char (pixel image i j))) stream)
                (if (and (plusp j) (= (mod (+ (* i width) j 1) 35) 0))
                  (write-byte (char-code #\Newline) stream)
-                 (write-byte (char-code #\Space) stream))))))
+ 		 (write-byte (char-code #\Space) stream))))))
 
 (defun %write-pbm-binary-stream (stream image)
   (map nil (lambda (x) (write-byte (char-code x) stream)) "P4")
@@ -328,27 +328,43 @@
 
 
 (defun %write-ppm-ascii-stream (stream image)
-  (map nil (lambda (x) (write-byte (char-code x) stream)) "P3")
-  (write-byte (char-code #\Newline) stream)
-  (with-image-bounds (height width)
-      image
-    (write-integer width stream)
-    (write-byte (char-code #\Space) stream)
-    (write-integer height stream)
-    (write-byte (char-code #\Newline) stream)
-    (etypecase image
-      (8-bit-rgb-image (write-integer #xff stream))
-      (8-bit-rgba-image (write-integer #xff stream))
-      (16-bit-rgb-image (write-integer #xffff stream))
-      (16-bit-rgba-image (write-integer #xffff stream)))
-    (write-byte (char-code #\Newline) stream)
-    (loop for i below height
-       do (loop for j below width
-             do 
-               (write-integer (pixel image i j) stream)
-               (unless (= j (1- width))
-                 (write-byte (char-code #\Space) stream)))
-         (write-byte (char-code #\Newline) stream))))
+  (flet ((emit-byte (char stream)
+	   (if (typep stream 'string-stream)
+	       (write-char char stream)
+	       (write-byte (char-code char) stream)))
+	 (emit-integer (number stream)
+	   (if (typep stream 'string-stream)
+	       (write number :stream stream)
+	       (write-integer number stream))))
+    (map nil (lambda (x) (emit-byte x stream)) "P3")
+    (emit-byte #\Newline stream)
+    (with-image-bounds (height width)
+	image
+      (emit-integer width stream)
+      (emit-byte #\Space stream)
+      (emit-integer height stream)
+      (emit-byte #\Newline stream)
+      (etypecase image
+	(8-bit-rgb-image (emit-integer #xff stream))
+	(8-bit-rgba-image (emit-integer #xff stream))
+	(16-bit-rgb-image (emit-integer #xffff stream))
+	(16-bit-rgba-image (emit-integer #xffff stream)))
+      (emit-byte #\Newline stream)
+      (loop for i below height
+	 do (loop for j below width
+	       do 
+		 #+nil(emit-integer (pixel image i j) stream)
+		 (multiple-value-bind (r g b)
+		     (pixel image i j) 
+		   (emit-integer r stream)
+		   (emit-byte #\Space stream)
+		   (emit-integer g stream)
+		   (emit-byte #\Space stream)
+		   (emit-integer b stream)
+		   (emit-byte #\Space stream))
+		 (unless (= j (1- width))
+		   (emit-byte #\Space stream)))
+	   (emit-byte #\Newline stream)))))
 
 (defun %write-8-bit-rgb-ppm-binary-data (stream image height width)
   (write-integer #xff stream)
