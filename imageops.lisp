@@ -191,7 +191,8 @@
   (let ((len (reduce #'* (array-dimensions array))))
     (if force-simple
         (let* ((disp (make-array len
-                                 :displaced-to array))
+                                 :displaced-to array
+				 :element-type (array-element-type array)))
                (vec (map `(vector ,element-type) fn disp))
                (dest (make-array (array-dimensions array)
                                  :adjustable adjustable
@@ -200,7 +201,7 @@
              do (setf (row-major-aref dest i)
                       (elt vec i)))
           dest)
-        (let* ((disp (make-array len :displaced-to array)))
+        (let* ((disp (make-array len :displaced-to array :element-type (array-element-type array))))
           (make-array (array-dimensions array)
                       :element-type element-type
                       :displaced-to (map `(vector ,element-type) fn disp))))))
