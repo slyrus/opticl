@@ -68,9 +68,9 @@ The elements at indexex 0 and 255 are set to +j-fn-max-value+."
            (incf apriori-1 (aref histogram idx))
            (if (zerop apriori-1)
                (setf (aref samples idx) +j-fn-max-value+)
-               (let* ((apriori-2 (- 1d0 (if (= apriori-1 1.0d0)
-					    (+ apriori-1 most-negative-double-float)
-					    apriori-1)))
+               (let* ((apriori-2 (if (= apriori-1 1.0d0)
+				     least-positive-double-float
+				     (- 1d0 apriori-1)))
                       (mean-1 (/ (loop for i upto idx
                                     summing (* (aref histogram i) i))
                                  apriori-1))
