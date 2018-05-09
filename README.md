@@ -287,7 +287,7 @@ more expository example code into
 
 Some examples of using opticl code can be found here:
 
-[http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml](http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml)
+[https://github.com/slyrus/opticl-examples](https://github.com/slyrus/opticl-examples)
 
 # Contributors
 
