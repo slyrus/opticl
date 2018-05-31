@@ -15,6 +15,20 @@
        (:ppm read-ppm-stream)
        (:gif read-gif-stream)))
 
+(defparameter *image-stream-writer-hash-table* (make-hash-table))
+(map nil (lambda (z)
+           (destructuring-bind (x y) z
+             (setf (gethash x *image-stream-writer-hash-table*) y)))
+     '((:tiff write-tiff-stream)
+       (:tif write-tiff-stream)
+       (:jpeg write-jpeg-stream)
+       (:jpg write-jpeg-stream)
+       (:png write-png-stream)
+       (:pbm write-pbm-stream)
+       (:pgm write-pgm-stream)
+       (:ppm write-ppm-stream)
+       (:gif write-gif-stream)))
+
 (defparameter *image-file-reader-hash-table* (make-hash-table))
 (map nil (lambda (z)
            (destructuring-bind (x y) z
@@ -48,11 +62,21 @@
   (let* ((key (intern (string-upcase type) :keyword)))
     (gethash key *image-stream-reader-hash-table*)))
 
+(defun get-image-stream-writer (type)
+  (let* ((key (intern (string-upcase type) :keyword)))
+    (gethash key *image-stream-writer-hash-table*)))
+
 (defun read-image-stream (stream type)
   (let ((fn (get-image-stream-reader type)))
     (if fn
         (funcall fn stream)
         (error "Cannot read image stream ~S of type ~S" stream type))))
+
+(defun write-image-stream (stream type image)
+  (let ((fn (get-image-stream-writer type)))
+    (if fn
+        (funcall fn stream image)
+        (error "Cannot write image stream ~S of type ~S" stream type))))
 
 (defun get-image-file-reader (file)
   (typecase file
