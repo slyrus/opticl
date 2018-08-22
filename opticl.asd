@@ -6,7 +6,15 @@
   :licence "BSD"
   :serial t
   :default-component-class cl-source-file
-  :depends-on (alexandria retrospectiff zpng pngload cl-jpeg skippy opticl-core cl-tga)
+  :depends-on (alexandria
+               retrospectiff
+               zpng
+               #-(or clisp abcl) pngload
+               #+(or clisp abcl) png-read
+               cl-jpeg
+               skippy
+               opticl-core
+               cl-tga)
   :components
   ((:static-file "README.md")
    (:static-file "COPYRIGHT")
