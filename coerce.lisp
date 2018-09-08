@@ -204,6 +204,7 @@
 (defmethod coerce-image (image (type (eql '8-bit-rgb-image)) &rest args)
   (declare (ignore args))
   (etypecase image
+    #+nil
     (gray-image
      (locally
          (declare (type gray-image image))
@@ -261,6 +262,47 @@
                (declare (ignore a))
                (setf (pixel 8-bit-rgb-image i j)
                      (values (ash r -8) (ash g -8) (ash b -8)))))
+           8-bit-rgb-image))))
+    (opticl-core::hsv-image
+     (locally
+         (declare (type opticl-core::hsv-image image))
+       (with-image-bounds (y x)
+           image
+         (let* ((8-bit-rgb-image (make-8-bit-rgb-image y x)))
+           (declare (type 8-bit-rgb-image 8-bit-rgb-image))
+           (do-pixels (i j)
+               image
+             (let ((hsv-pixel (pixel image i j)))
+               (let ((h (opticl-core::hsv-pixel-hue hsv-pixel))
+                     (s (opticl-core::hsv-pixel-saturation hsv-pixel))
+                     (v (opticl-core::hsv-pixel-value hsv-pixel)))
+                 (let* ((c (* v s))
+                        (x (* c (- 1 (abs (- (mod (/ h 60) 2) 1)))))
+                        (m (- v c)))
+                   (multiple-value-bind (r-prime g-prime b-prime)
+                       (cond ((and (>= h 0)
+                                   (< h 60))
+                              (values c x 0))
+                             ((and (>= h 60)
+                                   (< h 120))
+                              (values x c 0))
+                             ((and (>= h 120)
+                                   (< h 180))
+                              (values 0 c x))
+                             ((and (>= h 180)
+                                   (< h 240))
+                              (values 0 x c))
+                             ((and (>= h 240)
+                                   (< h 300))
+                              (values 0 x c))
+                             ((and (>= h 300)
+                                   (< h 360))
+                              (values 0 x c)))
+                     (let ((r (* (+ r-prime m) 255))
+                           (g (* (+ g-prime m) 255))
+                           (b (* (+ b-prime m) 255)))
+                       (setf (pixel 8-bit-rgb-image i j)
+                             (values (floor r) (floor g) (floor b)))))))))
            8-bit-rgb-image))))))
 
 (defmethod coerce-image (image (type (eql '8-bit-rgba-image)) &rest args)
@@ -479,3 +521,49 @@
 (defun convert-image-to-rgba (image)
   (coerce-image image 'rgba-image))
 
+(defmethod coerce-image (image (type (eql 'hsv-image)) &rest args)
+  (declare (ignore args))
+  (etypecase image
+    (8-bit-rgb-image
+     (locally
+         (declare (type 8-bit-rgb-image image))
+       (with-image-bounds (y x channels)
+           image
+         (let* ((hsv-image (opticl-core::make-hsv-image y x)))
+           (declare (type opticl-core::hsv-image hsv-image))
+           (do-pixels (i j)
+               image
+             (multiple-value-bind (r g b a)
+                 (pixel image i j)
+               (declare (ignore a))
+               (let ((r-prime (/ r 255.0))
+                     (g-prime (/ g 255.0))
+                     (b-prime (/ b 255.0)))
+                 (let ((cmax (max r-prime g-prime b-prime))
+                       (cmin (min r-prime g-prime b-prime)))
+                   (let ((delta (- cmax cmin)))
+                     (let ((h
+                            (cond ((zerop delta)
+                                   0.0)
+                                  ((eql r-prime cmax)
+                                   (* 60 (mod  (/ (- g-prime b-prime)
+                                                  delta)
+                                               6)))
+                                  ((eql g-prime cmax)
+                                   (* 60 (+ (/ (- b-prime r-prime)
+                                               delta)
+                                            2)))
+                                  ((eql b-prime cmax)
+                                   (* 60 (+ (/ (- r-prime g-prime)
+                                               delta)
+                                            4)))
+                                  (t (error "RGB -> HSV decoding error!"))))
+                           (s (if (zerop cmax)
+                                  0.0
+                                  (/ delta cmax)))
+                           (v cmax))
+                       (setf (pixel hsv-image i j)
+                             (opticl-core::make-hsv-pixel :hue h
+                                                          :saturation s
+                                                          :value v))))))))
+           hsv-image))))))
