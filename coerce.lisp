@@ -533,9 +533,8 @@
            (declare (type opticl-core::hsv-image hsv-image))
            (do-pixels (i j)
                image
-             (multiple-value-bind (r g b a)
+             (multiple-value-bind (r g b)
                  (pixel image i j)
-               (declare (ignore a))
                (let ((r-prime (/ r 255.0))
                      (g-prime (/ g 255.0))
                      (b-prime (/ b 255.0)))
