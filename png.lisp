@@ -68,7 +68,7 @@
     (write-png-stream stream image)
     (truename pathname)))
 
-#+(or clisp abcl)
+#+(or clisp abcl clasp)
 (defun read-png-stream (stream)
   (let* ((png (png-read:read-png-datastream stream))
 	 (colour-type (png-read:colour-type png))
@@ -226,7 +226,7 @@
 	      (setf (pixel img i j)
 		    (funcall get-pixel-fn i j)))))))))
 
-#+(or clisp abcl)
+#+(or clisp abcl clasp)
 (defun read-png-file (pathname)
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
     (read-png-stream stream)))

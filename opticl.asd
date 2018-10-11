@@ -9,8 +9,8 @@
   :depends-on (alexandria
                retrospectiff
                zpng
-               #-(or clisp abcl) pngload
-               #+(or clisp abcl) png-read
+               #-(or clisp abcl clasp) pngload
+               #+(or clisp abcl clasp) png-read
                cl-jpeg
                skippy
                opticl-core
