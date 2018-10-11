@@ -3,11 +3,11 @@
 
 (in-package :opticl)
 
-#-(or clisp abcl)
+#-(or clisp abcl clasp)
 (defun read-png-stream (stream)
   (pngload:data (pngload:load-stream stream)))
 
-#-(or clisp abcl)
+#-(or clisp abcl clasp)
 (defun read-png-file (pathname)
   (with-open-file (stream pathname
                           :direction :input
