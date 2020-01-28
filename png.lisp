@@ -59,6 +59,24 @@
                          :bpp 8
                          :image-data displaced)
           stream))))
+    (8-bit-gray-alpha-image
+     (with-image-bounds (ymax xmax)
+         image
+       (let ((displaced
+              (make-array (* ymax xmax 2)
+                          :element-type '(unsigned-byte 8)
+                          :initial-contents
+                          (make-array (* ymax xmax 2)
+                                      :element-type '(unsigned-byte 8)
+                                      :displaced-to image))))
+         (zpng:write-png-stream 
+          (make-instance 'zpng:png
+                         :color-type :grayscale-alpha
+                         :height ymax
+                         :width xmax
+                         :bpp 8
+                         :image-data displaced)
+          stream))))
     (t (error "No PNG writing support for this image type."))))
 
 (defun write-png-file (pathname image)
