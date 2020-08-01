@@ -52,7 +52,8 @@
                          (:file "generate-test-images")
                          (:file "tiff-test")
                          (:file "jpeg-test")
-                         (:file "png-test"))))
+                         (:file "png-test")
+                         (:file "coerce-test"))))
   :perform (test-op (o c)
                     (uiop:symbol-call :fiveam '#:run! :opticl)))
 

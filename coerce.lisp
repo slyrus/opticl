@@ -187,6 +187,24 @@
                (setf (pixel rgb-image i j)
                      (values val val val))))
            rgb-image))))
+    (gray-alpha-image
+     (locally
+         (declare (type gray-alpha-image image))
+       (with-image-bounds (y x)
+           image
+         (let* ((type (array-element-type image))
+                (rgb-image (make-array (list y x 3) :element-type type)))
+           (declare (type rgb-image rgb-image))
+           (do-pixels (i j)
+               image
+             (multiple-value-bind (val alpha)
+                 (pixel image i j)
+               (declare (ignore alpha))
+               ;; FIXME: we should probably do something better than
+               ;; just dropping the alpha channel here
+               (setf (pixel rgb-image i j)
+                     (values val val val))))
+           rgb-image))))
     (rgb-image image)
     (rgba-image
      (locally
@@ -214,6 +232,23 @@
            (do-pixels (i j)
                image
              (let ((val (pixel image i j)))
+               (setf (pixel 8-bit-rgb-image i j)
+                     (values val val val))))
+           8-bit-rgb-image))))
+    (gray-alpha-image
+     (locally
+         (declare (type gray-alpha-image image))
+       (with-image-bounds (y x)
+           image
+         (let* ((8-bit-rgb-image (make-8-bit-rgb-image y x)))
+           (declare (type 8-bit-rgb-image 8-bit-rgb-image))
+           (do-pixels (i j)
+               image
+             ;; FIXME: we should probably do something better than
+             ;; just dropping the alpha channel here
+             (multiple-value-bind (val alpha)
+                 (pixel image i j)
+               (declare (ignore alpha))
                (setf (pixel 8-bit-rgb-image i j)
                      (values val val val))))
            8-bit-rgb-image))))
@@ -279,6 +314,21 @@
              (let ((val (pixel image i j)))
                (setf (pixel rgba-image i j)
                      (values val val val 255))))
+           rgba-image))))
+    (gray-alpha-image
+     (locally
+         (declare (type gray-alpha-image image))
+       (with-image-bounds (y x)
+           image
+         (let* ((type (array-element-type image))
+                (rgba-image (make-array (list y x 4) :element-type type)))
+           (declare (type rgba-image rgba-image))
+           (do-pixels (i j)
+               image
+             (multiple-value-bind (val alpha)
+                 (pixel image i j)
+               (setf (pixel rgba-image i j)
+                     (values val val val alpha))))
            rgba-image))))
     (8-bit-rgb-image
      (locally
