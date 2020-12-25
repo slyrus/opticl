@@ -350,21 +350,19 @@
 	(16-bit-rgb-image (emit-integer #xffff stream))
 	(16-bit-rgba-image (emit-integer #xffff stream)))
       (emit-byte #\Newline stream)
-      (loop for i below height
-	 do (loop for j below width
-	       do 
-		 #+nil(emit-integer (pixel image i j) stream)
-		 (multiple-value-bind (r g b)
-		     (pixel image i j) 
-		   (emit-integer r stream)
-		   (emit-byte #\Space stream)
-		   (emit-integer g stream)
-		   (emit-byte #\Space stream)
-		   (emit-integer b stream)
-		   (emit-byte #\Space stream))
-		 (unless (= j (1- width))
-		   (emit-byte #\Space stream)))
-	   (emit-byte #\Newline stream)))))
+      (loop for i below height do
+	(loop for j below width do
+	  (multiple-value-bind (r g b)
+	      (pixel image i j) 
+	    (emit-integer r stream)
+	    (emit-byte #\Space stream)
+	    (emit-integer g stream)
+	    (emit-byte #\Space stream)
+	    (emit-integer b stream)
+	    (emit-byte #\Space stream))
+	  (unless (= j (1- width))
+	    (emit-byte #\Space stream)))
+	(emit-byte #\Newline stream)))))
 
 (defun %write-8-bit-rgb-ppm-binary-data (stream image height width)
   (write-integer #xff stream)
