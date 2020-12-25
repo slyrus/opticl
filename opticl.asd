@@ -6,7 +6,15 @@
   :licence "BSD"
   :serial t
   :default-component-class cl-source-file
-  :depends-on (alexandria retrospectiff zpng png-read cl-jpeg skippy opticl-core)
+  :depends-on (alexandria
+               retrospectiff
+               zpng
+               #-(or clisp abcl clasp) pngload
+               #+(or clisp abcl clasp) png-read
+               cl-jpeg
+               skippy
+               opticl-core
+               cl-tga)
   :components
   ((:static-file "README.md")
    (:static-file "COPYRIGHT")
@@ -23,8 +31,10 @@
    (:file "tiff")
    (:file "jpeg")
    (:file "png")
+   (:file "pngload")
    (:file "pnm")
    (:file "gif")
+   (:file "tga")
    (:file "io")
    (:file "cluster")
    (:file "thresholding"))
@@ -42,7 +52,8 @@
                          (:file "generate-test-images")
                          (:file "tiff-test")
                          (:file "jpeg-test")
-                         (:file "png-test"))))
+                         (:file "png-test")
+                         (:file "coerce-test"))))
   :perform (test-op (o c)
                     (uiop:symbol-call :fiveam '#:run! :opticl)))
 

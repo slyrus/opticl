@@ -90,7 +90,7 @@
                   (setf (pixel img y x) (values-list vals))))))))))
 
 (defun draw-line* (img y0 x0 y1 x1 list)
-  (multiple-value-call #'draw-line y0 x0 y1 x1 img (values-list list)))
+  (multiple-value-call #'draw-line img y0 x0 y1 x1 (values-list list)))
 
 (defun draw-circle (img center-y center-x radius &rest vals)
   "draws a circle centered at (x, y) with radius r on a image."

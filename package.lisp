@@ -26,6 +26,14 @@
    #:single-float-gray-image #:make-single-float-gray-image
    #:double-float-gray-image #:make-double-float-gray-image
 
+   #:gray-alpha-image
+   #:1-bit-gray-alpha-image #:make-1-bit-gray-alpha-image
+   #:2-bit-gray-alpha-image #:make-2-bit-gray-alpha-image
+   #:4-bit-gray-alpha-image #:make-4-bit-gray-alpha-image
+   #:8-bit-gray-alpha-image #:make-8-bit-gray-alpha-image
+   #:16-bit-gray-alpha-image #:make-16-bit-gray-alpha-image
+   #:32-bit-gray-alpha-image #:make-32-bit-gray-image
+
    #:rgb-image
    #:4-bit-rgb-image #:make-4-bit-rgb-image
    #:8-bit-rgb-image #:make-8-bit-rgb-image
@@ -48,6 +56,10 @@
    #:constrain
    #:with-image-bounds
    #:pixel-in-bounds
+
+   #:transpose-image
+   #:horizontal-flip-image
+   #:vertical-flip-image
 
    #:copy-image
    #:crop-image

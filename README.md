@@ -6,7 +6,7 @@ file for license details.
 # opticl-core
 
 NOTE: If you are using this version (or later) of opticl, you now
-also need [opticl-core](https://github.com/slyrus/opticl-core)..
+also need [opticl-core](https://github.com/slyrus/opticl-core).
 
 # Overview
 
@@ -269,19 +269,25 @@ by:
 
     (ql:quickload 'opticl)
 
-# opticl-test and opticl-examples
+# opticl-core
+
+The new [opticl-core](https://github.com/slyrus/opticl-core) package
+now contains the core machinery for representing images and accessing
+and setting pixel data. It is now required for opticl.
+
+# opticl-more-test and opticl-examples
 
 In the interest of keeping the core opticl library small, I've split
 off some test code in into
-[opticl-test](https://github.com/slyrus/opticl-test) and more
-expository example code into
+[opticl-more-test](https://github.com/slyrus/opticl-more-test) and
+more expository example code into
 [opticl-examples](https://github.com/slyrus/opticl-examples).
 
 # Examples
 
 Some examples of using opticl code can be found here:
 
-[http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml](http://www.cyrusharmon.org/static/opticl-examples/opticl-examples.xhtml)
+[https://github.com/slyrus/opticl-examples](https://github.com/slyrus/opticl-examples)
 
 # Contributors
 
