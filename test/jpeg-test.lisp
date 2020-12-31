@@ -49,3 +49,23 @@
                 (difference-threshold (* height width 4)))
             (is (< img-diff difference-threshold))))))))
 
+(test jpeg-8-bit-write-stream
+  (let ((height 32)
+        (width 32))
+    (let ((img (make-8-bit-gray-image height width)))
+      (fill-image img 192)
+      (draw-circle img 10 10 8 63)
+      (let ((out (output-image "8-bit-gray-circle.jpeg")))
+        (with-open-file (out-stream out
+                                    :direction :output
+                                    :element-type '(unsigned-byte 8)
+                                    :if-exists :supersede)
+          (write-jpeg-stream out-stream img))
+        (let ((input-img (read-jpeg-file out)))
+          ;; the JPEG images won't be identical, so let's see if we
+          ;; take the difference between the two images it ends up
+          ;; being less than some arbitrary threshold
+          (let ((img-diff (abs (sum-of-element-wise-differences img input-img)))
+                (difference-threshold (* height width 4)))
+            (is (< img-diff difference-threshold))))))))
+
