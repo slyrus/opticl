@@ -36,3 +36,12 @@
       (write-png-file out img)
       (let ((input-img (read-png-file out)))
         (is (equalp img input-img))))))
+
+(test png-8-bit-gray-alpha-write-and-read
+  (let ((img (make-8-bit-gray-alpha-image 32 32)))
+    (fill-image img 255 128)
+    (draw-circle img 10 10 8 127 64)
+    (let ((out (output-image "8-bit-gray-alpha-circle.png")))
+      (write-png-file out img)
+      (let ((input-img (read-png-file out)))
+        (is (equalp img input-img))))))
