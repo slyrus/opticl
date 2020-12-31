@@ -133,3 +133,57 @@ components of matrix. The default neighbor-function is
                             (let ((v (map 'list #'* upixel vpixel)))
                               (cond ((null acc) v)
                                     (t (map 'list #'min acc v)))))))
+
+(defun guo-hall-thinning (img &key (threshold 25))
+  (etypecase img
+    (8-bit-gray-image
+     (loop for i from 0 below (array-total-size img)
+	   do (setf (row-major-aref img i)
+		    (if (>= (row-major-aref img i) threshold) 1 0)))
+     ;; perform transform
+     (destructuring-bind (h w) (array-dimensions img)
+       (let ((map (make-1-bit-gray-image h w
+					 :initial-element 0)))
+	 (labels ((at (i y x)
+		    (and (pixel-in-bounds i y x)
+			 (plusp (pixel i y x))))
+		  (bi (v)
+		    (if v 1 0))
+		  (cycle (img evenp)
+		    (loop for y fixnum from 0 below h do
+		      (loop for x fixnum from 0 below w
+			    for p2 = (at img (1- y) x)
+			    for p3 = (at img (1- y) (1+ x))
+			    for p4 = (at img y (1+ x))
+			    for p5 = (at img (1+ y) (1+ x))
+			    for p6 = (at img (1+ y) x)
+			    for p7 = (at img (1+ y) (1- x))
+			    for p8 = (at img y (1- x))
+			    for p9 = (at img (1- y) (1- x))
+			    for c = (+ (bi (and (not p2) (or p3 p4)))
+				       (bi (and (not p4) (or p5 p6)))
+				       (bi (and (not p6) (or p7 p8)))
+				       (bi (and (not p8) (or p9 p2))))
+			    for n1 = (+ (bi (or p9 p2)) (bi (or p3 p4))
+					(bi (or p5 p6)) (bi (or p7 p8)))
+			    for n2 = (+ (bi (or p2 p3)) (bi (or p4 p5))
+					(bi (or p6 p7)) (bi (or p8 p9)))
+			    for n = (min n1 n2)
+			    for m = (if evenp
+					(and (or p2 p3 (not p5)) p4)
+					(and (or p6 p7 (not p9)) p8))
+			    when (and (= c 1) (<= 2 n 3) (not m))
+			      do (setf (pixel map y x) 1)))
+		    (loop for i from 0 below (array-total-size img)
+			  do (setf (row-major-aref img i)
+				   (logand (row-major-aref img i)
+					   (if (plusp (row-major-aref map i)) 0 1))))))
+	   (loop with prev
+		 until (equalp img prev) do
+		   (setf prev (copy-image img))
+		   (cycle img t)
+		   (cycle img nil)))))
+     ;; back to grayscale
+     (loop for i from 0 below (array-total-size img)
+	   do (setf (row-major-aref img i) (* (row-major-aref img i) 255)))
+     img)))

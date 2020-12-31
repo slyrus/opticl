@@ -84,6 +84,7 @@
    #:erode
    
    #:clear-image
+   #:guo-hall-thinning
 
    ;; Drawing primitives
    #:fill-image
