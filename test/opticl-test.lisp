@@ -106,3 +106,34 @@
      (make-single-float-rgba-image single-float-rgba-image :initial-element (values 1.0s0 1.0s0 1.0s0 1.0s0))
      (make-double-float-rgba-image double-float-rgba-image :initial-element (values 1.0d0 1.0d0 1.0d0 1.0d0))))
 
+;; map-array test
+
+(test map-array-8-bit-rgba
+  (let ((img (opticl:make-8-bit-rgba-image 4 4)))
+    (is (map-array #'1+ img)
+        #3A(((1 1 1 1) (1 1 1 1) (1 1 1 1) (1 1 1 1))
+            ((1 1 1 1) (1 1 1 1) (1 1 1 1) (1 1 1 1))
+            ((1 1 1 1) (1 1 1 1) (1 1 1 1) (1 1 1 1))
+            ((1 1 1 1) (1 1 1 1) (1 1 1 1) (1 1 1 1))))))
+
+(test map-array-double-float-rgb
+  (let ((img (opticl:make-double-float-rgb-image 4 4)))
+    (is (map-array #'1+ img)
+        #3A(((1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0))
+            ((1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0))
+            ((1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0))
+            ((1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0)
+             (1.0d0 1.0d0 1.0d0))))))
+
+
