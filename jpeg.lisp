@@ -66,6 +66,25 @@
            (jpeg::encode-image-stream stream jpeg-array +ncomp-gray+ height width
                                       :q-tabs *gray-q-tabs*)))))
 
+    ;; as with the RGBA images down below, just ignore the alpha channel for now
+    (8-bit-gray-alpha-image
+     (locally
+         (declare (type 8-bit-gray-alpha-image image))
+       (destructuring-bind (height width channels)
+           (array-dimensions image)
+         (declare (ignore channels))
+         (let ((jpeg-array (make-array (* height width) :element-type '(unsigned-byte 8)))
+               (pixoff 0))
+           (loop for i below height
+              do
+                (loop for j below width
+                   do
+                     (setf (aref jpeg-array pixoff)
+                           (pixel image i j))
+                     (incf pixoff)))
+           (jpeg::encode-image-stream stream jpeg-array +ncomp-gray+ height width
+                                      :q-tabs *gray-q-tabs*)))))
+
     (8-bit-rgb-image
      (locally
          (declare (type 8-bit-rgb-image image))
