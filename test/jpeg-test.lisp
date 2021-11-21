@@ -69,3 +69,13 @@
                 (difference-threshold (* height width 4)))
             (is (< img-diff difference-threshold))))))))
 
+(test jpeg-read-8-bit-rgb
+  (let* ((file (test-image "truck.jpeg"))
+         (img (read-jpeg-file file)))
+    img))
+
+(test jpeg-read-8-bit-cmyk
+  (let* ((file (test-image "truck-cmyk.jpeg"))
+         (img (read-jpeg-file file)))
+    img))
+

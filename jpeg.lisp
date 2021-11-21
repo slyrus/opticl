@@ -5,6 +5,7 @@
 
 (defconstant +ncomp-gray+ 1)
 (defconstant +ncomp-rgb+ 3)
+(defconstant +ncomp-cmyk+ 4)
 
 (defparameter *rgb-sampling* '((1 1)(1 1)(1 1)))
 (defparameter *rgb-q-tabs* (vector jpeg::+q-luminance-hi+
@@ -16,32 +17,36 @@
 (defun read-jpeg-stream (stream  &key (colorspace-conversion t))
   (multiple-value-bind (buffer height width ncomp)
       (jpeg:decode-stream stream :colorspace-conversion colorspace-conversion)
-    (cond
-      ((= ncomp +ncomp-rgb+)
-       (let ((image (make-8-bit-rgb-image height width)))
-         (declare (type 8-bit-rgb-image image))
-         (loop for i below height
-            do 
-              (loop for j below width
-                 do 
-                   (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
+    (flet ((read-rgb-buffer (buffer)
+             (let ((image (make-8-bit-rgb-image height width)))
+               (declare (type 8-bit-rgb-image image))
+               (loop for i below height
+                  do
+                    (loop for j below width
+                       do
+                         (let ((pixoff (* +ncomp-rgb+ (+ (* i width) j))))
+                           (setf (pixel image i j)
+                                 (values (aref buffer (+ 2 pixoff))
+                                         (aref buffer (+ 1 pixoff))
+                                         (aref buffer  pixoff))))))
+               image)))
+      (ecase ncomp
+        (#.+ncomp-rgb+
+         (read-rgb-buffer buffer))
+        (#.+ncomp-cmyk+
+         (read-rgb-buffer (jpeg:convert-cmyk-to-rgb buffer height width)))
+        (#.+ncomp-gray+
+         (let ((image (make-8-bit-gray-image height width))
+               (pixoff 0))
+           (declare (type 8-bit-gray-image image))
+           (loop for i below height
+              do
+                (loop for j below width
+                   do
                      (setf (pixel image i j)
-                           (values (aref buffer (+ 2 pixoff))
-                                   (aref buffer (+ 1 pixoff))
-                                   (aref buffer  pixoff))))))
-         image))
-      ((= ncomp 1)
-       (let ((image (make-8-bit-gray-image height width))
-             (pixoff 0))
-         (declare (type 8-bit-gray-image image))
-         (loop for i below height
-            do 
-              (loop for j below width
-                 do 
-                   (setf (pixel image i j)
-                         (aref buffer pixoff))
-                   (incf pixoff)))
-         image)))))
+                           (aref buffer pixoff))
+                     (incf pixoff)))
+           image))))))
 
 (defun read-jpeg-file (pathname &key (colorspace-conversion t))
   (with-open-file (stream pathname :direction :input :element-type '(unsigned-byte 8))
