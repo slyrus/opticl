@@ -12,7 +12,7 @@
 
   (etypecase image
     (8-bit-gray-image image)
-    (1-bit-gray-image 
+    (1-bit-gray-image
      (with-image-bounds (y x) image
        (let* ((gray-image (make-8-bit-gray-image y x)))
          (declare (type 8-bit-gray-image gray-image)
@@ -98,7 +98,7 @@
                    (multiple-value-bind (r g b)
                        (pixel image i j)
                      (setf (pixel gray-image i j)
-                           (round 
+                           (round
                             (+ (* r 0.2989)
                                (* g 0.5870)
                                (* b 0.1140))))))
@@ -107,7 +107,7 @@
                    (multiple-value-bind (r g b)
                        (pixel image i j)
                      (setf (pixel gray-image i j)
-                           (coerce (round 
+                           (coerce (round
                                     (+ (* r 0.2989)
                                        (* g 0.5870)
                                        (* b 0.1140))) type)))))
@@ -142,7 +142,7 @@
                    (multiple-value-bind (r g b)
                        (pixel image i j)
                      (setf (pixel gray-image i j)
-                           (round 
+                           (round
                             (+ (* r 0.2989)
                                (* g 0.5870)
                                (* b 0.1140))))))
@@ -151,7 +151,7 @@
                    (multiple-value-bind (r g b)
                        (pixel image i j)
                      (setf (pixel gray-image i j)
-                           (coerce (round 
+                           (coerce (round
                                     (+ (* r 0.2989)
                                        (* g 0.5870)
                                        (* b 0.1140))) type)))))
