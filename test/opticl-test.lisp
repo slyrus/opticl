@@ -80,7 +80,7 @@
      (make-16-bit-gray-image 16-bit-gray-image :initial-element #xffff)
      (make-32-bit-gray-image 32-bit-gray-image :initial-element #xffffffff)
      (make-fixnum-gray-image fixnum-gray-image :initial-element 42)
-     (make-single-float-gray-image single-float-gray-image :initial-element 1.0s0)
+     (make-single-float-gray-image single-float-gray-image :initial-element 1.0f0)
      (make-double-float-gray-image double-float-gray-image :initial-element 1.0d0)))
 
 (def-image-tests
@@ -91,7 +91,7 @@
      (make-fixnum-rgb-image fixnum-rgb-image :initial-element (values most-positive-fixnum
                                                                       most-positive-fixnum
                                                                       most-positive-fixnum))
-     (make-single-float-rgb-image single-float-rgb-image :initial-element (values 1.0s0 1.0s0 1.0s0))
+     (make-single-float-rgb-image single-float-rgb-image :initial-element (values 1.0f0 1.0f0 1.0f0))
      (make-double-float-rgb-image double-float-rgb-image :initial-element (values 1.0d0 1.0d0 1.0d0))))
 
 (def-image-tests
@@ -103,7 +103,7 @@
                                                                         most-positive-fixnum
                                                                         most-positive-fixnum
                                                                         most-positive-fixnum))
-     (make-single-float-rgba-image single-float-rgba-image :initial-element (values 1.0s0 1.0s0 1.0s0 1.0s0))
+     (make-single-float-rgba-image single-float-rgba-image :initial-element (values 1.0f0 1.0f0 1.0f0 1.0f0))
      (make-double-float-rgba-image double-float-rgba-image :initial-element (values 1.0d0 1.0d0 1.0d0 1.0d0))))
 
 ;; map-array test
