@@ -69,7 +69,7 @@
                    (incf y ystep)))
                 (when (pixel-in-bounds img y x)
                   (setf (pixel img y x) (values-list vals)))))
-            (let ((d (- (* 2 absdy) absdx))
+            (let ((d (- (* 2 absdx) absdy))
                   (incr-n (* 2 absdx))
                   (incr-ne (* 2 (- absdx absdy)))
                   (x x0)
