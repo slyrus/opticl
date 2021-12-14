@@ -3,9 +3,10 @@
 
 (in-package :opticl)
 
-(defconstant +ncomp-gray+ 1)
-(defconstant +ncomp-rgb+ 3)
-(defconstant +ncomp-cmyk+ 4)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defconstant +ncomp-gray+ 1)
+  (defconstant +ncomp-rgb+ 3)
+  (defconstant +ncomp-cmyk+ 4))
 
 (defparameter *rgb-sampling* '((1 1)(1 1)(1 1)))
 (defparameter *rgb-q-tabs* (vector jpeg::+q-luminance-hi+
@@ -147,5 +148,3 @@
                           :if-exists :supersede)
     (write-jpeg-stream stream image)
     pathname))
-
-
