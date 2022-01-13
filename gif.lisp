@@ -10,16 +10,24 @@
   (with-accessors ((height skippy:height)
                    (width skippy:width)
                    (image-data skippy:image-data)
-                   (image-color-table skippy:color-table))
+                   (image-color-table skippy:color-table)
+                   (transparency-index skippy:transparency-index))
       skippy-image
     (let ((color-table (or image-color-table
                            global-color-table
                            (error "~@<Could not find color table for image ~A.~@:>"
                                   skippy-image)))
-          (new-image   (make-8-bit-rgb-image height width)))
+          (new-image   (if transparency-index
+                           (make-8-bit-rgba-image height width)
+                           (make-8-bit-rgb-image height width))))
       (set-pixels (i j) new-image
-        (skippy:color-rgb
-         (skippy:color-table-entry color-table index)))
+        (let ((index (skippy:pixel-ref skippy-image j i)))
+          (if (eql index transparency-index)
+              (values 0 0 0 0)
+              (multiple-value-call #'values
+                (skippy:color-rgb
+                 (skippy:color-table-entry color-table index))
+                #xff))))
       new-image)))
 
 (defun read-gif-stream (stream)
